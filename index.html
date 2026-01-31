@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Электронная библиотека</title>
     <style>
+        /* Ваш существующий CSS-код остаётся полностью без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -1187,7 +1188,7 @@
             
             <div class="reviews-container" id="reviewsContainer">
                 <!-- Отзывы будут добавлены через JavaScript -->
-                <div class="no-reviews">Пока нет отзывов. Будьте первым!</div>
+                <div class="no-reviews">Загрузка отзывов...</div>
             </div>
         </section>
     </main>
@@ -1346,6 +1347,9 @@
     </div>
 
     <script>
+        // === ОБЩИЕ НАСТРОЙКИ ===
+        const API_URL = 'https://ваш-сайт.ru/reviews.php'; // ЗАМЕНИТЕ на реальный URL вашего PHP файла
+
         // Данные книг с объединенными страницами для лучшего чтения
         const books = [
             {
@@ -1571,9 +1575,6 @@
             }
         ];
 
-        // Система отзывов
-        let reviews = JSON.parse(localStorage.getItem('libraryReviews')) || [];
-        
         // Система администраторов
         let admins = JSON.parse(localStorage.getItem('libraryAdmins')) || [
             {
@@ -1618,7 +1619,7 @@
             // Восстанавливаем сохраненную тему
             loadSavedTheme();
             
-            // Загружаем отзывы
+            // Загружаем отзывы с сервера
             loadReviews();
         });
 
@@ -2190,23 +2191,37 @@
         }
 
         // Загрузка статистики в админ-панель
-        function loadAdminStats() {
-            document.getElementById('adminTotalBooks').textContent = books.length;
-            document.getElementById('adminTotalReviews').textContent = reviews.length;
-            document.getElementById('adminTotalAdmins').textContent = admins.length;
-            document.getElementById('adminAvgRating').textContent = reviews.length > 0 
-                ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
-                : '0.0';
-            
-            // Время работы системы (пример)
-            const startTime = localStorage.getItem('systemStartTime') || new Date().toISOString();
-            localStorage.setItem('systemStartTime', startTime);
-            
-            const days = Math.floor((new Date() - new Date(startTime)) / (1000 * 60 * 60 * 24));
-            document.getElementById('systemUptime').textContent = days + ' дней';
-            
-            // Последнее обновление
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('ru-RU');
+        async function loadAdminStats() {
+            try {
+                // Загружаем отзывы с сервера для статистики
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Ошибка загрузки отзывов');
+                const reviews = await response.json();
+                
+                document.getElementById('adminTotalBooks').textContent = books.length;
+                document.getElementById('adminTotalReviews').textContent = reviews?.length || 0;
+                document.getElementById('adminTotalAdmins').textContent = admins.length;
+                document.getElementById('adminAvgRating').textContent = reviews?.length > 0 
+                    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+                    : '0.0';
+                
+                // Время работы системы (пример)
+                const startTime = localStorage.getItem('systemStartTime') || new Date().toISOString();
+                localStorage.setItem('systemStartTime', startTime);
+                
+                const days = Math.floor((new Date() - new Date(startTime)) / (1000 * 60 * 60 * 24));
+                document.getElementById('systemUptime').textContent = days + ' дней';
+                
+                // Последнее обновление
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('ru-RU');
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+                // Используем данные по умолчанию при ошибке
+                document.getElementById('adminTotalBooks').textContent = books.length;
+                document.getElementById('adminTotalReviews').textContent = '0';
+                document.getElementById('adminTotalAdmins').textContent = admins.length;
+                document.getElementById('adminAvgRating').textContent = '0.0';
+            }
         }
 
         // Загрузка списка администраторов
@@ -2250,66 +2265,75 @@
         }
 
         // Загрузка отзывов в админ-панель
-        function loadAdminReviews() {
+        async function loadAdminReviews() {
             const adminReviewsList = document.getElementById('adminReviewsList');
             const filterRating = document.getElementById('reviewFilterRating').value;
             
-            let filteredReviews = reviews;
-            if (filterRating !== 'all') {
-                filteredReviews = reviews.filter(review => review.rating === parseInt(filterRating));
-            }
-            
-            adminReviewsList.innerHTML = '';
-            
-            if (filteredReviews.length === 0) {
-                adminReviewsList.innerHTML = '<div class="no-reviews">Нет отзывов</div>';
-                return;
-            }
-            
-            filteredReviews.forEach(review => {
-                const reviewItem = document.createElement('div');
-                reviewItem.className = 'admin-item';
+            try {
+                // Загружаем отзывы с сервера
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Ошибка загрузки отзывов');
+                let reviews = await response.json();
                 
-                // Создаем строку с звездами
-                let starsHtml = '';
-                for (let i = 0; i < 5; i++) {
-                    if (i < review.rating) {
-                        starsHtml += '★';
-                    } else {
-                        starsHtml += '☆';
-                    }
+                // Применяем фильтр
+                if (filterRating !== 'all' && reviews) {
+                    reviews = reviews.filter(review => review.rating === parseInt(filterRating));
                 }
                 
-                const date = new Date(review.date);
-                const formattedDate = date.toLocaleDateString('ru-RU');
+                adminReviewsList.innerHTML = '';
                 
-                reviewItem.innerHTML = `
-                    <div>
-                        <strong>${review.name}</strong><br>
-                        <small>Оценка: ${starsHtml}</small><br>
-                        <small>Дата: ${formattedDate}</small>
-                    </div>
-                    <div>
-                        <button class="btn btn-read remove-review-btn" data-id="${review.id}">Удалить</button>
-                    </div>
-                `;
+                if (!reviews || reviews.length === 0) {
+                    adminReviewsList.innerHTML = '<div class="no-reviews">Нет отзывов</div>';
+                    return;
+                }
                 
-                adminReviewsList.appendChild(reviewItem);
-            });
-            
-            // Добавляем обработчики для кнопок удаления
-            document.querySelectorAll('.remove-review-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const reviewId = parseInt(this.getAttribute('data-id'));
-                    if (confirm('Вы уверены, что хотите удалить этот отзыв?')) {
-                        reviews = reviews.filter(review => review.id !== reviewId);
-                        localStorage.setItem('libraryReviews', JSON.stringify(reviews));
-                        loadAdminReviews();
-                        loadReviews();
-                        loadAdminStats();
+                reviews.forEach(review => {
+                    const reviewItem = document.createElement('div');
+                    reviewItem.className = 'admin-item';
+                    
+                    // Создаем строку с звездами
+                    let starsHtml = '';
+                    for (let i = 0; i < 5; i++) {
+                        if (i < review.rating) {
+                            starsHtml += '★';
+                        } else {
+                            starsHtml += '☆';
+                        }
                     }
+                    
+                    const date = new Date(review.date);
+                    const formattedDate = date.toLocaleDateString('ru-RU');
+                    
+                    reviewItem.innerHTML = `
+                        <div>
+                            <strong>${review.name}</strong><br>
+                            <small>Оценка: ${starsHtml}</small><br>
+                            <small>Дата: ${formattedDate}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-read remove-review-btn" data-id="${review.id}">Удалить</button>
+                        </div>
+                    `;
+                    
+                    adminReviewsList.appendChild(reviewItem);
                 });
-            });
+                
+                // Добавляем обработчики для кнопок удаления
+                document.querySelectorAll('.remove-review-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const reviewId = parseInt(this.getAttribute('data-id'));
+                        // Внимание: это только клиентское удаление! 
+                        // Для реального удаления нужно отправлять запрос на сервер
+                        if (confirm('Это удалит отзыв только локально. Для удаления на сервере нужна дополнительная реализация. Продолжить?')) {
+                            // Локальное удаление (только для демонстрации)
+                            alert('В реальном приложении здесь будет отправка DELETE запроса на сервер');
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки отзывов:', error);
+                adminReviewsList.innerHTML = '<div class="no-reviews">Ошибка загрузки отзывов</div>';
+            }
         }
 
         // Загрузка книг в админ-панель
@@ -2359,74 +2383,93 @@
             alert('Функция редактирования книги в разработке. ID книги: ' + bookId);
         };
 
-        // Загрузка отзывов
-        function loadReviews() {
+        // === ОСНОВНАЯ ФУНКЦИЯ ЗАГРУЗКИ ОТЗЫВОВ ===
+        async function loadReviews() {
             const reviewsContainer = document.getElementById('reviewsContainer');
             
-            // Очищаем контейнер
-            reviewsContainer.innerHTML = '';
+            // Показываем сообщение о загрузке
+            reviewsContainer.innerHTML = '<div class="no-reviews">Загрузка отзывов...</div>';
             
-            if (reviews.length === 0) {
-                reviewsContainer.innerHTML = '<div class="no-reviews">Пока нет отзывов. Будьте первым!</div>';
-                updateStats();
-                return;
-            }
-            
-            // Сортируем отзывы по дате (новые сначала)
-            reviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            // Добавляем отзывы
-            reviews.forEach(review => {
-                const reviewCard = document.createElement('div');
-                reviewCard.className = 'review-card';
+            try {
+                // Пробуем загрузить с сервера
+                const response = await fetch(API_URL);
                 
-                // Создаем строку с звездами
-                let starsHtml = '';
-                for (let i = 0; i < 5; i++) {
-                    if (i < review.rating) {
-                        starsHtml += '★';
-                    } else {
-                        starsHtml += '☆';
-                    }
+                if (!response.ok) {
+                    throw new Error('Ошибка сервера: ' + response.status);
                 }
                 
-                // Форматируем дату
-                const date = new Date(review.date);
-                const formattedDate = date.toLocaleDateString('ru-RU', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
+                const reviews = await response.json();
+                
+                // Очищаем контейнер
+                reviewsContainer.innerHTML = '';
+                
+                if (!reviews || reviews.length === 0) {
+                    reviewsContainer.innerHTML = '<div class="no-reviews">Пока нет отзывов. Будьте первым!</div>';
+                    updateStats(reviews || []);
+                    return;
+                }
+                
+                // Сортируем отзывы по дате (новые сначала)
+                reviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Добавляем отзывы
+                reviews.forEach(review => {
+                    const reviewCard = document.createElement('div');
+                    reviewCard.className = 'review-card';
+                    
+                    // Создаем строку с звездами
+                    let starsHtml = '';
+                    for (let i = 0; i < 5; i++) {
+                        if (i < review.rating) {
+                            starsHtml += '★';
+                        } else {
+                            starsHtml += '☆';
+                        }
+                    }
+                    
+                    // Форматируем дату
+                    const date = new Date(review.date);
+                    const formattedDate = date.toLocaleDateString('ru-RU', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    
+                    reviewCard.innerHTML = `
+                        <div class="review-header">
+                            <div class="review-author">${review.name}</div>
+                            <div class="review-date">${formattedDate}</div>
+                        </div>
+                        <div class="review-rating">${starsHtml}</div>
+                        <div class="review-text">${review.text}</div>
+                    `;
+                    
+                    reviewsContainer.appendChild(reviewCard);
                 });
                 
-                reviewCard.innerHTML = `
-                    <div class="review-header">
-                        <div class="review-author">${review.name}</div>
-                        <div class="review-date">${formattedDate}</div>
-                    </div>
-                    <div class="review-rating">${starsHtml}</div>
-                    <div class="review-text">${review.text}</div>
-                `;
-                
-                reviewsContainer.appendChild(reviewCard);
-            });
-            
-            updateStats();
+                updateStats(reviews);
+            } catch (error) {
+                console.error('Ошибка загрузки отзывов:', error);
+                // Показываем сообщение об ошибке
+                reviewsContainer.innerHTML = '<div class="no-reviews">Не удалось загрузить отзывы. Попробуйте позже.</div>';
+                updateStats([]);
+            }
         }
 
         // Обновление статистики отзывов
-        function updateStats() {
-            const totalReviews = reviews.length;
-            const avgRating = reviews.length > 0 
+        function updateStats(reviews) {
+            const totalReviews = reviews?.length || 0;
+            const avgRating = reviews?.length > 0 
                 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
                 : '0.0';
             
             // Количество отзывов за текущий месяц
             const currentMonth = new Date().getMonth();
             const currentYear = new Date().getFullYear();
-            const reviewsThisMonth = reviews.filter(review => {
+            const reviewsThisMonth = reviews?.filter(review => {
                 const reviewDate = new Date(review.date);
                 return reviewDate.getMonth() === currentMonth && reviewDate.getFullYear() === currentYear;
-            }).length;
+            }).length || 0;
             
             document.getElementById('totalReviews').textContent = totalReviews;
             document.getElementById('avgRating').textContent = avgRating;
@@ -2434,7 +2477,7 @@
         }
 
         // Отправка отзыва
-        function submitReview() {
+        async function submitReview() {
             const name = document.getElementById('reviewName').value.trim();
             const rating = parseInt(document.getElementById('reviewRating').value);
             const text = document.getElementById('reviewText').value.trim();
@@ -2469,31 +2512,43 @@
                 date: new Date().toISOString()
             };
             
-            // Добавляем отзыв
-            reviews.unshift(newReview);
-            
-            // Сохраняем в localStorage
-            localStorage.setItem('libraryReviews', JSON.stringify(reviews));
-            
-            // Очищаем форму
-            document.getElementById('reviewName').value = '';
-            document.getElementById('reviewRating').value = '0';
-            document.getElementById('reviewText').value = '';
-            
-            // Сбрасываем звезды
-            document.querySelectorAll('.star').forEach(star => {
-                star.classList.remove('active');
-            });
-            selectedRating = 0;
-            
-            // Перезагружаем отзывы
-            loadReviews();
-            
-            // Скрываем форму
-            document.getElementById('reviewForm').style.display = 'none';
-            document.getElementById('showReviewForm').textContent = 'Оставить отзыв';
-            
-            alert('Спасибо за ваш отзыв!');
+            try {
+                // Отправляем отзыв на сервер
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(newReview)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка отправки отзыва');
+                }
+                
+                // Очищаем форму
+                document.getElementById('reviewName').value = '';
+                document.getElementById('reviewRating').value = '0';
+                document.getElementById('reviewText').value = '';
+                
+                // Сбрасываем звезды
+                document.querySelectorAll('.star').forEach(star => {
+                    star.classList.remove('active');
+                });
+                selectedRating = 0;
+                
+                // Перезагружаем отзывы
+                loadReviews();
+                
+                // Скрываем форму
+                document.getElementById('reviewForm').style.display = 'none';
+                document.getElementById('showReviewForm').textContent = 'Оставить отзыв';
+                
+                alert('Спасибо за ваш отзыв!');
+            } catch (error) {
+                console.error('Ошибка отправки отзыва:', error);
+                alert('Не удалось отправить отзыв. Попробуйте позже.');
+            }
         }
 
         // Документация для администратора
@@ -2501,6 +2556,7 @@
         console.log('Для входа в админ-панель используйте команду:');
         console.log('adminLogin("admin", "admin123")');
         console.log('Для выхода: adminLogout()');
+        console.log('URL для отзывов:', API_URL);
         console.log('===============================');
     </script>
 </body>
