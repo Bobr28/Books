@@ -12,8 +12,7 @@ const BOOKS_CONFIG = [
     { id: 3, filename: 'book3.json' },
     { id: 4, filename: 'book4.json' },
     { id: 5, filename: 'book5.json' },
-    { id: 6, filename: 'book6.json' },
-    { id: 7, filename: 'book7.json' }
+    { id: 6, filename: 'book6.json' }
 ];
 
 // Инициализация при загрузке страницы
