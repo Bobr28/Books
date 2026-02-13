@@ -17,6 +17,9 @@
         // ✅ Сообщение для вора
         THEFT_MESSAGE: '🚨Это не оригинальный сайт🚨',
         
+        // ✅ Контактная информация владельца
+        OWNER_CONTACTS: 'Владелец: rafstar',
+        
         // ✅ Режим отладки (поставьте true для тестирования)
         DEBUG_MODE: false,
         
@@ -459,6 +462,13 @@ const BOOKS_CONFIG = [
     { id: 6, filename: 'book6.json' }
 ];
 
+// Глобальные переменные для работы читалки
+let allBooks = [];
+let currentBook = null;
+let currentPage = 1;
+let fontSize = 18;
+let isFullscreen = false;
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     // Устанавливаем текущий год в футере
@@ -599,18 +609,18 @@ async function loadAllBooks() {
     }
 }
 
-// Показать список файлов книг
-function showBookList() {
-    const fileList = BOOKS_CONFIG.map(config => config.filename).join('\n');
-    alert(`Файлы книг, которые пытались загрузить:\n\n${fileList}\n\nУбедитесь, что эти файлы находятся в корне проекта.`);
-}
-
-// Повторная попытка загрузки
-function retryLoading() {
+// Функция повторной загрузки
+window.retryLoading = function() {
     const errorMessage = document.getElementById('errorMessage');
     errorMessage.style.display = 'none';
     loadAllBooks();
-}
+};
+
+// Показать список файлов книг
+window.showBookList = function() {
+    const fileList = BOOKS_CONFIG.map(config => config.filename).join('\n');
+    alert(`Файлы книг, которые пытались загрузить:\n\n${fileList}\n\nУбедитесь, что эти файлы находятся в корне проекта.`);
+};
 
 // Загрузка отдельного файла книги
 async function loadBookFile(filename) {
@@ -677,7 +687,7 @@ function renderBooks(books) {
     document.querySelectorAll('.btn-read').forEach(button => {
         button.addEventListener('click', function() {
             const bookId = parseInt(this.getAttribute('data-id'));
-            openBook(bookId);
+            window.openBook(bookId);
         });
     });
     
@@ -690,7 +700,7 @@ function renderBooks(books) {
 }
 
 // Функция открытия книги
-function openBook(bookId) {
+window.openBook = function(bookId) {
     const book = allBooks.find(b => b.id === bookId);
     if (!book || !book.pages || book.pages.length === 0) {
         alert('Ошибка: книга не найдена или повреждена');
@@ -737,64 +747,81 @@ function setupReader() {
     const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
     const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
     const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
-    const readerContent = document.getElementById('readerContent');
     
     // Закрытие читалки
-    closeBtn.addEventListener('click', closeReader);
-    overlay.addEventListener('click', closeReader);
-    exitFullscreenBtn.addEventListener('click', toggleFullscreen);
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeReader);
+    }
+    
+    if (overlay) {
+        overlay.addEventListener('click', closeReader);
+    }
+    
+    if (exitFullscreenBtn) {
+        exitFullscreenBtn.addEventListener('click', toggleFullscreen);
+    }
     
     // Навигация по страницам
-    prevBtn.addEventListener('click', function() {
-        if (currentBook && currentPage > 1) {
-            currentPage--;
-            updateReaderContent();
-        }
-    });
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            if (currentBook && currentPage > 1) {
+                currentPage--;
+                updateReaderContent();
+            }
+        });
+    }
     
-    nextBtn.addEventListener('click', function() {
-        if (currentBook && currentPage < currentBook.pages.length) {
-            currentPage++;
-            updateReaderContent();
-        }
-    });
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            if (currentBook && currentPage < currentBook.pages.length) {
+                currentPage++;
+                updateReaderContent();
+            }
+        });
+    }
     
     // Навигация в полноэкранном режиме
-    fullscreenPrevBtn.addEventListener('click', function() {
-        if (currentBook && currentPage > 1) {
-            currentPage--;
-            updateReaderContent();
-        }
-    });
+    if (fullscreenPrevBtn) {
+        fullscreenPrevBtn.addEventListener('click', function() {
+            if (currentBook && currentPage > 1) {
+                currentPage--;
+                updateReaderContent();
+            }
+        });
+    }
     
-    fullscreenNextBtn.addEventListener('click', function() {
-        if (currentBook && currentPage < currentBook.pages.length) {
-            currentPage++;
-            updateReaderContent();
-        }
-    });
+    if (fullscreenNextBtn) {
+        fullscreenNextBtn.addEventListener('click', function() {
+            if (currentBook && currentPage < currentBook.pages.length) {
+                currentPage++;
+                updateReaderContent();
+            }
+        });
+    }
     
     // Изменение размера шрифта
-    fontPlus.addEventListener('click', function() {
-        fontSize = Math.min(fontSize + 2, 30);
-        readerContent.style.fontSize = fontSize + 'px';
-        const scrollPos = readerContent.scrollTop;
-        readerContent.scrollTop = scrollPos;
-    });
+    if (fontPlus) {
+        fontPlus.addEventListener('click', function() {
+            fontSize = Math.min(fontSize + 2, 30);
+            document.getElementById('readerContent').style.fontSize = fontSize + 'px';
+        });
+    }
     
-    fontMinus.addEventListener('click', function() {
-        fontSize = Math.max(fontSize - 2, 14);
-        readerContent.style.fontSize = fontSize + 'px';
-        const scrollPos = readerContent.scrollTop;
-        readerContent.scrollTop = scrollPos;
-    });
+    if (fontMinus) {
+        fontMinus.addEventListener('click', function() {
+            fontSize = Math.max(fontSize - 2, 14);
+            document.getElementById('readerContent').style.fontSize = fontSize + 'px';
+        });
+    }
     
     // Полноэкранный режим
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+    }
     
     // Горячие клавиши
     document.addEventListener('keydown', function(e) {
-        if (readerWindow.style.display === 'flex') {
+        if (readerWindow && readerWindow.style.display === 'flex') {
             if (e.key === 'Escape') {
                 if (isFullscreen) {
                     toggleFullscreen();
@@ -802,67 +829,102 @@ function setupReader() {
                     closeReader();
                 }
             } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
                 if (currentBook && currentPage > 1) {
                     currentPage--;
                     updateReaderContent();
                 }
             } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+                e.preventDefault();
                 if (currentBook && currentPage < currentBook.pages.length) {
                     currentPage++;
                     updateReaderContent();
                 }
             } else if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
                 toggleFullscreen();
             } else if (e.key === '+') {
+                e.preventDefault();
                 fontSize = Math.min(fontSize + 2, 30);
-                readerContent.style.fontSize = fontSize + 'px';
+                document.getElementById('readerContent').style.fontSize = fontSize + 'px';
             } else if (e.key === '-') {
+                e.preventDefault();
                 fontSize = Math.max(fontSize - 2, 14);
-                readerContent.style.fontSize = fontSize + 'px';
+                document.getElementById('readerContent').style.fontSize = fontSize + 'px';
             }
         }
     });
     
     // Предотвращаем закрытие при клике на саму читалку
-    readerWindow.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
+    if (readerWindow) {
+        readerWindow.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
 }
 
 // Переключение полноэкранного режима
-function toggleFullscreen() {
+window.toggleFullscreen = function() {
     const readerWindow = document.getElementById('readerWindow');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+    const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
+    const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
+    const overlay = document.getElementById('overlay');
+    const readerContent = document.getElementById('readerContent');
+    
+    if (!readerWindow) return;
     
     if (!isFullscreen) {
         // Входим в полноэкранный режим
         readerWindow.classList.add('fullscreen');
-        fullscreenBtn.innerHTML = '⛶';
-        fullscreenBtn.title = 'Обычный режим';
-        exitFullscreenBtn.style.display = 'flex';
-        document.getElementById('fullscreenPrevBtn').style.display = 'flex';
-        document.getElementById('fullscreenNextBtn').style.display = 'flex';
-        document.getElementById('overlay').style.display = 'none';
+        if (fullscreenBtn) {
+            fullscreenBtn.innerHTML = '⛶';
+            fullscreenBtn.title = 'Обычный режим';
+        }
+        if (exitFullscreenBtn) {
+            exitFullscreenBtn.style.display = 'flex';
+        }
+        if (fullscreenPrevBtn) {
+            fullscreenPrevBtn.style.display = 'flex';
+        }
+        if (fullscreenNextBtn) {
+            fullscreenNextBtn.style.display = 'flex';
+        }
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
         isFullscreen = true;
         
-        const readerContent = document.getElementById('readerContent');
-        readerContent.style.paddingLeft = '50px';
-        readerContent.style.paddingRight = '50px';
+        if (readerContent) {
+            readerContent.style.paddingLeft = '50px';
+            readerContent.style.paddingRight = '50px';
+        }
     } else {
         // Выходим из полноэкранного режима
         readerWindow.classList.remove('fullscreen');
-        fullscreenBtn.innerHTML = '⛶';
-        fullscreenBtn.title = 'Полноэкранный режим';
-        exitFullscreenBtn.style.display = 'none';
-        document.getElementById('fullscreenPrevBtn').style.display = 'none';
-        document.getElementById('fullscreenNextBtn').style.display = 'none';
-        document.getElementById('overlay').style.display = 'block';
+        if (fullscreenBtn) {
+            fullscreenBtn.innerHTML = '⛶';
+            fullscreenBtn.title = 'Полноэкранный режим';
+        }
+        if (exitFullscreenBtn) {
+            exitFullscreenBtn.style.display = 'none';
+        }
+        if (fullscreenPrevBtn) {
+            fullscreenPrevBtn.style.display = 'none';
+        }
+        if (fullscreenNextBtn) {
+            fullscreenNextBtn.style.display = 'none';
+        }
+        if (overlay) {
+            overlay.style.display = 'block';
+        }
         isFullscreen = false;
         
-        const readerContent = document.getElementById('readerContent');
-        readerContent.style.paddingLeft = '30px';
-        readerContent.style.paddingRight = '30px';
+        if (readerContent) {
+            readerContent.style.paddingLeft = '30px';
+            readerContent.style.paddingRight = '30px';
+        }
     }
 }
 
@@ -873,28 +935,48 @@ function updateReaderContent() {
     const readerContent = document.getElementById('readerContent');
     const currentPageEl = document.getElementById('currentPage');
     
-    readerContent.innerHTML = currentBook.pages[currentPage - 1];
-    readerContent.style.fontSize = fontSize + 'px';
-    currentPageEl.textContent = currentPage;
+    if (readerContent) {
+        readerContent.innerHTML = currentBook.pages[currentPage - 1];
+        readerContent.style.fontSize = fontSize + 'px';
+    }
+    if (currentPageEl) {
+        currentPageEl.textContent = currentPage;
+    }
     
     // Прокручиваем в начало страницы
-    readerContent.scrollTop = 0;
+    if (readerContent) {
+        readerContent.scrollTop = 0;
+    }
 }
 
 // Закрытие читалки
-function closeReader() {
+window.closeReader = function() {
     if (isFullscreen) {
         toggleFullscreen();
     }
     
-    document.getElementById('readerWindow').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('exitFullscreenBtn').style.display = 'none';
-    document.getElementById('fullscreenPrevBtn').style.display = 'none';
-    document.getElementById('fullscreenNextBtn').style.display = 'none';
+    const readerWindow = document.getElementById('readerWindow');
+    const overlay = document.getElementById('overlay');
+    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+    const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
+    const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
+    
+    if (readerWindow) {
+        readerWindow.style.display = 'none';
+    }
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+    if (exitFullscreenBtn) {
+        exitFullscreenBtn.style.display = 'none';
+    }
+    if (fullscreenPrevBtn) {
+        fullscreenPrevBtn.style.display = 'none';
+    }
+    if (fullscreenNextBtn) {
+        fullscreenNextBtn.style.display = 'none';
+    }
 }
 
 // Экспортируем функции для отладки
 window.loadAllBooks = loadAllBooks;
-window.openBook = openBook;
-window.showBookList = showBookList;
