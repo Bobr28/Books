@@ -9,7 +9,7 @@
     const ANTI_THEFT_CONFIG = {
         // ✅ Разрешенные домены (ОБЯЗАТЕЛЬНО ИЗМЕНИТЕ!)
         ALLOWED_DOMAINS: [
-            'rafsar.vercel.app',    // Ваш домен на Vercel
+            'rafstar.vercel.app',    // Ваш домен на Vercel
             'localhost',               // Локальная разработка
             '127.0.0.1'                // Локальный сервер
         ],
