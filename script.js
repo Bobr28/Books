@@ -1,6 +1,116 @@
-// ========== 🔒 АНТИВОР СИСТЕМА ==========
-// Добавьте этот код в НАЧАЛО вашего script.js
-// =========================================
+// ========== 🚀 ОФЛАЙН-СИНХРОНИЗАЦИЯ (ДОБАВЛЕНО) ==========
+// =======================================================
+
+let offlineReady = false;
+
+// Отображение статуса подключения (визуальный индикатор)
+function updateConnectionStatus() {
+  let statusDiv = document.getElementById('connection-status');
+  
+  if (!statusDiv) {
+    statusDiv = document.createElement('div');
+    statusDiv.id = 'connection-status';
+    statusDiv.style.cssText = `
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: sans-serif;
+      z-index: 1000;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+    `;
+    document.body.appendChild(statusDiv);
+  }
+  
+  if (navigator.onLine) {
+    statusDiv.textContent = '● Онлайн';
+    statusDiv.style.background = 'rgba(46, 125, 50, 0.9)';
+  } else {
+    statusDiv.textContent = '○ Офлайн';
+    statusDiv.style.background = 'rgba(198, 40, 40, 0.9)';
+  }
+}
+
+// Всплывашка (не пуш-уведомление)
+function showToast(message, duration = 3000) {
+  let toast = document.getElementById('dynamic-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'dynamic-toast';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+      font-family: sans-serif;
+    `;
+    document.body.appendChild(toast);
+  }
+  
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+  }, duration);
+}
+
+// Регистрация Service Worker (только если поддерживается)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(registration => {
+      console.log('SW registered');
+      if ('sync' in registration) {
+        registration.sync.register('sync-books').catch(err => {
+          console.log('Sync registration failed:', err);
+        });
+      }
+    })
+    .catch(err => console.log('SW registration failed:', err));
+  
+  // Слушаем сообщения от Service Worker
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data.type === 'BOOKS_UPDATED') {
+      // Обновляем список книг
+      if (typeof loadAllBooks === 'function') {
+        loadAllBooks();
+      }
+      showToast('Новые книги загружены');
+    }
+  });
+}
+
+// Следим за сетью
+window.addEventListener('online', () => {
+  updateConnectionStatus();
+  if (typeof loadAllBooks === 'function') {
+    loadAllBooks();
+  }
+  showToast('Интернет появился, обновляем библиотеку');
+});
+
+window.addEventListener('offline', () => {
+  updateConnectionStatus();
+  showToast('Нет интернета, доступны ранее загруженные книги');
+});
+
+// ========== 🔒 АНТИВОР СИСТЕМА (ВАШ ОРИГИНАЛЬНЫЙ КОД) ==========
+// ============================================================
 
 (function() {
     'use strict';
@@ -452,6 +562,9 @@
 })();
 
 
+// ========== 📚 ОСНОВНАЯ ЛОГИКА БИБЛИОТЕКИ (ВАШ ОРИГИНАЛЬНЫЙ КОД) ==========
+// ==========================================================================
+
 // Конфигурация - пути к файлам книг (прямо в корне)
 const BOOKS_CONFIG = [
     { id: 1, filename: 'book1.json' },
@@ -486,6 +599,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Настраиваем читалку
     setupReader();
+    
+    // Добавляем индикатор сети
+    updateConnectionStatus();
 });
 
 // Настройка переключателя тем
