@@ -16,12 +16,14 @@ body {
 body.light-theme {
     background: linear-gradient(135deg, #fef9f0 0%, #f8f3e8 100%);
     color: #2c3e2f;
+    line-height: 1.6;
 }
 
 /* Темная тема (возвращена как было) */
 body.dark-theme {
     background-color: #1a1a1a;
     color: #e0e0e0;
+    line-height: 1.6;
 }
 
 .container {
@@ -36,6 +38,7 @@ body.dark-theme {
     color: white;
     position: relative;
     overflow: hidden;
+    padding: 25px 0;
 }
 
 .light-theme header::before {
@@ -58,13 +61,17 @@ body.dark-theme {
     background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
     color: #e0e0e0;
     border-bottom: 1px solid #333;
+    padding: 25px 0;
 }
 
 .light-theme h2 {
     color: #8b5a2b;
     position: relative;
     display: inline-block;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
+    font-size: 2rem;
+    margin-bottom: 25px;
+    border-bottom: none;
 }
 
 .light-theme h2::after {
@@ -81,6 +88,10 @@ body.dark-theme {
 
 .dark-theme h2 {
     color: #90caf9;
+    font-size: 2rem;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
 }
 
 header {
@@ -91,11 +102,6 @@ header {
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.light-theme header {
-    padding: 35px 0;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
 h1 {
     font-size: 2.8rem;
     margin-bottom: 10px;
@@ -103,8 +109,7 @@ h1 {
 }
 
 .light-theme h1 {
-    font-size: 3rem;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+    font-size: 2.8rem;
 }
 
 h2 {
@@ -113,13 +118,6 @@ h2 {
     font-size: 2rem;
     padding-bottom: 10px;
     border-bottom: 2px solid #3498db;
-}
-
-.light-theme h2 {
-    border-bottom: none;
-    font-size: 2.2rem;
-    margin-bottom: 30px;
-    padding-bottom: 12px;
 }
 
 /* Контролы тем */
@@ -212,16 +210,16 @@ h2 {
 
 .light-theme .intro {
     background: linear-gradient(135deg, #ffffff, #fffef7);
-    padding: 30px;
-    border-radius: 20px;
-    margin-bottom: 35px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     border: 1px solid rgba(139, 90, 43, 0.1);
 }
 
 .light-theme .intro p {
-    font-size: 1.1rem;
-    line-height: 1.8;
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
 .dark-theme .intro {
@@ -234,11 +232,6 @@ h2 {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 30px;
     margin-top: 30px;
-}
-
-.light-theme .books-grid {
-    gap: 35px;
-    margin-top: 35px;
 }
 
 .book-card {
@@ -254,8 +247,9 @@ h2 {
 
 .light-theme .book-card {
     background: linear-gradient(135deg, #ffffff, #fffef9);
-    border-radius: 16px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     border: 1px solid rgba(139, 90, 43, 0.1);
     position: relative;
     overflow: hidden;
@@ -280,10 +274,6 @@ h2 {
 .book-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
-
-.light-theme .book-card:hover {
-    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
 }
 
 .dark-theme .book-card {
@@ -314,10 +304,10 @@ h2 {
 }
 
 .light-theme .book-cover {
-    height: 240px;
+    height: 220px;
     background: linear-gradient(135deg, #c49a6c, #8b5a2b);
-    border-radius: 12px;
-    margin-bottom: 22px;
+    border-radius: 10px;
+    margin-bottom: 20px;
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.1);
     position: relative;
     overflow: hidden;
@@ -355,10 +345,10 @@ h2 {
 }
 
 .light-theme .book-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     color: #8b5a2b;
-    min-height: 70px;
-    font-weight: 600;
+    min-height: 65px;
+    font-weight: bold;
 }
 
 .dark-theme .book-title {
@@ -373,13 +363,9 @@ h2 {
 }
 
 .light-theme .book-meta {
-    color: #8b7a6b;
-    margin-bottom: 22px;
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    border-top: 1px solid rgba(139, 90, 43, 0.1);
-    padding-top: 15px;
+    color: #7f8c8d;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
 }
 
 .dark-theme .book-meta {
@@ -401,12 +387,6 @@ h2 {
     transition: all 0.3s ease;
     flex: 1;
     font-size: 1rem;
-}
-
-.light-theme .btn {
-    border-radius: 8px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
 }
 
 .btn-read {
@@ -444,18 +424,14 @@ h2 {
 }
 
 .light-theme .btn-details {
-    background: linear-gradient(135deg, #ecf0f1, #e0e4e8);
-    color: #8b5a2b;
-    border: 1px solid rgba(139, 90, 43, 0.2);
+    background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+    color: #2c3e50;
+    border: none;
 }
 
 .btn-details:hover {
     background: linear-gradient(135deg, #bdc3c7, #a1a9b0);
     transform: translateY(-2px);
-}
-
-.light-theme .btn-details:hover {
-    background: linear-gradient(135deg, #e0e4e8, #d4d8de);
 }
 
 .dark-theme .btn-details {
@@ -478,11 +454,11 @@ footer {
 }
 
 .light-theme footer {
-    margin-top: 60px;
-    padding: 30px;
-    color: #8b7a6b;
-    border-top: 1px solid rgba(139, 90, 43, 0.15);
-    background: linear-gradient(135deg, transparent, rgba(139, 90, 43, 0.02));
+    margin-top: 50px;
+    padding: 25px;
+    color: #7f8c8d;
+    border-top: 1px solid #eee;
+    background: none;
 }
 
 .dark-theme footer {
@@ -510,9 +486,9 @@ footer {
 
 .light-theme .reader-window {
     background: linear-gradient(135deg, #fffef7, #ffffff);
-    border-radius: 20px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-    border: 1px solid rgba(139, 90, 43, 0.1);
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    border: none;
 }
 
 /* Полноэкранный режим */
@@ -599,8 +575,8 @@ footer {
 
 .light-theme .reader-header {
     background: linear-gradient(135deg, #8b5a2b, #c49a6c);
-    padding: 20px 30px;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    padding: 18px 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .dark-theme .reader-header {
@@ -620,8 +596,8 @@ footer {
 
 .light-theme .reader-controls {
     background: linear-gradient(135deg, #faf8f5, #f5f2ec);
-    padding: 18px 30px;
-    border-bottom: 1px solid rgba(139, 90, 43, 0.1);
+    padding: 15px 25px;
+    border-bottom: none;
 }
 
 .dark-theme .reader-controls {
@@ -642,7 +618,9 @@ footer {
 }
 
 .light-theme .reader-content {
-    padding: 40px;
+    padding: 30px;
+    font-size: 18px;
+    line-height: 1.8;
     background: linear-gradient(135deg, #fffef7, #ffffff);
 }
 
@@ -650,11 +628,6 @@ footer {
     max-height: 100vh;
     padding-top: 50px;
     padding-bottom: 50px;
-}
-
-.light-theme .reader-window.fullscreen .reader-content {
-    padding-top: 60px;
-    padding-bottom: 60px;
 }
 
 .dark-theme .reader-content {
@@ -677,10 +650,9 @@ footer {
 
 .light-theme .reader-content h3,
 .light-theme .reader-content h4 {
-    color: #8b5a2b;
-    border-bottom: 2px solid rgba(139, 90, 43, 0.2);
-    padding-bottom: 8px;
-    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
 }
 
 .dark-theme .reader-content h3,
@@ -698,7 +670,7 @@ footer {
 }
 
 .light-theme .reader-content .chapter-start {
-    color: #8b5a2b;
+    color: #2c3e50;
 }
 
 .dark-theme .reader-content .chapter-start {
@@ -719,9 +691,10 @@ footer {
 
 .light-theme .close-btn {
     background: linear-gradient(135deg, #e8b87a, #c49a6c);
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
 }
 
 .light-theme .close-btn:hover {
@@ -745,13 +718,15 @@ footer {
     transition: all 0.3s ease;
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
+    font-size: 1rem;
 }
 
 .light-theme .reader-btn {
     background: linear-gradient(135deg, #c49a6c, #8b5a2b);
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
 }
 
 .light-theme .reader-btn:hover {
@@ -781,9 +756,9 @@ footer {
 }
 
 .light-theme .page-indicator {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #8b5a2b;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: inherit;
 }
 
 .font-controls {
@@ -807,9 +782,10 @@ footer {
 }
 
 .light-theme .font-btn {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, #c49a6c, #8b5a2b);
+    font-size: 1.2rem;
 }
 
 .light-theme .font-btn:hover {
@@ -840,9 +816,10 @@ footer {
 }
 
 .light-theme .fullscreen-btn {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, #e8b87a, #c49a6c);
+    font-size: 1.2rem;
 }
 
 .light-theme .fullscreen-btn:hover {
@@ -868,8 +845,8 @@ footer {
 }
 
 .light-theme .overlay {
-    backdrop-filter: blur(5px);
-    background-color: rgba(0,0,0,0.75);
+    backdrop-filter: blur(3px);
+    background-color: rgba(0,0,0,0.7);
 }
 
 /* Скрываем оверлей в полноэкранном режиме */
