@@ -1,0 +1,27 @@
+{
+  "name": "books",
+  "version": "1.0.0",
+  "description": "Electronic library - read books online for free",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bobr28/Books.git"
+  },
+  "keywords": [
+    "books",
+    "library",
+    "reading"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bobr28/Books/issues"
+  },
+  "homepage": "https://github.com/Bobr28/Books#readme",
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
