@@ -1,8 +1,8 @@
 {
-  "name": "Электронная библиотека",
-  "short_name": "Библиотека",
+  "name": "Reading world",
+  "short_name": "Reading world",
   "description": "Читайте книги онлайн и офлайн",
-  "start_url": "/",
+  "start_url": "https://rafstar.vercel.app",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
