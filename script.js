@@ -382,7 +382,7 @@ async function loadBooksList() {
         
         // Загружаем список книг с таймаутом
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
         
         let response;
         try {
