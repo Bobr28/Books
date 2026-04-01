@@ -152,7 +152,7 @@ async function loadFromCache() {
             allBooks = JSON.parse(cachedBooks);
             if (allBooks.length > 0) {
                 renderBooks(allBooks);
-                console.log(`✅ Загружено из кэша: ${allBooks.length} книг`);
+                console.log('Загружено из кэша:', allBooks.length, 'книг');
                 return true;
             }
         }
@@ -174,7 +174,10 @@ async function loadBooksList() {
             response = await fetch('books-list.json');
         } catch (e) {
             if (!cacheLoaded) {
-                BOOKS_CONFIG = Array.from({ length: 7 }, (_, i) => ({ id: i + 1, filename: `book${i + 1}.json` }));
+                BOOKS_CONFIG = [];
+                for (let i = 1; i <= 7; i++) {
+                    BOOKS_CONFIG.push({ id: i, filename: 'book' + i + '.json' });
+                }
                 await loadAllBooks();
             }
             isLoading = false;
@@ -184,10 +187,16 @@ async function loadBooksList() {
         if (response.ok) {
             const bookFiles = await response.json();
             if (Array.isArray(bookFiles) && bookFiles.length > 0) {
-                BOOKS_CONFIG = bookFiles.map((filename, index) => ({ id: index + 1, filename }));
+                BOOKS_CONFIG = [];
+                for (let i = 0; i < bookFiles.length; i++) {
+                    BOOKS_CONFIG.push({ id: i + 1, filename: bookFiles[i] });
+                }
             }
         } else if (!cacheLoaded) {
-            BOOKS_CONFIG = Array.from({ length: 7 }, (_, i) => ({ id: i + 1, filename: `book${i + 1}.json` }));
+            BOOKS_CONFIG = [];
+            for (let i = 1; i <= 7; i++) {
+                BOOKS_CONFIG.push({ id: i, filename: 'book' + i + '.json' });
+            }
         }
         
         await loadAllBooks();
@@ -198,11 +207,7 @@ async function loadBooksList() {
             const errorDiv = document.getElementById('errorMessage');
             if (errorDiv) {
                 errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `
-                    <h3>Ошибка загрузки</h3>
-                    <p>Не удалось загрузить книги. Проверьте подключение.</p>
-                    <button onclick="window.retryLoading()">Повторить</button>
-                `;
+                errorDiv.innerHTML = '<h3>Ошибка загрузки</h3><p>Не удалось загрузить книги. Проверьте подключение.</p><button onclick="window.retryLoading()">Повторить</button>';
             }
         }
     } finally {
@@ -214,35 +219,44 @@ async function loadBooksList() {
 // Параллельная загрузка всех книг
 async function loadAllBooks() {
     try {
-        const promises = BOOKS_CONFIG.map(async (config) => {
-            if (bookCache.has(config.filename)) return bookCache.get(config.filename);
-            
-            try {
-                const response = await fetch(config.filename);
-                if (!response.ok) return null;
+        const promises = [];
+        for (let i = 0; i < BOOKS_CONFIG.length; i++) {
+            const config = BOOKS_CONFIG[i];
+            promises.push((async () => {
+                if (bookCache.has(config.filename)) return bookCache.get(config.filename);
                 
-                const text = await response.text();
-                if (!text || !text.trim()) return null;
-                
-                let bookData;
                 try {
-                    bookData = JSON.parse(text);
-                } catch (e) {
+                    const response = await fetch(config.filename);
+                    if (!response.ok) return null;
+                    
+                    const text = await response.text();
+                    if (!text || !text.trim()) return null;
+                    
+                    let bookData;
+                    try {
+                        bookData = JSON.parse(text);
+                    } catch (e) {
+                        return null;
+                    }
+                    
+                    if (!bookData.title || !bookData.author || !bookData.pages) return null;
+                    
+                    bookData.id = config.id;
+                    bookCache.set(config.filename, bookData);
+                    return bookData;
+                } catch (error) {
                     return null;
                 }
-                
-                if (!bookData.title || !bookData.author || !bookData.pages) return null;
-                
-                bookData.id = config.id;
-                bookCache.set(config.filename, bookData);
-                return bookData;
-            } catch (error) {
-                return null;
-            }
-        });
+            })());
+        }
         
         const results = await Promise.all(promises);
-        const newBooks = results.filter(book => book !== null);
+        const newBooks = [];
+        for (let i = 0; i < results.length; i++) {
+            if (results[i] !== null) {
+                newBooks.push(results[i]);
+            }
+        }
         
         if (newBooks.length > 0) {
             allBooks = newBooks;
@@ -251,7 +265,7 @@ async function loadAllBooks() {
             try {
                 localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
                 localStorage.setItem('cacheTimestamp', Date.now().toString());
-                console.log(`✅ Загружено ${allBooks.length} книг`);
+                console.log('Загружено книг:', allBooks.length);
             } catch (e) {}
         }
     } catch (error) {
@@ -275,37 +289,36 @@ function renderBooks(books) {
     
     const fragment = document.createDocumentFragment();
     
-    books.forEach(book => {
+    for (let i = 0; i < books.length; i++) {
+        const book = books[i];
         const card = document.createElement('div');
         card.className = 'book-card';
-        card.innerHTML = `
-            <div class="book-cover">${escapeHtml(book.cover || book.title)}</div>
-            <div class="book-title">${escapeHtml(book.title)}</div>
-            <div class="book-meta">
-                <p><strong>Автор:</strong> ${escapeHtml(book.author)}</p>
-                <p><strong>Год:</strong> ${escapeHtml(book.year || 'Не указан')}</p>
-                <p><strong>Страниц:</strong> ${book.pages ? book.pages.length : 0}</p>
-            </div>
-            <div class="book-buttons">
-                <button class="btn btn-read" data-id="${book.id}">📖 Читать</button>
-                <button class="btn btn-details" data-id="${book.id}">ℹ️ Подробнее</button>
-            </div>
-        `;
+        card.innerHTML = '<div class="book-cover">' + escapeHtml(book.cover || book.title) + '</div>' +
+            '<div class="book-title">' + escapeHtml(book.title) + '</div>' +
+            '<div class="book-meta">' +
+                '<p><strong>Автор:</strong> ' + escapeHtml(book.author) + '</p>' +
+                '<p><strong>Год:</strong> ' + escapeHtml(book.year || 'Не указан') + '</p>' +
+                '<p><strong>Страниц:</strong> ' + (book.pages ? book.pages.length : 0) + '</p>' +
+            '</div>' +
+            '<div class="book-buttons">' +
+                '<button class="btn btn-read" data-id="' + book.id + '">📖 Читать</button>' +
+                '<button class="btn btn-details" data-id="' + book.id + '">ℹ️ Подробнее</button>' +
+            '</div>';
         fragment.appendChild(card);
-    });
+    }
     
     booksGrid.innerHTML = '';
     booksGrid.appendChild(fragment);
     
-    booksGrid.addEventListener('click', (e) => {
+    booksGrid.addEventListener('click', function(e) {
         const readBtn = e.target.closest('.btn-read');
         const detailsBtn = e.target.closest('.btn-details');
         
         if (readBtn) {
-            const bookId = parseInt(readBtn.dataset.id);
+            const bookId = parseInt(readBtn.getAttribute('data-id'));
             openBook(bookId);
         } else if (detailsBtn) {
-            const bookId = parseInt(detailsBtn.dataset.id);
+            const bookId = parseInt(detailsBtn.getAttribute('data-id'));
             showBookDetails(bookId);
         }
     });
@@ -313,12 +326,17 @@ function renderBooks(books) {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
+    return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
 window.openBook = function(bookId) {
-    const book = allBooks.find(b => b.id === bookId);
-    if (!book || !book.pages?.length) {
+    const book = allBooks.find(function(b) { return b.id === bookId; });
+    if (!book || !book.pages || !book.pages.length) {
         alert('Ошибка: книга не найдена');
         return;
     }
@@ -347,21 +365,27 @@ window.openBook = function(bookId) {
 };
 
 function showBookDetails(bookId) {
-    const book = allBooks.find(b => b.id === bookId);
+    const book = allBooks.find(function(b) { return b.id === bookId; });
     if (!book) return;
-    const preview = book.pages?.[0]?.replace(/<[^>]*>/g, '').substring(0, 150) || '';
-    alert(`${book.title}\n\nАвтор: ${book.author}\nГод: ${book.year || 'Не указан'}\nСтраниц: ${book.pages?.length || 0}\n\n${preview}...`);
+    let preview = '';
+    if (book.pages && book.pages[0]) {
+        preview = book.pages[0].replace(/<[^>]*>/g, '').substring(0, 150);
+    }
+    alert(book.title + '\n\nАвтор: ' + book.author + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
 }
 
 function setupThemeSwitcher() {
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const theme = btn.id.replace('theme-', '');
+    const themeBtns = document.querySelectorAll('.theme-btn');
+    for (let i = 0; i < themeBtns.length; i++) {
+        themeBtns[i].addEventListener('click', function() {
+            const theme = this.id.replace('theme-', '');
             switchTheme(theme);
-            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            for (let j = 0; j < themeBtns.length; j++) {
+                themeBtns[j].classList.remove('active');
+            }
+            this.classList.add('active');
         });
-    });
+    }
 }
 
 function switchTheme(themeName) {
@@ -373,7 +397,7 @@ function switchTheme(themeName) {
 function loadSavedTheme() {
     const savedTheme = localStorage.getItem('selectedTheme') || 'light';
     switchTheme(savedTheme);
-    const btn = document.getElementById(`theme-${savedTheme}`);
+    const btn = document.getElementById('theme-' + savedTheme);
     if (btn) btn.classList.add('active');
 }
 
@@ -393,24 +417,98 @@ function setupReader() {
     if (overlay) overlay.onclick = closeReader;
     if (exitFullscreenBtn) exitFullscreenBtn.onclick = toggleFullscreen;
     
-    if (prevBtn) prevBtn.onclick = () => { if (currentBook && currentPage > 1) { currentPage--; updateReader(); saveReadingProgress(currentBook.id, currentPage); } };
-    if (nextBtn) nextBtn.onclick = () => { if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReader(); saveReadingProgress(currentBook.id, currentPage); } };
-    if (fullscreenPrevBtn) fullscreenPrevBtn.onclick = () => { if (currentBook && currentPage > 1) { currentPage--; updateReader(); saveReadingProgress(currentBook.id, currentPage); } };
-    if (fullscreenNextBtn) fullscreenNextBtn.onclick = () => { if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReader(); saveReadingProgress(currentBook.id, currentPage); } };
+    if (prevBtn) {
+        prevBtn.onclick = function() {
+            if (currentBook && currentPage > 1) {
+                currentPage--;
+                updateReader();
+                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
+            }
+        };
+    }
     
-    if (fontPlus) fontPlus.onclick = () => { fontSize = Math.min(fontSize + 2, 30); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; };
-    if (fontMinus) fontMinus.onclick = () => { fontSize = Math.max(fontSize - 2, 14); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; };
+    if (nextBtn) {
+        nextBtn.onclick = function() {
+            if (currentBook && currentPage < currentBook.pages.length) {
+                currentPage++;
+                updateReader();
+                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
+            }
+        };
+    }
+    
+    if (fullscreenPrevBtn) {
+        fullscreenPrevBtn.onclick = function() {
+            if (currentBook && currentPage > 1) {
+                currentPage--;
+                updateReader();
+                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
+            }
+        };
+    }
+    
+    if (fullscreenNextBtn) {
+        fullscreenNextBtn.onclick = function() {
+            if (currentBook && currentPage < currentBook.pages.length) {
+                currentPage++;
+                updateReader();
+                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
+            }
+        };
+    }
+    
+    if (fontPlus) {
+        fontPlus.onclick = function() {
+            fontSize = Math.min(fontSize + 2, 30);
+            const rc = document.getElementById('readerContent');
+            if (rc) rc.style.fontSize = fontSize + 'px';
+        };
+    }
+    
+    if (fontMinus) {
+        fontMinus.onclick = function() {
+            fontSize = Math.max(fontSize - 2, 14);
+            const rc = document.getElementById('readerContent');
+            if (rc) rc.style.fontSize = fontSize + 'px';
+        };
+    }
+    
     if (fullscreenBtn) fullscreenBtn.onclick = toggleFullscreen;
     
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', function(e) {
         const readerWindow = document.getElementById('readerWindow');
-        if (readerWindow?.style.display !== 'flex') return;
-        if (e.key === 'Escape') { if (isFullscreen) toggleFullscreen(); else closeReader(); }
-        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); if (currentBook && currentPage > 1) { currentPage--; updateReader(); saveReadingProgress(currentBook.id, currentPage); } }
-        else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReader(); saveReadingProgress(currentBook.id, currentPage); } }
-        else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
-        else if (e.key === '+') { e.preventDefault(); fontSize = Math.min(fontSize + 2, 30); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; }
-        else if (e.key === '-') { e.preventDefault(); fontSize = Math.max(fontSize - 2, 14); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; }
+        if (readerWindow && readerWindow.style.display !== 'flex') return;
+        if (e.key === 'Escape') {
+            if (isFullscreen) toggleFullscreen();
+            else closeReader();
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            if (currentBook && currentPage > 1) {
+                currentPage--;
+                updateReader();
+                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
+            }
+        } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+            e.preventDefault();
+            if (currentBook && currentPage < currentBook.pages.length) {
+                currentPage++;
+                updateReader();
+                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
+            }
+        } else if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            toggleFullscreen();
+        } else if (e.key === '+') {
+            e.preventDefault();
+            fontSize = Math.min(fontSize + 2, 30);
+            const rc = document.getElementById('readerContent');
+            if (rc) rc.style.fontSize = fontSize + 'px';
+        } else if (e.key === '-') {
+            e.preventDefault();
+            fontSize = Math.max(fontSize - 2, 14);
+            const rc = document.getElementById('readerContent');
+            if (rc) rc.style.fontSize = fontSize + 'px';
+        }
     });
 }
 
@@ -432,7 +530,10 @@ window.toggleFullscreen = function() {
         if (fn) fn.style.display = 'flex';
         if (ov) ov.style.display = 'none';
         isFullscreen = true;
-        if (rc) { rc.style.paddingLeft = '50px'; rc.style.paddingRight = '50px'; }
+        if (rc) {
+            rc.style.paddingLeft = '50px';
+            rc.style.paddingRight = '50px';
+        }
     } else {
         rw.classList.remove('fullscreen');
         if (fb) fb.innerHTML = '⛶';
@@ -441,7 +542,10 @@ window.toggleFullscreen = function() {
         if (fn) fn.style.display = 'none';
         if (ov) ov.style.display = 'block';
         isFullscreen = false;
-        if (rc) { rc.style.paddingLeft = '30px'; rc.style.paddingRight = '30px'; }
+        if (rc) {
+            rc.style.paddingLeft = '30px';
+            rc.style.paddingRight = '30px';
+        }
     }
 };
 
@@ -449,12 +553,16 @@ function updateReader() {
     if (!currentBook) return;
     const rc = document.getElementById('readerContent');
     const cp = document.getElementById('currentPage');
-    if (rc) { rc.innerHTML = currentBook.pages[currentPage - 1]; rc.style.fontSize = fontSize + 'px'; rc.scrollTop = 0; }
+    if (rc) {
+        rc.innerHTML = currentBook.pages[currentPage - 1];
+        rc.style.fontSize = fontSize + 'px';
+        rc.scrollTop = 0;
+    }
     if (cp) cp.textContent = currentPage;
 }
 
 window.closeReader = function() {
-    if (currentBook?.id) saveReadingProgress(currentBook.id, currentPage);
+    if (currentBook && currentBook.id) saveReadingProgress(currentBook.id, currentPage);
     if (isFullscreen) toggleFullscreen();
     const rw = document.getElementById('readerWindow');
     const ov = document.getElementById('overlay');
@@ -469,29 +577,3 @@ window.closeReader = function() {
 };
 
 window.loadAllBooks = loadAllBooks;
-
-// ========== ПОЛНОСТЬЮ УНИЧТОЖАЕМ ВСЕ ТОСТЫ ==========
-// Удаляем функцию showToast если она была
-window.showToast = function() {};
-
-// Удаляем существующие тосты
-const toastElements = document.querySelectorAll('#dynamic-toast, .toast, [class*="toast"]');
-toastElements.forEach(el => {
-    if (el && el.parentNode) el.parentNode.removeChild(el);
-});
-
-// Следим за новыми элементами
-const toastObserver = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-        mutation.addedNodes.forEach(function(node) {
-            if (node.nodeType === 1) {
-                if (node.id === 'dynamic-toast' || 
-                    (node.className && node.className.includes && node.className.includes('toast'))) {
-                    if (node.parentNode) node.parentNode.removeChild(node);
-                }
-            }
-        });
-    });
-});
-
-toastObserver.observe(document.body, { childList: true, subtree: true });
