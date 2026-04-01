@@ -88,39 +88,5 @@
             margin: 0 auto 20px;
         }
     </style>
-<script>
-// Полностью удаляем функцию showToast и все уведомления
-window.showToast = function() {};
-window.toast = function() {};
-
-// Удаляем все существующие тосты
-setInterval(function() {
-    var toasts = document.querySelectorAll('#dynamic-toast, [class*="toast"], [class*="notification"]');
-    toasts.forEach(function(toast) {
-        if (toast && toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-        }
-    });
-    
-    // Удаляем любые элементы с текстом "Загрузка книг"
-    var elements = document.querySelectorAll('*');
-    for (var i = 0; i < elements.length; i++) {
-        if (elements[i].innerHTML && elements[i].innerHTML.includes('📚') && elements[i].innerHTML.includes('Загрузка книг')) {
-            if (elements[i].parentNode) {
-                elements[i].parentNode.removeChild(elements[i]);
-            }
-        }
-    }
-}, 100);
-
-// Перехватываем создание новых элементов
-var originalAppendChild = Node.prototype.appendChild;
-Node.prototype.appendChild = function(child) {
-    if (child && child.innerHTML && child.innerHTML.includes('📚') && child.innerHTML.includes('Загрузка книг')) {
-        return null; // Не добавляем такой элемент
-    }
-    return originalAppendChild.call(this, child);
-};
-</script>
 </body>
 </html>
