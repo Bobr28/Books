@@ -146,3 +146,4 @@ if ('serviceWorker' in navigator) {
     window.location.reload(); // Принудительно обновляем страницу
   });
 }
+ }
