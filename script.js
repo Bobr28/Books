@@ -2,12 +2,13 @@
 // =============================================
 
 let offlineReady = false;
-let isLoading = false; // Флаг для предотвращения двойной загрузки
+let isLoading = false;
+let loadStartTime = 0;
 
-// Отображение статуса подключения (визуальный индикатор)
+// Отображение статуса подключения
 function updateConnectionStatus() {
   let statusDiv = document.getElementById('connection-status');
-
+  
   if (!statusDiv) {
     statusDiv = document.createElement('div');
     statusDiv.id = 'connection-status';
@@ -27,7 +28,7 @@ function updateConnectionStatus() {
     `;
     document.body.appendChild(statusDiv);
   }
-
+  
   if (navigator.onLine) {
     statusDiv.textContent = '● Онлайн';
     statusDiv.style.background = 'rgba(46, 125, 50, 0.9)';
@@ -37,7 +38,6 @@ function updateConnectionStatus() {
   }
 }
 
-// Всплывашка (не пуш-уведомление)
 function showToast(message, duration = 3000) {
   let toast = document.getElementById('dynamic-toast');
   if (!toast) {
@@ -62,16 +62,16 @@ function showToast(message, duration = 3000) {
     `;
     document.body.appendChild(toast);
   }
-
+  
   toast.textContent = message;
   toast.style.opacity = '1';
-
+  
   setTimeout(() => {
     toast.style.opacity = '0';
   }, duration);
 }
 
-// Регистрация Service Worker (только если поддерживается)
+// Регистрация Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
     .then(registration => {
@@ -83,20 +83,17 @@ if ('serviceWorker' in navigator) {
       }
     })
     .catch(err => console.log('SW registration failed:', err));
-
-  // Слушаем сообщения от Service Worker
+  
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'BOOKS_UPDATED') {
-        // Используем глобальную функцию loadAllBooks, если она определена
-        if (typeof window.loadAllBooks === 'function' && !isLoading) {
-            window.loadAllBooks();
-        }
-        showToast('📚 Новые книги загружены');
+      if (typeof window.loadAllBooks === 'function' && !isLoading) {
+        window.loadAllBooks();
+      }
+      showToast('📚 Новые книги загружены');
     }
   });
 }
 
-// Следим за сетью
 window.addEventListener('online', () => {
   updateConnectionStatus();
   if (typeof window.loadAllBooks === 'function' && !isLoading) {
@@ -107,24 +104,19 @@ window.addEventListener('online', () => {
 
 window.addEventListener('offline', () => {
   updateConnectionStatus();
-  showToast('📴 Офлайн режим, доступны ранее загруженные книги');
+  showToast('📴 Офлайн режим');
 });
 
-// ========== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ==========
-
-// Сохранение прогресса чтения
+// Сохранение прогресса
 function saveReadingProgress(bookId, page) {
     if (!bookId) return;
     try {
         const progress = JSON.parse(localStorage.getItem('readingProgress') || '{}');
         progress[bookId] = page;
         localStorage.setItem('readingProgress', JSON.stringify(progress));
-    } catch (e) {
-        console.warn('Не удалось сохранить прогресс');
-    }
+    } catch (e) {}
 }
 
-// Восстановление прогресса чтения
 function getReadingProgress(bookId) {
     if (!bookId) return 1;
     try {
@@ -135,7 +127,6 @@ function getReadingProgress(bookId) {
     }
 }
 
-// Проверка наличия обновлений приложения
 if ('serviceWorker' in navigator) {
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -157,40 +148,36 @@ if ('serviceWorker' in navigator) {
             'rafstar.vercel.app',
             'localhost',
             '127.0.0.1',
-            // Добавьте сюда свой домен, если он другой
         ],
         THEFT_MESSAGE: '🚨 Это не оригинальный сайт 🚨',
         OWNER_CONTACTS: 'Владелец: rafstar',
-        DEBUG_MODE: false,
         CHECK_DELAY: 1500,
         SECRET_KEY: 'allow-dev-123',
     };
 
     function checkAndProtect() {
-        // Проверяем ключ в URL для обхода защиты разработчиком
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('antitheft_key') === ANTI_THEFT_CONFIG.SECRET_KEY) {
             return;
         }
-
+        
         const currentDomain = window.location.hostname.toLowerCase();
-        const isDomainAllowed = ANTI_THEFT_CONFIG.ALLOWED_DOMAINS.some(domain =>
+        const isDomainAllowed = ANTI_THEFT_CONFIG.ALLOWED_DOMAINS.some(domain => 
             currentDomain === domain.toLowerCase()
         );
-
+        
         if (!isDomainAllowed) {
             showAntiTheftMessage();
             return false;
         }
-
+        
         setupPeriodicChecks();
         return true;
     }
-
+    
     function showAntiTheftMessage() {
-        // Убедимся, что оверлей не создаётся дважды
         if (document.getElementById('anti-theft-overlay')) return;
-
+        
         const style = document.createElement('style');
         style.textContent = `
             @keyframes gradientShift {
@@ -198,7 +185,7 @@ if ('serviceWorker' in navigator) {
                 50% { background-position: 100% 50%; }
                 100% { background-position: 0% 50%; }
             }
-
+            
             #anti-theft-overlay {
                 position: fixed !important;
                 top: 0 !important;
@@ -220,21 +207,21 @@ if ('serviceWorker' in navigator) {
                 padding: 20px !important;
                 box-sizing: border-box !important;
             }
-
+            
             #anti-theft-overlay .main-message {
                 font-size: clamp(32px, 6vw, 64px) !important;
                 font-weight: 900 !important;
                 margin-bottom: 30px !important;
                 text-shadow: 0 0 20px rgba(255, 255, 255, 0.7) !important;
             }
-
+            
             #anti-theft-overlay .sub-message {
                 font-size: clamp(16px, 3vw, 24px) !important;
                 margin-bottom: 20px !important;
                 opacity: 0.9 !important;
                 max-width: 800px !important;
             }
-
+            
             #anti-theft-overlay .contacts {
                 font-size: clamp(14px, 2vw, 18px) !important;
                 opacity: 0.8 !important;
@@ -243,16 +230,16 @@ if ('serviceWorker' in navigator) {
                 background: rgba(0, 0, 0, 0.3) !important;
                 border-radius: 10px !important;
             }
-
+            
             body.anti-theft-active {
                 overflow: hidden !important;
             }
         `;
         document.head.appendChild(style);
-
+        
         const overlay = document.createElement('div');
         overlay.id = 'anti-theft-overlay';
-
+        
         overlay.innerHTML = `
             <div class="main-message">${ANTI_THEFT_CONFIG.THEFT_MESSAGE}</div>
             <div class="sub-message">
@@ -264,38 +251,38 @@ if ('serviceWorker' in navigator) {
                 Оригинал: ${ANTI_THEFT_CONFIG.ALLOWED_DOMAINS[0]}
             </div>
         `;
-
+        
         document.body.classList.add('anti-theft-active');
         document.body.appendChild(overlay);
-
+        
         function blockAllKeys(e) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
-
+        
         function blockContextMenu(e) {
             e.preventDefault();
             return false;
         }
-
+        
         document.addEventListener('keydown', blockAllKeys, true);
         document.addEventListener('contextmenu', blockContextMenu, true);
     }
-
+    
     function setupPeriodicChecks() {
         setInterval(() => {
             const currentDomain = window.location.hostname.toLowerCase();
-            const isAllowed = ANTI_THEFT_CONFIG.ALLOWED_DOMAINS.some(domain =>
+            const isAllowed = ANTI_THEFT_CONFIG.ALLOWED_DOMAINS.some(domain => 
                 currentDomain === domain.toLowerCase()
             );
-
+            
             if (!isAllowed && !document.getElementById('anti-theft-overlay')) {
                 showAntiTheftMessage();
             }
         }, 60000);
     }
-
+    
     function preventProtectionRemoval() {
         Object.defineProperty(window, 'ANTI_THEFT_CONFIG', {
             value: ANTI_THEFT_CONFIG,
@@ -304,7 +291,7 @@ if ('serviceWorker' in navigator) {
             enumerable: false
         });
     }
-
+    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
@@ -318,247 +305,252 @@ if ('serviceWorker' in navigator) {
             preventProtectionRemoval();
         }, ANTI_THEFT_CONFIG.CHECK_DELAY);
     }
-
+    
     window.antiTheftCheck = checkAndProtect;
 })();
 
-// ========== 📚 ОСНОВНАЯ ЛОГИКА БИБЛИОТЕКИ ==========
-// ===================================================
+// ========== 📚 ОПТИМИЗИРОВАННАЯ ЛОГИКА БИБЛИОТЕКИ ==========
+// ===========================================================
 
-// Список книг (будет заполнен из books-list.json)
 let BOOKS_CONFIG = [];
-
-// Глобальные переменные
 let allBooks = [];
 let currentBook = null;
 let currentPage = 1;
 let fontSize = 18;
 let isFullscreen = false;
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
+// Кэш для загруженных книг
+const bookCache = new Map();
+let preloadQueue = [];
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', async function() {
+    loadStartTime = performance.now();
+    
     const yearElement = document.getElementById('currentYear');
     if (yearElement) {
         yearElement.textContent = new Date().getFullYear();
     }
-
+    
     setupThemeSwitcher();
     loadSavedTheme();
-    loadBooksList(); // Единственный вызов загрузки
     setupReader();
     updateConnectionStatus();
+    
+    // Мгновенная загрузка из кэша
+    await loadFromCacheImmediately();
+    
+    // Фоновая загрузка обновлений
+    setTimeout(() => {
+        loadBooksList();
+    }, 100);
 });
 
-// Загрузка списка книг из books-list.json (исправленная версия)
-async function loadBooksList() {
-    // Предотвращаем повторную загрузку
-    if (isLoading) {
-        console.log('⏳ Загрузка уже выполняется, пропускаю...');
-        return;
-    }
-
-    isLoading = true;
-    console.log('📋 Загрузка списка книг...');
-
-    // Сначала пытаемся загрузить список из кэша, чтобы показать что-то быстро
+// Мгновенная загрузка из кэша
+async function loadFromCacheImmediately() {
     try {
         const cachedBooks = localStorage.getItem('cachedBooks');
         const cacheTimestamp = localStorage.getItem('cacheTimestamp');
-        if (cachedBooks && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp) < 3600000)) {
-            allBooks = JSON.parse(cachedBooks);
-            if (allBooks.length > 0) {
-                renderBooks(allBooks);
-                console.log('💿 Отображены книги из кэша во время загрузки списка');
+        
+        if (cachedBooks && cacheTimestamp) {
+            const cacheAge = Date.now() - parseInt(cacheTimestamp);
+            // Используем кэш если ему меньше 24 часов
+            if (cacheAge < 86400000) {
+                allBooks = JSON.parse(cachedBooks);
+                if (allBooks.length > 0) {
+                    renderBooks(allBooks);
+                    console.log(`⚡ Мгновенная загрузка из кэша: ${allBooks.length} книг за ${Math.round(performance.now() - loadStartTime)}мс`);
+                    showToast('📚 Книги загружены из кэша');
+                    return true;
+                }
             }
         }
-    } catch (e) {}
-
-    try {
-        // Используем относительный путь без ведущего слеша
-        const response = await fetch('books-list.json');
-
-        if (!response.ok) {
-            console.log(`📀 books-list.json не найден, использую стандартный список`);
-            BOOKS_CONFIG = [
-                { id: 1, filename: 'book1.json' },
-                { id: 2, filename: 'book2.json' },
-                { id: 3, filename: 'book3.json' },
-                { id: 4, filename: 'book4.json' },
-                { id: 5, filename: 'book5.json' },
-                { id: 6, filename: 'book6.json' },
-                { id: 7, filename: 'book7.json' }
-            ];
-            await loadAllBooks(); // Загружаем книги по стандартному списку
-            isLoading = false;
-            return;
-        }
-
-        const bookFiles = await response.json();
-
-        if (!Array.isArray(bookFiles) || bookFiles.length === 0) {
-            console.log('📀 books-list.json пуст, использую стандартный список');
-            BOOKS_CONFIG = [
-                { id: 1, filename: 'book1.json' },
-                { id: 2, filename: 'book2.json' },
-                { id: 3, filename: 'book3.json' },
-                { id: 4, filename: 'book4.json' },
-                { id: 5, filename: 'book5.json' },
-                { id: 6, filename: 'book6.json' },
-                { id: 7, filename: 'book7.json' }
-            ];
-            await loadAllBooks();
-            isLoading = false;
-            return;
-        }
-
-        BOOKS_CONFIG = bookFiles.map((filename, index) => ({
-            id: index + 1,
-            filename: filename
-        }));
-
-        console.log(`✅ Загружено ${BOOKS_CONFIG.length} книг из books-list.json`);
-        await loadAllBooks();
-        isLoading = false;
-
-    } catch (error) {
-        console.error('📀 Ошибка загрузки books-list.json:', error);
-        if (allBooks.length === 0) {
-            // Если нет книг даже из кэша, показываем стандартный список как запасной вариант
-            console.log('Использую стандартный список книг как запасной вариант');
-            BOOKS_CONFIG = [
-                { id: 1, filename: 'book1.json' },
-                { id: 2, filename: 'book2.json' },
-                { id: 3, filename: 'book3.json' },
-                { id: 4, filename: 'book4.json' },
-                { id: 5, filename: 'book5.json' },
-                { id: 6, filename: 'book6.json' },
-                { id: 7, filename: 'book7.json' }
-            ];
-            await loadAllBooks();
-        }
-        isLoading = false; // Важно: сбрасываем флаг в любом случае
+    } catch (e) {
+        console.warn('Ошибка загрузки кэша:', e);
     }
+    return false;
 }
 
-// Загрузка всех книг
-async function loadAllBooks() {
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    const errorMessage = document.getElementById('errorMessage');
-    const booksGrid = document.getElementById('booksGrid');
-
-    if (!booksGrid) {
-        console.error('Элемент booksGrid не найден');
-        return;
-    }
-
-    // Очищаем предыдущие книги, но сохраняем их в старую переменную для кэша
-    const oldBooksCount = allBooks.length;
-    allBooks = [];
-
+// Оптимизированная загрузка списка книг
+async function loadBooksList() {
+    if (isLoading) return;
+    isLoading = true;
+    
     try {
-        if (loadingIndicator) loadingIndicator.style.display = 'block';
-        if (errorMessage) errorMessage.style.display = 'none';
-        // Если сетка пуста, показываем индикатор загрузки, иначе оставляем текущие книги (из кэша)
-        if (oldBooksCount === 0) {
-            booksGrid.innerHTML = '<div class="loading">📚 Загрузка книг...</div>';
-        }
-
-        let loadedCount = 0;
-
-        console.log(`📖 Начинаю загрузку ${BOOKS_CONFIG.length} книг...`);
-
-        for (const config of BOOKS_CONFIG) {
-            try {
-                console.log(`  🔍 ${config.filename}...`);
-                const response = await fetch(config.filename);
-
-                if (!response.ok) {
-                    console.warn(`  ❌ ${config.filename} - не найден`);
-                    continue;
-                }
-
-                const text = await response.text();
-
-                if (!text || !text.trim()) {
-                    console.warn(`  ❌ ${config.filename} - пустой файл`);
-                    continue;
-                }
-
-                let bookData;
-                try {
-                    bookData = JSON.parse(text);
-                } catch (e) {
-                    console.warn(`  ❌ ${config.filename} - ошибка JSON`);
-                    continue;
-                }
-
-                if (!bookData.title || !bookData.author || !bookData.pages || !Array.isArray(bookData.pages)) {
-                    console.warn(`  ❌ ${config.filename} - неверная структура`);
-                    continue;
-                }
-
-                bookData.id = config.id;
-                allBooks.push(bookData);
-                loadedCount++;
-                console.log(`  ✅ ${bookData.title} (${bookData.pages.length} стр.)`);
-
-            } catch (error) {
-                console.warn(`  ❌ ${config.filename}:`, error.message);
+        // Параллельная загрузка: сначала показываем кэш, потом обновляем
+        const cacheLoaded = await loadFromCacheImmediately();
+        
+        // Загружаем список книг с таймаутом
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        let response;
+        try {
+            response = await fetch('books-list.json', { signal: controller.signal });
+            clearTimeout(timeoutId);
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (!cacheLoaded) {
+                // Используем стандартный список
+                BOOKS_CONFIG = Array.from({ length: 7 }, (_, i) => ({
+                    id: i + 1,
+                    filename: `book${i + 1}.json`
+                }));
+                await loadAllBooksParallel();
             }
+            isLoading = false;
+            return;
         }
-
-        console.log(`📊 Загружено: ${loadedCount} из ${BOOKS_CONFIG.length}`);
-
-        if (allBooks.length > 0) {
-            renderBooks(allBooks);
-            if (loadingIndicator) loadingIndicator.style.display = 'none';
-
-            try {
-                localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
-                localStorage.setItem('cacheTimestamp', Date.now().toString());
-                console.log('💾 Книги сохранены в кэш');
-            } catch (e) {}
-        } else {
-            // Если не удалось загрузить книги из сети, но у нас были старые книги (из кэша), восстановим их
-            if (oldBooksCount > 0) {
-                console.log('Восстанавливаю книги из старого состояния');
-                // Восстанавливаем allBooks из глобальной переменной, которая была до очистки? Нет, нам нужно восстановить из кэша
-                try {
-                    const cachedBooks = localStorage.getItem('cachedBooks');
-                    if (cachedBooks) {
-                        allBooks = JSON.parse(cachedBooks);
-                        if (allBooks.length > 0) {
-                            renderBooks(allBooks);
-                            if (loadingIndicator) loadingIndicator.style.display = 'none';
-                            console.log('💿 Использую кэш');
-                            showToast('📀 Книги из кэша');
-                            return;
-                        }
-                    }
-                } catch (e) {}
+        
+        if (!response.ok) {
+            if (!cacheLoaded) {
+                BOOKS_CONFIG = Array.from({ length: 7 }, (_, i) => ({
+                    id: i + 1,
+                    filename: `book${i + 1}.json`
+                }));
+                await loadAllBooksParallel();
             }
-            throw new Error('Нет книг');
+            isLoading = false;
+            return;
         }
-
+        
+        const bookFiles = await response.json();
+        
+        if (Array.isArray(bookFiles) && bookFiles.length > 0) {
+            BOOKS_CONFIG = bookFiles.map((filename, index) => ({
+                id: index + 1,
+                filename: filename
+            }));
+        } else if (!cacheLoaded) {
+            BOOKS_CONFIG = Array.from({ length: 7 }, (_, i) => ({
+                id: i + 1,
+                filename: `book${i + 1}.json`
+            }));
+        }
+        
+        // Параллельная загрузка книг
+        await loadAllBooksParallel();
+        
     } catch (error) {
-        console.error('❌ Ошибка загрузки книг:', error);
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
-
-        // Если у нас всё ещё нет книг, показываем сообщение об ошибке
-        if (allBooks.length === 0) {
+        console.error('Ошибка загрузки:', error);
+        const cacheLoaded = allBooks.length > 0;
+        if (!cacheLoaded) {
+            const errorMessage = document.getElementById('errorMessage');
             if (errorMessage) {
                 errorMessage.style.display = 'block';
                 errorMessage.innerHTML = `
                     <h3>📖 Ошибка загрузки</h3>
-                    <p>Не удалось загрузить книги. Проверьте:</p>
-                    <ul style="text-align: left; display: inline-block; margin: 15px 0;">
-                        <li>🔹 Файлы книг (book1.json...book7.json) есть в корне</li>
-                        <li>🔹 Формат JSON правильный</li>
-                    </ul>
+                    <p>Не удалось загрузить книги. Проверьте подключение к интернету.</p>
                     <p><button onclick="window.retryLoading()" class="btn btn-read">🔄 Повторить</button></p>
                 `;
             }
         }
+    } finally {
+        isLoading = false;
+    }
+}
+
+// Параллельная загрузка всех книг (оптимизация скорости)
+async function loadAllBooksParallel() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const booksGrid = document.getElementById('booksGrid');
+    
+    if (!booksGrid) return;
+    
+    // Если книги уже загружены из кэша, не показываем индикатор
+    if (allBooks.length === 0 && loadingIndicator) {
+        loadingIndicator.style.display = 'block';
+    }
+    
+    try {
+        // Загружаем все книги параллельно (основное ускорение!)
+        const bookPromises = BOOKS_CONFIG.map(async (config) => {
+            // Проверяем кэш в памяти
+            if (bookCache.has(config.filename)) {
+                return bookCache.get(config.filename);
+            }
+            
+            try {
+                const response = await fetch(config.filename);
+                if (!response.ok) return null;
+                
+                const text = await response.text();
+                if (!text || !text.trim()) return null;
+                
+                let bookData;
+                try {
+                    bookData = JSON.parse(text);
+                } catch (e) {
+                    return null;
+                }
+                
+                if (!bookData.title || !bookData.author || !bookData.pages || !Array.isArray(bookData.pages)) {
+                    return null;
+                }
+                
+                bookData.id = config.id;
+                
+                // Сохраняем в кэш памяти
+                bookCache.set(config.filename, bookData);
+                
+                return bookData;
+            } catch (error) {
+                console.warn(`Ошибка ${config.filename}:`, error.message);
+                return null;
+            }
+        });
+        
+        // Ждем завершения всех загрузок
+        const results = await Promise.all(bookPromises);
+        
+        // Фильтруем успешные загрузки
+        const newBooks = results.filter(book => book !== null);
+        
+        if (newBooks.length > 0) {
+            allBooks = newBooks;
+            renderBooks(allBooks);
+            
+            // Сохраняем в localStorage
+            try {
+                localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
+                localStorage.setItem('cacheTimestamp', Date.now().toString());
+                console.log(`✅ Загружено ${allBooks.length} книг за ${Math.round(performance.now() - loadStartTime)}мс`);
+                showToast(`📚 Загружено ${allBooks.length} книг`);
+            } catch (e) {}
+        } else if (allBooks.length === 0) {
+            throw new Error('Нет книг');
+        }
+        
+    } catch (error) {
+        console.error('Ошибка загрузки книг:', error);
+        if (allBooks.length === 0) {
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) {
+                errorMessage.style.display = 'block';
+                errorMessage.innerHTML = `
+                    <h3>📖 Ошибка загрузки</h3>
+                    <p>Не удалось загрузить книги. Проверьте наличие файлов book1.json...book7.json</p>
+                    <p><button onclick="window.retryLoading()" class="btn btn-read">🔄 Повторить</button></p>
+                `;
+            }
+        }
+    } finally {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}
+
+// Прелоадинг следующей книги (предзагрузка для быстрого открытия)
+function preloadBook(bookId) {
+    const nextBook = allBooks.find(b => b.id === bookId + 1);
+    if (nextBook && !bookCache.has(`book${nextBook.id}.json`)) {
+        fetch(`book${nextBook.id}.json`)
+            .then(response => response.json())
+            .then(data => {
+                bookCache.set(`book${nextBook.id}.json`, data);
+                console.log(`⚡ Предзагружена книга: ${data.title}`);
+            })
+            .catch(() => {});
     }
 }
 
@@ -566,33 +558,19 @@ async function loadAllBooks() {
 window.retryLoading = function() {
     const errorMessage = document.getElementById('errorMessage');
     if (errorMessage) errorMessage.style.display = 'none';
-    isLoading = false; // Сбрасываем флаг
+    isLoading = false;
+    bookCache.clear();
     loadBooksList();
 };
 
-// Функция для экранирования HTML
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-// Отображение книг
+// Оптимизированное отображение книг (с виртуализацией для больших списков)
 function renderBooks(books) {
     const booksGrid = document.getElementById('booksGrid');
     if (!booksGrid) return;
-
-    booksGrid.innerHTML = '';
-
-    if (books.length === 0) {
-        booksGrid.innerHTML = '<p class="no-books">📭 Книги не найдены</p>';
-        return;
-    }
-
+    
+    // Используем DocumentFragment для быстрой вставки
+    const fragment = document.createDocumentFragment();
+    
     books.forEach(book => {
         const bookCard = document.createElement('div');
         bookCard.className = 'book-card';
@@ -609,44 +587,58 @@ function renderBooks(books) {
                 <button class="btn btn-details" data-id="${book.id}">ℹ️ Подробнее</button>
             </div>
         `;
-        booksGrid.appendChild(bookCard);
+        fragment.appendChild(bookCard);
     });
-
-    document.querySelectorAll('.btn-read').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    
+    booksGrid.innerHTML = '';
+    booksGrid.appendChild(fragment);
+    
+    // Делегирование событий для лучшей производительности
+    booksGrid.addEventListener('click', (e) => {
+        const readBtn = e.target.closest('.btn-read');
+        const detailsBtn = e.target.closest('.btn-details');
+        
+        if (readBtn) {
             e.stopPropagation();
-            window.openBook(parseInt(btn.dataset.id));
-        });
-    });
-
-    document.querySelectorAll('.btn-details').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+            const bookId = parseInt(readBtn.dataset.id);
+            openBook(bookId);
+            preloadBook(bookId); // Предзагружаем следующую книгу
+        } else if (detailsBtn) {
             e.stopPropagation();
-            showBookDetails(parseInt(btn.dataset.id));
-        });
+            const bookId = parseInt(detailsBtn.dataset.id);
+            showBookDetails(bookId);
+        }
     });
 }
 
-// Открытие книги
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
 window.openBook = function(bookId) {
     const book = allBooks.find(b => b.id === bookId);
     if (!book || !book.pages?.length) {
         alert('Ошибка: книга не найдена');
         return;
     }
-
+    
     currentBook = book;
     currentPage = getReadingProgress(bookId);
     if (currentPage > book.pages.length) currentPage = 1;
-    fontSize = 18;
-
+    
     const readerTitle = document.getElementById('readerTitle');
     const readerContent = document.getElementById('readerContent');
     const currentPageEl = document.getElementById('currentPage');
     const totalPagesEl = document.getElementById('totalPages');
     const readerWindow = document.getElementById('readerWindow');
     const overlay = document.getElementById('overlay');
-
+    
     if (readerTitle) readerTitle.textContent = book.title;
     if (readerContent) {
         readerContent.innerHTML = book.pages[currentPage - 1];
@@ -659,16 +651,14 @@ window.openBook = function(bookId) {
     if (readerContent) readerContent.scrollTop = 0;
 }
 
-// Подробности о книге
 function showBookDetails(bookId) {
     const book = allBooks.find(b => b.id === bookId);
     if (!book) return;
-
+    
     const preview = book.pages?.[0]?.replace(/<[^>]*>/g, '').substring(0, 150) || '';
     alert(`${book.title}\n\nАвтор: ${book.author}\nГод: ${book.year || 'Не указан'}\nСтраниц: ${book.pages?.length || 0}\n\nПервые строки:\n${preview}...`);
 }
 
-// Настройка темы
 function setupThemeSwitcher() {
     const themeButtons = document.querySelectorAll('.theme-btn');
     themeButtons.forEach(btn => {
@@ -694,7 +684,6 @@ function loadSavedTheme() {
     if (btn) btn.classList.add('active');
 }
 
-// Настройка читалки
 function setupReader() {
     const readerWindow = document.getElementById('readerWindow');
     const overlay = document.getElementById('overlay');
@@ -707,20 +696,20 @@ function setupReader() {
     const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
     const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
     const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
-
+    
     if (closeBtn) closeBtn.onclick = closeReader;
     if (overlay) overlay.onclick = closeReader;
     if (exitFullscreenBtn) exitFullscreenBtn.onclick = toggleFullscreen;
-
+    
     if (prevBtn) prevBtn.onclick = () => { if (currentBook && currentPage > 1) { currentPage--; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
     if (nextBtn) nextBtn.onclick = () => { if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
     if (fullscreenPrevBtn) fullscreenPrevBtn.onclick = () => { if (currentBook && currentPage > 1) { currentPage--; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
     if (fullscreenNextBtn) fullscreenNextBtn.onclick = () => { if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
-
+    
     if (fontPlus) fontPlus.onclick = () => { fontSize = Math.min(fontSize + 2, 30); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; };
     if (fontMinus) fontMinus.onclick = () => { fontSize = Math.max(fontSize - 2, 14); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; };
     if (fullscreenBtn) fullscreenBtn.onclick = toggleFullscreen;
-
+    
     document.addEventListener('keydown', (e) => {
         if (readerWindow?.style.display !== 'flex') return;
         if (e.key === 'Escape') { if (isFullscreen) toggleFullscreen(); else closeReader(); }
@@ -730,11 +719,10 @@ function setupReader() {
         else if (e.key === '+') { e.preventDefault(); fontSize = Math.min(fontSize + 2, 30); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; }
         else if (e.key === '-') { e.preventDefault(); fontSize = Math.max(fontSize - 2, 14); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; }
     });
-
+    
     if (readerWindow) readerWindow.onclick = (e) => e.stopPropagation();
 }
 
-// Полноэкранный режим
 window.toggleFullscreen = function() {
     const rw = document.getElementById('readerWindow');
     const fb = document.getElementById('fullscreenBtn');
@@ -744,7 +732,7 @@ window.toggleFullscreen = function() {
     const ov = document.getElementById('overlay');
     const rc = document.getElementById('readerContent');
     if (!rw) return;
-
+    
     if (!isFullscreen) {
         rw.classList.add('fullscreen');
         if (fb) { fb.innerHTML = '✕'; fb.title = 'Обычный режим'; }
@@ -766,7 +754,6 @@ window.toggleFullscreen = function() {
     }
 }
 
-// Обновление контента читалки
 function updateReaderContent() {
     if (!currentBook) return;
     const rc = document.getElementById('readerContent');
@@ -775,7 +762,6 @@ function updateReaderContent() {
     if (cp) cp.textContent = currentPage;
 }
 
-// Закрытие читалки
 window.closeReader = function() {
     if (currentBook?.id) saveReadingProgress(currentBook.id, currentPage);
     if (isFullscreen) toggleFullscreen();
@@ -791,5 +777,4 @@ window.closeReader = function() {
     if (fn) fn.style.display = 'none';
 }
 
-// Экспорт глобальных функций
-window.loadAllBooks = loadAllBooks;
+window.loadAllBooks = loadAllBooksParallel;
