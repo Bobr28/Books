@@ -64,26 +64,15 @@ body.dark-theme {
     padding: 25px 0;
 }
 
+/* Стили для h2 в светлой теме - с полоской в своей цветовой гамме */
 .light-theme h2 {
     color: #8b5a2b;
-    position: relative;
-    display: inline-block;
-    padding-bottom: 10px;
     font-size: 2rem;
     margin-bottom: 25px;
-    border-bottom: none;
-}
-
-.light-theme h2::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(90deg, #c49a6c, #e8b87a);
-    border-radius: 3px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #c49a6c;
+    text-align: center;
+    display: block;
 }
 
 .dark-theme h2 {
@@ -92,6 +81,7 @@ body.dark-theme {
     margin-bottom: 25px;
     padding-bottom: 10px;
     border-bottom: 2px solid #3498db;
+    text-align: center;
 }
 
 header {
@@ -650,8 +640,8 @@ footer {
 
 .light-theme .reader-content h3,
 .light-theme .reader-content h4 {
-    color: #2c3e50;
-    border-bottom: 1px solid #eee;
+    color: #8b5a2b;
+    border-bottom: 1px solid rgba(139, 90, 43, 0.2);
     padding-bottom: 5px;
 }
 
@@ -670,7 +660,7 @@ footer {
 }
 
 .light-theme .reader-content .chapter-start {
-    color: #2c3e50;
+    color: #8b5a2b;
 }
 
 .dark-theme .reader-content .chapter-start {
