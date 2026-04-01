@@ -129,4 +129,20 @@ async function syncNewBooks() {
   } catch (error) {
     console.error('Sync failed:', error);
   }
+  // В основном файле (например, index.html или main.js)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(registration => {
+    // Проверяем обновления каждые 5 минут (или по событию)
+    setInterval(() => {
+      registration.update();
+    }, 5 * 60 * 1000); // 300000 ms
+  });
+
+  // Слушаем события обновления
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload(); // Принудительно обновляем страницу
+  });
 }
