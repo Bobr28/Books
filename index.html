@@ -88,5 +88,22 @@
             margin: 0 auto 20px;
         }
     </style>
+    
+    <!-- УНИЧТОЖАЕМ ТОСТЫ -->
+    <script>
+    window.showToast = function() {};
+    
+    function killAllToasts() {
+        var toasts = document.querySelectorAll('#dynamic-toast');
+        for (var i = 0; i < toasts.length; i++) {
+            if (toasts[i] && toasts[i].parentNode) {
+                toasts[i].parentNode.removeChild(toasts[i]);
+            }
+        }
+    }
+    
+    killAllToasts();
+    setInterval(killAllToasts, 100);
+    </script>
 </body>
 </html>
