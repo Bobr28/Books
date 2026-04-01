@@ -973,7 +973,8 @@ div:contains("Загрузка книг"),
 p:contains("Загрузка книг"),
 span:contains("Загрузка книг") {
     display: none !important;
-} /* Применить ко всему сайту */
+} 
+/* Применить ко всему сайту */
 body {
   -webkit-touch-callout: none; /* Отключает контекстное меню при долгом нажатии в iOS Safari */
   -webkit-user-select: none;   /* Safari, Chrome, Opera, Android */
