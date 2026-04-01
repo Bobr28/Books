@@ -360,7 +360,7 @@ async function loadFromCacheImmediately() {
                 if (allBooks.length > 0) {
                     renderBooks(allBooks);
                     console.log(`⚡ Мгновенная загрузка из кэша: ${allBooks.length} книг за ${Math.round(performance.now() - loadStartTime)}мс`);
-                    showToast('📚 Книги загружены из кэша');
+                    // Убрал тост с эмодзи книги
                     return true;
                 }
             }
@@ -515,7 +515,7 @@ async function loadAllBooksParallel() {
                 localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
                 localStorage.setItem('cacheTimestamp', Date.now().toString());
                 console.log(`✅ Загружено ${allBooks.length} книг за ${Math.round(performance.now() - loadStartTime)}мс`);
-                showToast(`📚 Загружено ${allBooks.length} книг`);
+                // Убрал тост с эмодзи книги
             } catch (e) {}
         } else if (allBooks.length === 0) {
             throw new Error('Нет книг');
