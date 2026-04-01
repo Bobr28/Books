@@ -974,6 +974,25 @@ p:contains("Загрузка книг"),
 span:contains("Загрузка книг") {
     display: none !important;
 } 
+/* ========== УБИВАЕМ ТОЛЬКО ТОСТ "📚 ЗАГРУЗКА КНИГ..." ========== */
+/* Удаляем только тост-уведомления, которые появляются в правом нижнем углу */
+#dynamic-toast {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Удаляем только элемент со статусом подключения если он мешает */
+#connection-status {
+    display: block !important; /* Не скрываем статус подключения */
+}
+
+/* Не трогаем остальные элементы! */
+.toast,
+.toast-message {
+    display: none !important;
+}
 /* Применить ко всему сайту */
 body {
   -webkit-touch-callout: none; /* Отключает контекстное меню при долгом нажатии в iOS Safari */
