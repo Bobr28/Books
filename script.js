@@ -2,6 +2,7 @@
 // =============================================
 
 let offlineReady = false;
+let isLoading = false; // Флаг для предотвращения двойной загрузки
 
 // Отображение статуса подключения (визуальный индикатор)
 function updateConnectionStatus() {
@@ -86,7 +87,7 @@ if ('serviceWorker' in navigator) {
   // Слушаем сообщения от Service Worker
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'BOOKS_UPDATED') {
-      if (typeof loadAllBooks === 'function') {
+      if (typeof loadAllBooks === 'function' && !isLoading) {
         loadAllBooks();
       }
       showToast('📚 Новые книги загружены');
@@ -97,7 +98,7 @@ if ('serviceWorker' in navigator) {
 // Следим за сетью
 window.addEventListener('online', () => {
   updateConnectionStatus();
-  if (typeof loadAllBooks === 'function') {
+  if (typeof loadAllBooks === 'function' && !isLoading) {
     loadAllBooks();
   }
   showToast('🌐 Интернет появился');
@@ -342,19 +343,27 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setupThemeSwitcher();
     loadSavedTheme();
-    loadBooksList(); // Загружаем список книг
+    loadBooksList(); // Единственный вызов загрузки
     setupReader();
     updateConnectionStatus();
 });
 
-// Загрузка списка книг из books-list.json (исправленная версия - без ложных уведомлений)
+// Загрузка списка книг из books-list.json (исправленная версия - без дублирования)
 async function loadBooksList() {
+    // Предотвращаем повторную загрузку
+    if (isLoading) {
+        console.log('⏳ Загрузка уже выполняется, пропускаю...');
+        return;
+    }
+    
+    isLoading = true;
+    
     try {
         console.log('📋 Загрузка списка книг...');
         const response = await fetch('/books-list.json');
         
         if (!response.ok) {
-            console.log(`📀 books-list.json не найден, использую стандартный список (book1.json...book7.json)`);
+            console.log(`📀 books-list.json не найден, использую стандартный список`);
             BOOKS_CONFIG = [
                 { id: 1, filename: 'book1.json' },
                 { id: 2, filename: 'book2.json' },
@@ -364,7 +373,8 @@ async function loadBooksList() {
                 { id: 6, filename: 'book6.json' },
                 { id: 7, filename: 'book7.json' }
             ];
-            loadAllBooks();
+            await loadAllBooks();
+            isLoading = false;
             return;
         }
         
@@ -381,7 +391,8 @@ async function loadBooksList() {
                 { id: 6, filename: 'book6.json' },
                 { id: 7, filename: 'book7.json' }
             ];
-            loadAllBooks();
+            await loadAllBooks();
+            isLoading = false;
             return;
         }
         
@@ -391,7 +402,8 @@ async function loadBooksList() {
         }));
         
         console.log(`✅ Загружено ${BOOKS_CONFIG.length} книг из books-list.json`);
-        loadAllBooks();
+        await loadAllBooks();
+        isLoading = false;
         
     } catch (error) {
         console.log('📀 Ошибка загрузки books-list.json, использую стандартный список');
@@ -404,7 +416,8 @@ async function loadBooksList() {
             { id: 6, filename: 'book6.json' },
             { id: 7, filename: 'book7.json' }
         ];
-        loadAllBooks();
+        await loadAllBooks();
+        isLoading = false;
     }
 }
 
@@ -419,12 +432,14 @@ async function loadAllBooks() {
         return;
     }
     
+    // Очищаем предыдущие книги, чтобы не было дублей
+    allBooks = [];
+    
     try {
         if (loadingIndicator) loadingIndicator.style.display = 'block';
         if (errorMessage) errorMessage.style.display = 'none';
         booksGrid.innerHTML = '<div class="loading">📚 Загрузка книг...</div>';
         
-        allBooks = [];
         let loadedCount = 0;
         
         console.log(`📖 Начинаю загрузку ${BOOKS_CONFIG.length} книг...`);
@@ -524,6 +539,7 @@ async function loadAllBooks() {
 window.retryLoading = function() {
     const errorMessage = document.getElementById('errorMessage');
     if (errorMessage) errorMessage.style.display = 'none';
+    isLoading = false; // Сбрасываем флаг
     loadBooksList();
 };
 
