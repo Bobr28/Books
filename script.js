@@ -89,7 +89,7 @@ if ('serviceWorker' in navigator) {
       if (typeof loadAllBooks === 'function') {
         loadAllBooks();
       }
-      showToast('Новые книги загружены');
+      showToast('📚 Новые книги загружены');
     }
   });
 }
@@ -100,12 +100,12 @@ window.addEventListener('online', () => {
   if (typeof loadAllBooks === 'function') {
     loadAllBooks();
   }
-  showToast('Интернет появился, обновляем библиотеку');
+  showToast('🌐 Интернет появился');
 });
 
 window.addEventListener('offline', () => {
   updateConnectionStatus();
-  showToast('Нет интернета, доступны ранее загруженные книги');
+  showToast('📴 Офлайн режим, доступны ранее загруженные книги');
 });
 
 // ========== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ==========
@@ -323,7 +323,7 @@ if ('serviceWorker' in navigator) {
 // ========== 📚 ОСНОВНАЯ ЛОГИКА БИБЛИОТЕКИ ==========
 // ===================================================
 
-// Конфигурация - список файлов книг (будет загружен из books-list.json)
+// Список книг (будет заполнен из books-list.json)
 let BOOKS_CONFIG = [];
 
 // Глобальные переменные
@@ -342,44 +342,59 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setupThemeSwitcher();
     loadSavedTheme();
-    loadBooksList(); // Сначала загружаем список книг
+    loadBooksList(); // Загружаем список книг
     setupReader();
     updateConnectionStatus();
 });
 
-// Загрузка списка книг из books-list.json
+// Загрузка списка книг из books-list.json (исправленная версия - без ложных уведомлений)
 async function loadBooksList() {
     try {
         console.log('📋 Загрузка списка книг...');
         const response = await fetch('/books-list.json');
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            console.log(`📀 books-list.json не найден, использую стандартный список (book1.json...book7.json)`);
+            BOOKS_CONFIG = [
+                { id: 1, filename: 'book1.json' },
+                { id: 2, filename: 'book2.json' },
+                { id: 3, filename: 'book3.json' },
+                { id: 4, filename: 'book4.json' },
+                { id: 5, filename: 'book5.json' },
+                { id: 6, filename: 'book6.json' },
+                { id: 7, filename: 'book7.json' }
+            ];
+            loadAllBooks();
+            return;
         }
         
         const bookFiles = await response.json();
         
         if (!Array.isArray(bookFiles) || bookFiles.length === 0) {
-            throw new Error('Список книг пуст');
+            console.log('📀 books-list.json пуст, использую стандартный список');
+            BOOKS_CONFIG = [
+                { id: 1, filename: 'book1.json' },
+                { id: 2, filename: 'book2.json' },
+                { id: 3, filename: 'book3.json' },
+                { id: 4, filename: 'book4.json' },
+                { id: 5, filename: 'book5.json' },
+                { id: 6, filename: 'book6.json' },
+                { id: 7, filename: 'book7.json' }
+            ];
+            loadAllBooks();
+            return;
         }
         
-        // Преобразуем в формат BOOKS_CONFIG
         BOOKS_CONFIG = bookFiles.map((filename, index) => ({
             id: index + 1,
             filename: filename
         }));
         
-        console.log(`✅ Загружен список: ${BOOKS_CONFIG.length} книг`);
-        console.log('📚 Файлы:', BOOKS_CONFIG.map(c => c.filename).join(', '));
-        
-        // Загружаем сами книги
+        console.log(`✅ Загружено ${BOOKS_CONFIG.length} книг из books-list.json`);
         loadAllBooks();
         
     } catch (error) {
-        console.error('❌ Ошибка загрузки списка книг:', error);
-        
-        // Пробуем использовать стандартный список
-        console.log('📀 Использую стандартный список книг');
+        console.log('📀 Ошибка загрузки books-list.json, использую стандартный список');
         BOOKS_CONFIG = [
             { id: 1, filename: 'book1.json' },
             { id: 2, filename: 'book2.json' },
@@ -389,9 +404,7 @@ async function loadBooksList() {
             { id: 6, filename: 'book6.json' },
             { id: 7, filename: 'book7.json' }
         ];
-        
         loadAllBooks();
-        showToast('Не удалось загрузить список книг, используется стандартный');
     }
 }
 
@@ -418,11 +431,11 @@ async function loadAllBooks() {
         
         for (const config of BOOKS_CONFIG) {
             try {
-                console.log(`  🔍 Загрузка ${config.filename}...`);
+                console.log(`  🔍 ${config.filename}...`);
                 const response = await fetch(config.filename);
                 
                 if (!response.ok) {
-                    console.warn(`  ❌ ${config.filename} - не найден (${response.status})`);
+                    console.warn(`  ❌ ${config.filename} - не найден`);
                     continue;
                 }
                 
@@ -437,35 +450,26 @@ async function loadAllBooks() {
                 try {
                     bookData = JSON.parse(text);
                 } catch (e) {
-                    console.warn(`  ❌ ${config.filename} - ошибка парсинга JSON`);
+                    console.warn(`  ❌ ${config.filename} - ошибка JSON`);
                     continue;
                 }
                 
-                // Проверяем обязательные поля
-                if (!bookData.title) {
-                    console.warn(`  ❌ ${config.filename} - отсутствует поле title`);
-                    continue;
-                }
-                if (!bookData.author) {
-                    console.warn(`  ❌ ${config.filename} - отсутствует поле author`);
-                    continue;
-                }
-                if (!bookData.pages || !Array.isArray(bookData.pages) || bookData.pages.length === 0) {
-                    console.warn(`  ❌ ${config.filename} - отсутствует pages или он пуст`);
+                if (!bookData.title || !bookData.author || !bookData.pages || !Array.isArray(bookData.pages)) {
+                    console.warn(`  ❌ ${config.filename} - неверная структура`);
                     continue;
                 }
                 
                 bookData.id = config.id;
                 allBooks.push(bookData);
                 loadedCount++;
-                console.log(`  ✅ Загружена: ${bookData.title} (${bookData.pages.length} стр.)`);
+                console.log(`  ✅ ${bookData.title} (${bookData.pages.length} стр.)`);
                 
             } catch (error) {
-                console.warn(`  ❌ Ошибка загрузки ${config.filename}:`, error.message);
+                console.warn(`  ❌ ${config.filename}:`, error.message);
             }
         }
         
-        console.log(`📊 Итого загружено: ${loadedCount} из ${BOOKS_CONFIG.length} книг`);
+        console.log(`📊 Загружено: ${loadedCount} из ${BOOKS_CONFIG.length}`);
         
         if (allBooks.length > 0) {
             renderBooks(allBooks);
@@ -475,9 +479,7 @@ async function loadAllBooks() {
                 localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
                 localStorage.setItem('cacheTimestamp', Date.now().toString());
                 console.log('💾 Книги сохранены в кэш');
-            } catch (e) {
-                console.warn('Не удалось кэшировать книги:', e);
-            }
+            } catch (e) {}
         } else {
             // Пробуем загрузить из кэша
             try {
@@ -490,35 +492,29 @@ async function loadAllBooks() {
                         allBooks = JSON.parse(cachedBooks);
                         renderBooks(allBooks);
                         if (loadingIndicator) loadingIndicator.style.display = 'none';
-                        console.log('💿 Используем кэшированные книги');
-                        showToast('📀 Книги загружены из кэша');
+                        console.log('💿 Использую кэш');
+                        showToast('📀 Книги из кэша');
                         return;
                     }
                 }
-            } catch (e) {
-                console.warn('Ошибка при чтении кэша:', e);
-            }
+            } catch (e) {}
             
-            throw new Error('Не удалось загрузить ни одной книги');
+            throw new Error('Нет книг');
         }
         
     } catch (error) {
-        console.error('❌ Критическая ошибка:', error);
+        console.error('❌ Ошибка:', error);
         if (loadingIndicator) loadingIndicator.style.display = 'none';
         if (errorMessage) {
             errorMessage.style.display = 'block';
             errorMessage.innerHTML = `
-                <h3>📖 Ошибка загрузки книг</h3>
+                <h3>📖 Ошибка загрузки</h3>
                 <p>Не удалось загрузить книги. Проверьте:</p>
                 <ul style="text-align: left; display: inline-block; margin: 15px 0;">
-                    <li>🔹 Файл <strong>books-list.json</strong> существует в корне сайта</li>
-                    <li>🔹 Файлы книг (<strong>${BOOKS_CONFIG.map(c => c.filename).join(', ')}</strong>) есть в корне</li>
-                    <li>🔹 Формат JSON правильный (можно проверить на <strong>jsonlint.com</strong>)</li>
-                    <li>🔹 Есть подключение к интернету</li>
+                    <li>🔹 Файлы книг (book1.json...book7.json) есть в корне</li>
+                    <li>🔹 Формат JSON правильный</li>
                 </ul>
-                <p style="margin-top: 15px;">
-                    <button onclick="retryLoading()" class="btn btn-read" style="margin: 0 auto;">🔄 Повторить</button>
-                </p>
+                <p><button onclick="retryLoading()" class="btn btn-read">🔄 Повторить</button></p>
             `;
         }
     }
@@ -542,7 +538,7 @@ function escapeHtml(str) {
     });
 }
 
-// Отображение книг в сетке
+// Отображение книг
 function renderBooks(books) {
     const booksGrid = document.getElementById('booksGrid');
     if (!booksGrid) return;
@@ -570,38 +566,35 @@ function renderBooks(books) {
                 <button class="btn btn-details" data-id="${book.id}">ℹ️ Подробнее</button>
             </div>
         `;
-        
         booksGrid.appendChild(bookCard);
     });
     
-    document.querySelectorAll('.btn-read').forEach(button => {
-        button.addEventListener('click', function(e) {
+    document.querySelectorAll('.btn-read').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const bookId = parseInt(this.getAttribute('data-id'));
-            window.openBook(bookId);
+            window.openBook(parseInt(btn.dataset.id));
         });
     });
     
-    document.querySelectorAll('.btn-details').forEach(button => {
-        button.addEventListener('click', function(e) {
+    document.querySelectorAll('.btn-details').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const bookId = parseInt(this.getAttribute('data-id'));
-            showBookDetails(bookId);
+            showBookDetails(parseInt(btn.dataset.id));
         });
     });
 }
 
-// Функция открытия книги
+// Открытие книги
 window.openBook = function(bookId) {
     const book = allBooks.find(b => b.id === bookId);
-    if (!book || !book.pages || book.pages.length === 0) {
-        alert('Ошибка: книга не найдена или повреждена');
+    if (!book || !book.pages?.length) {
+        alert('Ошибка: книга не найдена');
         return;
     }
     
     currentBook = book;
-    const savedPage = getReadingProgress(bookId);
-    currentPage = (savedPage > 0 && savedPage <= book.pages.length) ? savedPage : 1;
+    currentPage = getReadingProgress(bookId);
+    if (currentPage > book.pages.length) currentPage = 1;
     fontSize = 18;
     
     const readerTitle = document.getElementById('readerTitle');
@@ -623,26 +616,24 @@ window.openBook = function(bookId) {
     if (readerContent) readerContent.scrollTop = 0;
 }
 
-// Функция показа подробностей
+// Подробности о книге
 function showBookDetails(bookId) {
     const book = allBooks.find(b => b.id === bookId);
     if (!book) return;
     
-    const preview = book.pages && book.pages[0] ? book.pages[0].replace(/<[^>]*>/g, '').substring(0, 150) : '';
-    const message = `${book.title}\n\nАвтор: ${book.author}\nГод: ${book.year || 'Не указан'}\nСтраниц: ${book.pages ? book.pages.length : 0}\n\nПервые строки:\n${preview}...`;
-    alert(message);
+    const preview = book.pages?.[0]?.replace(/<[^>]*>/g, '').substring(0, 150) || '';
+    alert(`${book.title}\n\nАвтор: ${book.author}\nГод: ${book.year || 'Не указан'}\nСтраниц: ${book.pages?.length || 0}\n\nПервые строки:\n${preview}...`);
 }
 
 // Настройка темы
 function setupThemeSwitcher() {
     const themeButtons = document.querySelectorAll('.theme-btn');
-    
-    themeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const theme = this.id.replace('theme-', '');
+    themeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.id.replace('theme-', '');
             switchTheme(theme);
-            themeButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
+            themeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         });
     });
 }
@@ -656,14 +647,8 @@ function switchTheme(themeName) {
 function loadSavedTheme() {
     const savedTheme = localStorage.getItem('selectedTheme') || 'light';
     switchTheme(savedTheme);
-    
-    const themeButtons = document.querySelectorAll('.theme-btn');
-    themeButtons.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.id === 'theme-' + savedTheme) {
-            btn.classList.add('active');
-        }
-    });
+    const btn = document.getElementById(`theme-${savedTheme}`);
+    if (btn) btn.classList.add('active');
 }
 
 // Настройка читалки
@@ -680,195 +665,88 @@ function setupReader() {
     const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
     const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
     
-    if (closeBtn) closeBtn.addEventListener('click', closeReader);
-    if (overlay) overlay.addEventListener('click', closeReader);
-    if (exitFullscreenBtn) exitFullscreenBtn.addEventListener('click', toggleFullscreen);
+    if (closeBtn) closeBtn.onclick = closeReader;
+    if (overlay) overlay.onclick = closeReader;
+    if (exitFullscreenBtn) exitFullscreenBtn.onclick = toggleFullscreen;
     
-    if (prevBtn) {
-        prevBtn.addEventListener('click', function() {
-            if (currentBook && currentPage > 1) {
-                currentPage--;
-                updateReaderContent();
-                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
-            }
-        });
-    }
+    if (prevBtn) prevBtn.onclick = () => { if (currentBook && currentPage > 1) { currentPage--; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
+    if (nextBtn) nextBtn.onclick = () => { if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
+    if (fullscreenPrevBtn) fullscreenPrevBtn.onclick = () => { if (currentBook && currentPage > 1) { currentPage--; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
+    if (fullscreenNextBtn) fullscreenNextBtn.onclick = () => { if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReaderContent(); saveReadingProgress(currentBook.id, currentPage); } };
     
-    if (nextBtn) {
-        nextBtn.addEventListener('click', function() {
-            if (currentBook && currentPage < currentBook.pages.length) {
-                currentPage++;
-                updateReaderContent();
-                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
-            }
-        });
-    }
+    if (fontPlus) fontPlus.onclick = () => { fontSize = Math.min(fontSize + 2, 30); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; };
+    if (fontMinus) fontMinus.onclick = () => { fontSize = Math.max(fontSize - 2, 14); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; };
+    if (fullscreenBtn) fullscreenBtn.onclick = toggleFullscreen;
     
-    if (fullscreenPrevBtn) {
-        fullscreenPrevBtn.addEventListener('click', function() {
-            if (currentBook && currentPage > 1) {
-                currentPage--;
-                updateReaderContent();
-                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
-            }
-        });
-    }
-    
-    if (fullscreenNextBtn) {
-        fullscreenNextBtn.addEventListener('click', function() {
-            if (currentBook && currentPage < currentBook.pages.length) {
-                currentPage++;
-                updateReaderContent();
-                if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
-            }
-        });
-    }
-    
-    if (fontPlus) {
-        fontPlus.addEventListener('click', function() {
-            fontSize = Math.min(fontSize + 2, 30);
-            const readerContent = document.getElementById('readerContent');
-            if (readerContent) readerContent.style.fontSize = fontSize + 'px';
-        });
-    }
-    
-    if (fontMinus) {
-        fontMinus.addEventListener('click', function() {
-            fontSize = Math.max(fontSize - 2, 14);
-            const readerContent = document.getElementById('readerContent');
-            if (readerContent) readerContent.style.fontSize = fontSize + 'px';
-        });
-    }
-    
-    if (fullscreenBtn) fullscreenBtn.addEventListener('click', toggleFullscreen);
-    
-    document.addEventListener('keydown', function(e) {
-        if (readerWindow && readerWindow.style.display === 'flex') {
-            if (e.key === 'Escape') {
-                if (isFullscreen) {
-                    toggleFullscreen();
-                } else {
-                    closeReader();
-                }
-            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-                e.preventDefault();
-                if (currentBook && currentPage > 1) {
-                    currentPage--;
-                    updateReaderContent();
-                    if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
-                }
-            } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
-                e.preventDefault();
-                if (currentBook && currentPage < currentBook.pages.length) {
-                    currentPage++;
-                    updateReaderContent();
-                    if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
-                }
-            } else if (e.key === 'f' || e.key === 'F') {
-                e.preventDefault();
-                toggleFullscreen();
-            } else if (e.key === '+') {
-                e.preventDefault();
-                fontSize = Math.min(fontSize + 2, 30);
-                const readerContent = document.getElementById('readerContent');
-                if (readerContent) readerContent.style.fontSize = fontSize + 'px';
-            } else if (e.key === '-') {
-                e.preventDefault();
-                fontSize = Math.max(fontSize - 2, 14);
-                const readerContent = document.getElementById('readerContent');
-                if (readerContent) readerContent.style.fontSize = fontSize + 'px';
-            }
-        }
+    document.addEventListener('keydown', (e) => {
+        if (readerWindow?.style.display !== 'flex') return;
+        if (e.key === 'Escape') { if (isFullscreen) toggleFullscreen(); else closeReader(); }
+        else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); if (currentBook && currentPage > 1) { currentPage--; updateReaderContent(); if (currentBook.id) saveReadingProgress(currentBook.id, currentPage); } }
+        else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); if (currentBook && currentPage < currentBook.pages.length) { currentPage++; updateReaderContent(); if (currentBook.id) saveReadingProgress(currentBook.id, currentPage); } }
+        else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
+        else if (e.key === '+') { e.preventDefault(); fontSize = Math.min(fontSize + 2, 30); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; }
+        else if (e.key === '-') { e.preventDefault(); fontSize = Math.max(fontSize - 2, 14); const rc = document.getElementById('readerContent'); if (rc) rc.style.fontSize = fontSize + 'px'; }
     });
     
-    if (readerWindow) {
-        readerWindow.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-    }
+    if (readerWindow) readerWindow.onclick = (e) => e.stopPropagation();
 }
 
-// Переключение полноэкранного режима
+// Полноэкранный режим
 window.toggleFullscreen = function() {
-    const readerWindow = document.getElementById('readerWindow');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
-    const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
-    const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
-    const overlay = document.getElementById('overlay');
-    const readerContent = document.getElementById('readerContent');
-    
-    if (!readerWindow) return;
+    const rw = document.getElementById('readerWindow');
+    const fb = document.getElementById('fullscreenBtn');
+    const efb = document.getElementById('exitFullscreenBtn');
+    const fp = document.getElementById('fullscreenPrevBtn');
+    const fn = document.getElementById('fullscreenNextBtn');
+    const ov = document.getElementById('overlay');
+    const rc = document.getElementById('readerContent');
+    if (!rw) return;
     
     if (!isFullscreen) {
-        readerWindow.classList.add('fullscreen');
-        if (fullscreenBtn) {
-            fullscreenBtn.innerHTML = '⛶';
-            fullscreenBtn.title = 'Обычный режим';
-        }
-        if (exitFullscreenBtn) exitFullscreenBtn.style.display = 'flex';
-        if (fullscreenPrevBtn) fullscreenPrevBtn.style.display = 'flex';
-        if (fullscreenNextBtn) fullscreenNextBtn.style.display = 'flex';
-        if (overlay) overlay.style.display = 'none';
+        rw.classList.add('fullscreen');
+        if (fb) { fb.innerHTML = '⛶'; fb.title = 'Обычный режим'; }
+        if (efb) efb.style.display = 'flex';
+        if (fp) fp.style.display = 'flex';
+        if (fn) fn.style.display = 'flex';
+        if (ov) ov.style.display = 'none';
         isFullscreen = true;
-        if (readerContent) {
-            readerContent.style.paddingLeft = '50px';
-            readerContent.style.paddingRight = '50px';
-        }
+        if (rc) { rc.style.paddingLeft = '50px'; rc.style.paddingRight = '50px'; }
     } else {
-        readerWindow.classList.remove('fullscreen');
-        if (fullscreenBtn) {
-            fullscreenBtn.innerHTML = '⛶';
-            fullscreenBtn.title = 'Полноэкранный режим';
-        }
-        if (exitFullscreenBtn) exitFullscreenBtn.style.display = 'none';
-        if (fullscreenPrevBtn) fullscreenPrevBtn.style.display = 'none';
-        if (fullscreenNextBtn) fullscreenNextBtn.style.display = 'none';
-        if (overlay) overlay.style.display = 'block';
+        rw.classList.remove('fullscreen');
+        if (fb) { fb.innerHTML = '⛶'; fb.title = 'Полноэкранный режим'; }
+        if (efb) efb.style.display = 'none';
+        if (fp) fp.style.display = 'none';
+        if (fn) fn.style.display = 'none';
+        if (ov) ov.style.display = 'block';
         isFullscreen = false;
-        if (readerContent) {
-            readerContent.style.paddingLeft = '30px';
-            readerContent.style.paddingRight = '30px';
-        }
+        if (rc) { rc.style.paddingLeft = '30px'; rc.style.paddingRight = '30px'; }
     }
 }
 
-// Обновление контента в читалке
+// Обновление контента читалки
 function updateReaderContent() {
     if (!currentBook) return;
-    
-    const readerContent = document.getElementById('readerContent');
-    const currentPageEl = document.getElementById('currentPage');
-    
-    if (readerContent) {
-        readerContent.innerHTML = currentBook.pages[currentPage - 1];
-        readerContent.style.fontSize = fontSize + 'px';
-    }
-    if (currentPageEl) currentPageEl.textContent = currentPage;
-    if (readerContent) readerContent.scrollTop = 0;
+    const rc = document.getElementById('readerContent');
+    const cp = document.getElementById('currentPage');
+    if (rc) { rc.innerHTML = currentBook.pages[currentPage - 1]; rc.style.fontSize = fontSize + 'px'; rc.scrollTop = 0; }
+    if (cp) cp.textContent = currentPage;
 }
 
 // Закрытие читалки
 window.closeReader = function() {
-    if (currentBook && currentBook.id) {
-        saveReadingProgress(currentBook.id, currentPage);
-    }
-    
+    if (currentBook?.id) saveReadingProgress(currentBook.id, currentPage);
     if (isFullscreen) toggleFullscreen();
-    
-    const readerWindow = document.getElementById('readerWindow');
-    const overlay = document.getElementById('overlay');
-    const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
-    const fullscreenPrevBtn = document.getElementById('fullscreenPrevBtn');
-    const fullscreenNextBtn = document.getElementById('fullscreenNextBtn');
-    
-    if (readerWindow) readerWindow.style.display = 'none';
-    if (overlay) overlay.style.display = 'none';
-    if (exitFullscreenBtn) exitFullscreenBtn.style.display = 'none';
-    if (fullscreenPrevBtn) fullscreenPrevBtn.style.display = 'none';
-    if (fullscreenNextBtn) fullscreenNextBtn.style.display = 'none';
+    const rw = document.getElementById('readerWindow');
+    const ov = document.getElementById('overlay');
+    const efb = document.getElementById('exitFullscreenBtn');
+    const fp = document.getElementById('fullscreenPrevBtn');
+    const fn = document.getElementById('fullscreenNextBtn');
+    if (rw) rw.style.display = 'none';
+    if (ov) ov.style.display = 'none';
+    if (efb) efb.style.display = 'none';
+    if (fp) fp.style.display = 'none';
+    if (fn) fn.style.display = 'none';
 }
 
-// Экспорт функций
+// Экспорт
 window.loadAllBooks = loadAllBooks;
-window.loadBooksList = loadBooksList;
