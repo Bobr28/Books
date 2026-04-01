@@ -959,7 +959,30 @@ span:contains("📚"),
 span:contains("Загрузка книг") {
     display: none !important;
 }
+/* Убиваем конкретную надпись */
+#dynamic-toast,
+div[style*="bottom"],
+div[style*="position: fixed"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
 
+/* Ищем любой элемент с эмодзи книги и текстом загрузки */
+div:has(> :contains("📚")),
+div:contains("📚"),
+p:contains("📚"),
+span:contains("📚") {
+    display: none !important;
+}
+
+/* Скрываем все всплывающие уведомления */
+.toast,
+.toast-message,
+.notification,
+.alert {
+    display: none !important;
+}
 /* Применить ко всему сайту */
 body {
   -webkit-touch-callout: none; /* Отключает контекстное меню при долгом нажатии в iOS Safari */
