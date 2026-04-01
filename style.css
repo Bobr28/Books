@@ -36,25 +36,15 @@ body.dark-theme {
 .light-theme header {
     background: linear-gradient(135deg, #8b5a2b, #c49a6c);
     color: white;
+    padding: 25px 0;
+    /* Статическое изображение вместо анимации */
     position: relative;
     overflow: hidden;
-    padding: 25px 0;
 }
 
+/* Убираем анимацию shimmer */
 .light-theme header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
-    animation: shimmer 15s infinite linear;
-}
-
-@keyframes shimmer {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    display: none;
 }
 
 .dark-theme header {
