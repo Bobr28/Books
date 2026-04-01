@@ -14,7 +14,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 </head>
 <body class="light-theme">
-    <!-- Контролы для переключения тем -->
     <div class="theme-controls">
         <button class="theme-btn active" id="theme-light" title="Светлая тема">☀️</button>
         <button class="theme-btn" id="theme-dark" title="Темная тема">🌙</button>
@@ -36,13 +35,8 @@
         
         <section>
             <h2>Коллекция книг</h2>
-            <!-- Убрали весь индикатор загрузки из HTML, он будет создаваться только через JS -->
-            <div class="books-grid" id="booksGrid">
-                <!-- Книги будут добавлены через JavaScript -->
-            </div>
-            <div class="error-message" id="errorMessage" style="display: none;">
-                Ошибка загрузки книг. Пожалуйста, обновите страницу.
-            </div>
+            <div class="books-grid" id="booksGrid"></div>
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
         </section>
     </main>
     
@@ -51,7 +45,6 @@
         <p>Все произведения находятся в открытом доступе</p>
     </footer>
     
-    <!-- Окно читалки -->
     <div class="overlay" id="overlay"></div>
     <div class="reader-window" id="readerWindow">
         <div class="reader-header">
@@ -68,25 +61,32 @@
                 <button class="fullscreen-btn" id="fullscreenBtn" title="Полноэкранный режим">⛶</button>
             </div>
         </div>
-        <div class="reader-content" id="readerContent">
-            Содержание книги...
-        </div>
+        <div class="reader-content" id="readerContent"></div>
     </div>
 
-    <!-- Кнопки навигации в полноэкранном режиме -->
     <button class="page-nav-btn prev-page" id="fullscreenPrevBtn" title="Предыдущая страница (←)">←</button>
     <button class="page-nav-btn next-page" id="fullscreenNextBtn" title="Следующая страница (→)">→</button>
-    
-    <!-- Кнопка возврата из полноэкранного режима -->
     <button class="exit-fullscreen-btn" id="exitFullscreenBtn" title="Выйти из полноэкранного режима (ESC)">✕</button>
 
     <script src="script.js"></script>
     <style>
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .custom-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
     </style>
-    <div id="connection-status" style="display: none;"></div>
 </body>
 </html>
