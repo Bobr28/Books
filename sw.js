@@ -5,7 +5,9 @@ const STATIC_FILES = [
   '/script.js',
   '/style.css',
   '/manifest.json',
-  '/books-list.json'
+  '/books-list.json',
+  '/launchericon-192x192.png',
+  '/launchericon-512x512.png'
 ];
 
 // Установка — кэшируем статические файлы
