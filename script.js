@@ -89,7 +89,7 @@ if ('serviceWorker' in navigator) {
       if (typeof window.loadAllBooks === 'function' && !isLoading) {
         window.loadAllBooks();
       }
-      showToast('📚 Новые книги загружены');
+      showToast('📚 Книги загружены');
     }
   });
 }
