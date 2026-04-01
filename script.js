@@ -1,91 +1,5 @@
 // ========== 🚀 ОФЛАЙН-СИНХРОНИЗАЦИЯ (ДОБАВЛЕНО) ==========
 // =======================================================
-// ========== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ==========
-
-// Сохранение прогресса чтения (позиция страницы)
-function saveReadingProgress(bookId, page) {
-    try {
-        const progress = JSON.parse(localStorage.getItem('readingProgress') || '{}');
-        progress[bookId] = page;
-        localStorage.setItem('readingProgress', JSON.stringify(progress));
-    } catch (e) {
-        console.warn('Не удалось сохранить прогресс');
-    }
-}
-
-// Восстановление прогресса чтения
-function getReadingProgress(bookId) {
-    try {
-        const progress = JSON.parse(localStorage.getItem('readingProgress') || '{}');
-        return progress[bookId] || 1;
-    } catch (e) {
-        return 1;
-    }
-}
-
-// Модифицируем openBook для восстановления прогресса
-const originalOpenBook = window.openBook;
-window.openBook = function(bookId) {
-    const savedPage = getReadingProgress(bookId);
-    originalOpenBook(bookId);
-    
-    if (savedPage > 1 && currentBook && currentBook.id === bookId) {
-        currentPage = savedPage;
-        updateReaderContent();
-    }
-};
-
-// Сохраняем прогресс при закрытии или смене страницы
-function saveCurrentProgress() {
-    if (currentBook && currentBook.id) {
-        saveReadingProgress(currentBook.id, currentPage);
-    }
-}
-
-// Перехватываем закрытие читалки
-const originalCloseReader = window.closeReader;
-window.closeReader = function() {
-    saveCurrentProgress();
-    originalCloseReader();
-};
-
-// Сохраняем при смене страницы
-const originalUpdateReaderContent = updateReaderContent;
-updateReaderContent = function() {
-    originalUpdateReaderContent();
-    if (currentBook && currentBook.id) {
-        saveReadingProgress(currentBook.id, currentPage);
-    }
-};
-
-// Проверка наличия обновлений приложения
-if ('serviceWorker' in navigator) {
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-        }
-    });
-}
-
-// Отображение размера кэша (для отладки)
-async function showCacheSize() {
-    if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        let totalSize = 0;
-        for (const name of cacheNames) {
-            const cache = await caches.open(name);
-            const keys = await cache.keys();
-            console.log(`Кэш "${name}": ${keys.length} файлов`);
-        }
-    }
-}
-
-// Вызываем при загрузке (опционально)
-if (ANTI_THEFT_CONFIG.DEBUG_MODE) {
-    showCacheSize();
-}
 
 let offlineReady = false;
 
@@ -194,6 +108,52 @@ window.addEventListener('offline', () => {
   updateConnectionStatus();
   showToast('Нет интернета, доступны ранее загруженные книги');
 });
+
+// ========== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ==========
+
+// Сохранение прогресса чтения (позиция страницы)
+function saveReadingProgress(bookId, page) {
+    try {
+        const progress = JSON.parse(localStorage.getItem('readingProgress') || '{}');
+        progress[bookId] = page;
+        localStorage.setItem('readingProgress', JSON.stringify(progress));
+    } catch (e) {
+        console.warn('Не удалось сохранить прогресс');
+    }
+}
+
+// Восстановление прогресса чтения
+function getReadingProgress(bookId) {
+    try {
+        const progress = JSON.parse(localStorage.getItem('readingProgress') || '{}');
+        return progress[bookId] || 1;
+    } catch (e) {
+        return 1;
+    }
+}
+
+// Проверка наличия обновлений приложения
+if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+        }
+    });
+}
+
+// Отображение размера кэша (для отладки)
+async function showCacheSize() {
+    if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+            const cache = await caches.open(name);
+            const keys = await cache.keys();
+            console.log(`Кэш "${name}": ${keys.length} файлов`);
+        }
+    }
+}
 
 // ========== 🔒 АНТИВОР СИСТЕМА (ВАШ ОРИГИНАЛЬНЫЙ КОД) ==========
 // ============================================================
@@ -688,6 +648,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Добавляем индикатор сети
     updateConnectionStatus();
+    
+    // Вызываем показ размера кэша (для отладки)
+    if (ANTI_THEFT_CONFIG && ANTI_THEFT_CONFIG.DEBUG_MODE) {
+        showCacheSize();
+    }
 });
 
 // Настройка переключателя тем
@@ -902,7 +867,7 @@ function renderBooks(books) {
     });
 }
 
-// Функция открытия книги
+// Функция открытия книги (с восстановлением прогресса)
 window.openBook = function(bookId) {
     const book = allBooks.find(b => b.id === bookId);
     if (!book || !book.pages || book.pages.length === 0) {
@@ -911,12 +876,16 @@ window.openBook = function(bookId) {
     }
     
     currentBook = book;
-    currentPage = 1;
+    
+    // Восстанавливаем сохраненную страницу
+    const savedPage = getReadingProgress(bookId);
+    currentPage = savedPage > 0 && savedPage <= book.pages.length ? savedPage : 1;
+    
     fontSize = 18;
     
     // Показываем читалку
     document.getElementById('readerTitle').textContent = book.title;
-    document.getElementById('readerContent').innerHTML = book.pages[0];
+    document.getElementById('readerContent').innerHTML = book.pages[currentPage - 1];
     document.getElementById('readerContent').style.fontSize = fontSize + 'px';
     document.getElementById('currentPage').textContent = currentPage;
     document.getElementById('totalPages').textContent = book.pages.length;
@@ -970,6 +939,7 @@ function setupReader() {
             if (currentBook && currentPage > 1) {
                 currentPage--;
                 updateReaderContent();
+                saveReadingProgress(currentBook.id, currentPage);
             }
         });
     }
@@ -979,6 +949,7 @@ function setupReader() {
             if (currentBook && currentPage < currentBook.pages.length) {
                 currentPage++;
                 updateReaderContent();
+                saveReadingProgress(currentBook.id, currentPage);
             }
         });
     }
@@ -989,6 +960,7 @@ function setupReader() {
             if (currentBook && currentPage > 1) {
                 currentPage--;
                 updateReaderContent();
+                saveReadingProgress(currentBook.id, currentPage);
             }
         });
     }
@@ -998,6 +970,7 @@ function setupReader() {
             if (currentBook && currentPage < currentBook.pages.length) {
                 currentPage++;
                 updateReaderContent();
+                saveReadingProgress(currentBook.id, currentPage);
             }
         });
     }
@@ -1036,12 +1009,14 @@ function setupReader() {
                 if (currentBook && currentPage > 1) {
                     currentPage--;
                     updateReaderContent();
+                    if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
                 }
             } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
                 e.preventDefault();
                 if (currentBook && currentPage < currentBook.pages.length) {
                     currentPage++;
                     updateReaderContent();
+                    if (currentBook.id) saveReadingProgress(currentBook.id, currentPage);
                 }
             } else if (e.key === 'f' || e.key === 'F') {
                 e.preventDefault();
@@ -1152,8 +1127,13 @@ function updateReaderContent() {
     }
 }
 
-// Закрытие читалки
+// Закрытие читалки с сохранением прогресса
 window.closeReader = function() {
+    // Сохраняем прогресс перед закрытием
+    if (currentBook && currentBook.id) {
+        saveReadingProgress(currentBook.id, currentPage);
+    }
+    
     if (isFullscreen) {
         toggleFullscreen();
     }
