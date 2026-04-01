@@ -1,5 +1,91 @@
 // ========== 🚀 ОФЛАЙН-СИНХРОНИЗАЦИЯ (ДОБАВЛЕНО) ==========
 // =======================================================
+// ========== ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ==========
+
+// Сохранение прогресса чтения (позиция страницы)
+function saveReadingProgress(bookId, page) {
+    try {
+        const progress = JSON.parse(localStorage.getItem('readingProgress') || '{}');
+        progress[bookId] = page;
+        localStorage.setItem('readingProgress', JSON.stringify(progress));
+    } catch (e) {
+        console.warn('Не удалось сохранить прогресс');
+    }
+}
+
+// Восстановление прогресса чтения
+function getReadingProgress(bookId) {
+    try {
+        const progress = JSON.parse(localStorage.getItem('readingProgress') || '{}');
+        return progress[bookId] || 1;
+    } catch (e) {
+        return 1;
+    }
+}
+
+// Модифицируем openBook для восстановления прогресса
+const originalOpenBook = window.openBook;
+window.openBook = function(bookId) {
+    const savedPage = getReadingProgress(bookId);
+    originalOpenBook(bookId);
+    
+    if (savedPage > 1 && currentBook && currentBook.id === bookId) {
+        currentPage = savedPage;
+        updateReaderContent();
+    }
+};
+
+// Сохраняем прогресс при закрытии или смене страницы
+function saveCurrentProgress() {
+    if (currentBook && currentBook.id) {
+        saveReadingProgress(currentBook.id, currentPage);
+    }
+}
+
+// Перехватываем закрытие читалки
+const originalCloseReader = window.closeReader;
+window.closeReader = function() {
+    saveCurrentProgress();
+    originalCloseReader();
+};
+
+// Сохраняем при смене страницы
+const originalUpdateReaderContent = updateReaderContent;
+updateReaderContent = function() {
+    originalUpdateReaderContent();
+    if (currentBook && currentBook.id) {
+        saveReadingProgress(currentBook.id, currentPage);
+    }
+};
+
+// Проверка наличия обновлений приложения
+if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+        }
+    });
+}
+
+// Отображение размера кэша (для отладки)
+async function showCacheSize() {
+    if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        let totalSize = 0;
+        for (const name of cacheNames) {
+            const cache = await caches.open(name);
+            const keys = await cache.keys();
+            console.log(`Кэш "${name}": ${keys.length} файлов`);
+        }
+    }
+}
+
+// Вызываем при загрузке (опционально)
+if (ANTI_THEFT_CONFIG.DEBUG_MODE) {
+    showCacheSize();
+}
 
 let offlineReady = false;
 
