@@ -10,6 +10,11 @@ body {
     color: #333;
     line-height: 1.6;
     transition: all 0.3s ease;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 /* Светлая тема (по умолчанию) - улучшенная версия */
@@ -37,7 +42,6 @@ body.dark-theme {
     background: linear-gradient(135deg, #8b5a2b, #c49a6c);
     color: white;
     padding: 25px 0;
-    /* Статическое изображение вместо анимации */
     position: relative;
     overflow: hidden;
 }
@@ -933,9 +937,21 @@ footer {
     height: 100%;
     cursor: pointer;
 }
-/* Убиваем все надписи "Загрузка книг..." с эмодзи */
-#dynamic-toast,
+
+/* ========== УБИВАЕМ НАДПИСЬ "📚 ЗАГРУЗКА КНИГ..." ========== */
+/* Удаляем тост-уведомления */
+#dynamic-toast {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Удаляем любые всплывающие уведомления */
+.toast,
 .toast-message,
+.notification,
+.alert,
 [class*="toast"],
 [class*="notification"] {
     display: none !important;
@@ -944,46 +960,20 @@ footer {
     pointer-events: none !important;
 }
 
-/* Скрываем любые элементы, содержащие текст с эмодзи книги */
-*:has(> :contains("📚")),
-*:has(> :contains("Загрузка книг")) {
+/* Скрываем все элементы с эмодзи книги и текстом загрузки */
+[class*="loading"]:contains("📚"),
+[class*="load"]:contains("📚"),
+[id*="loading"]:contains("📚"),
+[id*="load"]:contains("📚") {
     display: none !important;
 }
 
-/* Универсальное скрытие - ищем по тексту */
-div:contains("📚"),
+/* Скрываем элементы с текстом "Загрузка книг" */
 div:contains("Загрузка книг"),
-p:contains("📚"),
 p:contains("Загрузка книг"),
-span:contains("📚"),
 span:contains("Загрузка книг") {
     display: none !important;
-}
-/* Убиваем конкретную надпись */
-#dynamic-toast,
-div[style*="bottom"],
-div[style*="position: fixed"] {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-}
-
-/* Ищем любой элемент с эмодзи книги и текстом загрузки */
-div:has(> :contains("📚")),
-div:contains("📚"),
-p:contains("📚"),
-span:contains("📚") {
-    display: none !important;
-}
-
-/* Скрываем все всплывающие уведомления */
-.toast,
-.toast-message,
-.notification,
-.alert {
-    display: none !important;
-}
-/* Применить ко всему сайту */
+} /* Применить ко всему сайту */
 body {
   -webkit-touch-callout: none; /* Отключает контекстное меню при долгом нажатии в iOS Safari */
   -webkit-user-select: none;   /* Safari, Chrome, Opera, Android */
