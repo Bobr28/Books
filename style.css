@@ -933,6 +933,32 @@ footer {
     height: 100%;
     cursor: pointer;
 }
+/* Убиваем все надписи "Загрузка книг..." с эмодзи */
+#dynamic-toast,
+.toast-message,
+[class*="toast"],
+[class*="notification"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Скрываем любые элементы, содержащие текст с эмодзи книги */
+*:has(> :contains("📚")),
+*:has(> :contains("Загрузка книг")) {
+    display: none !important;
+}
+
+/* Универсальное скрытие - ищем по тексту */
+div:contains("📚"),
+div:contains("Загрузка книг"),
+p:contains("📚"),
+p:contains("Загрузка книг"),
+span:contains("📚"),
+span:contains("Загрузка книг") {
+    display: none !important;
+}
 
 /* Применить ко всему сайту */
 body {
