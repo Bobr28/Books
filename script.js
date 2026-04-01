@@ -470,12 +470,28 @@ window.closeReader = function() {
 
 window.loadAllBooks = loadAllBooks;
 
-// ========== НАСИЛЬНОЕ УДАЛЕНИЕ ВСЕХ ТОСТОВ ==========
-setInterval(function() {
-    var elements = document.querySelectorAll('#dynamic-toast, .toast, [class*="toast"], [class*="notification"]');
-    for (var i = 0; i < elements.length; i++) {
-        if (elements[i] && elements[i].parentNode) {
-            elements[i].parentNode.removeChild(elements[i]);
-        }
-    }
-}, 100);
+// ========== ПОЛНОСТЬЮ УНИЧТОЖАЕМ ВСЕ ТОСТЫ ==========
+// Удаляем функцию showToast если она была
+window.showToast = function() {};
+
+// Удаляем существующие тосты
+const toastElements = document.querySelectorAll('#dynamic-toast, .toast, [class*="toast"]');
+toastElements.forEach(el => {
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+});
+
+// Следим за новыми элементами
+const toastObserver = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) {
+                if (node.id === 'dynamic-toast' || 
+                    (node.className && node.className.includes && node.className.includes('toast'))) {
+                    if (node.parentNode) node.parentNode.removeChild(node);
+                }
+            }
+        });
+    });
+});
+
+toastObserver.observe(document.body, { childList: true, subtree: true });
