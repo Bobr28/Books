@@ -4,106 +4,320 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Электронная библиотека</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4CAF50">
-    <link rel="apple-touch-icon" href="/icon-192.png">
-    <meta name="description" content="Электронная библиотека - читайте книги онлайн и офлайн">
-    <meta name="author" content="rafstar">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-</head>
-<body class="light-theme">
-    <div class="theme-controls">
-        <button class="theme-btn active" id="theme-light" title="Светлая тема">☀️</button>
-        <button class="theme-btn" id="theme-dark" title="Темная тема">🌙</button>
-    </div>
-    
-    <header>
-        <div class="container">
-            <h1>📚 Электронная библиотека</h1>
-            <p>Читайте книги онлайн бесплатно</p>
-        </div>
-    </header>
-    
-    <main class="container">
-        <section class="intro">
-            <h2>Добро пожаловать!</h2>
-            <p>В нашей библиотеке вы можете читать произведения совершенно бесплатно. Выбирайте книгу и начинайте чтение прямо сейчас!</p>
-            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">Используйте кнопки справа вверху для переключения между светлой и темной темой</p>
-        </section>
-        
-        <section>
-            <h2>Коллекция книг</h2>
-            <div class="books-grid" id="booksGrid"></div>
-            <div class="error-message" id="errorMessage" style="display: none;"></div>
-        </section>
-    </main>
-    
-    <footer class="container">
-        <p>Электронная библиотека &copy; <span id="currentYear">2024</span></p>
-        <p>Все произведения находятся в открытом доступе</p>
-    </footer>
-    
-    <div class="overlay" id="overlay"></div>
-    <div class="reader-window" id="readerWindow">
-        <div class="reader-header">
-            <h3 id="readerTitle">Название книги</h3>
-            <button class="close-btn" id="closeReader">Закрыть (ESC)</button>
-        </div>
-        <div class="reader-controls">
-            <button class="reader-btn" id="prevPage">← Назад</button>
-            <span class="page-indicator">Страница: <span id="currentPage">1</span>/<span id="totalPages">1</span></span>
-            <button class="reader-btn" id="nextPage">Вперед →</button>
-            <div class="font-controls">
-                <button class="font-btn" id="fontMinus" title="Уменьшить шрифт">A-</button>
-                <button class="font-btn" id="fontPlus" title="Увеличить шрифт">A+</button>
-                <button class="fullscreen-btn" id="fullscreenBtn" title="Полноэкранный режим">⛶</button>
-            </div>
-        </div>
-        <div class="reader-content" id="readerContent"></div>
-    </div>
-
-    <button class="page-nav-btn prev-page" id="fullscreenPrevBtn" title="Предыдущая страница (←)">←</button>
-    <button class="page-nav-btn next-page" id="fullscreenNextBtn" title="Следующая страница (→)">→</button>
-    <button class="exit-fullscreen-btn" id="exitFullscreenBtn" title="Выйти из полноэкранного режима (ESC)">✕</button>
-
-    <script src="script.js"></script>
     <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .custom-loading {
+        
+        body {
+            font-family: 'Georgia', serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #8b5a2b, #c49a6c);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .book-cover {
+            height: 200px;
+            background: linear-gradient(135deg, #c49a6c, #8b5a2b);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        
+        .book-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #8b5a2b;
+            margin-bottom: 10px;
+        }
+        
+        .book-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            background: #8b5a2b;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: #6b3e1a;
+        }
+        
+        .loading {
             text-align: center;
             padding: 40px;
+            font-size: 1.2rem;
+            color: #666;
         }
-        .custom-loading .spinner {
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: red;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+        
+        .spinner {
             width: 40px;
             height: 40px;
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+            border-top: 4px solid #8b5a2b;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .theme-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .theme-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            font-size: 1.3rem;
+            background: white;
+        }
+        
+        body.dark-theme {
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        body.dark-theme .book-card {
+            background: #2a2a2a;
+            color: #e0e0e0;
+        }
+        
+        body.dark-theme .book-title {
+            color: #c49a6c;
+        }
+        
+        body.dark-theme .book-meta {
+            color: #aaa;
+        }
+        
+        body.dark-theme footer {
+            border-top-color: #333;
+        }
     </style>
+</head>
+<body>
+    <div class="theme-controls">
+        <button class="theme-btn" id="theme-light">☀️</button>
+        <button class="theme-btn" id="theme-dark">🌙</button>
+    </div>
     
-    <!-- УНИЧТОЖАЕМ ТОСТЫ -->
+    <div class="container">
+        <header>
+            <h1>📚 Электронная библиотека</h1>
+            <p>Читайте книги онлайн бесплатно</p>
+        </header>
+        
+        <h2 style="text-align: center; margin: 30px 0 20px;">Коллекция книг</h2>
+        
+        <div id="booksGrid" class="books-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Загрузка книг...</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Электронная библиотека © <span id="currentYear"></span></p>
+        </footer>
+    </div>
+    
     <script>
-    window.showToast = function() {};
-    
-    function killAllToasts() {
-        var toasts = document.querySelectorAll('#dynamic-toast');
-        for (var i = 0; i < toasts.length; i++) {
-            if (toasts[i] && toasts[i].parentNode) {
-                toasts[i].parentNode.removeChild(toasts[i]);
+        // Простой и рабочий скрипт
+        console.log('Сайт загружен');
+        
+        // Год
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // Тема
+        function setTheme(theme) {
+            document.body.className = theme + '-theme';
+            localStorage.setItem('theme', theme);
+        }
+        
+        var savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+        
+        document.getElementById('theme-light').onclick = function() { setTheme('light'); };
+        document.getElementById('theme-dark').onclick = function() { setTheme('dark'); };
+        
+        // Загрузка книг
+        async function loadBooks() {
+            var booksGrid = document.getElementById('booksGrid');
+            
+            try {
+                // Список книг
+                var bookFiles = ['book1.json', 'book2.json', 'book3.json', 'book4.json', 'book5.json', 'book6.json', 'book7.json'];
+                var allBooks = [];
+                
+                for (var i = 0; i < bookFiles.length; i++) {
+                    try {
+                        var response = await fetch(bookFiles[i]);
+                        if (response.ok) {
+                            var book = await response.json();
+                            book.id = i + 1;
+                            allBooks.push(book);
+                        }
+                    } catch(e) {
+                        console.log('Не удалось загрузить:', bookFiles[i]);
+                    }
+                }
+                
+                if (allBooks.length === 0) {
+                    booksGrid.innerHTML = '<div class="error">❌ Не удалось загрузить книги. Проверьте наличие файлов book1.json...book7.json</div>';
+                    return;
+                }
+                
+                // Отображаем книги
+                booksGrid.innerHTML = '';
+                
+                for (var i = 0; i < allBooks.length; i++) {
+                    var book = allBooks[i];
+                    var card = document.createElement('div');
+                    card.className = 'book-card';
+                    card.innerHTML = 
+                        '<div class="book-cover">' + (book.cover || book.title) + '</div>' +
+                        '<div class="book-title">' + book.title + '</div>' +
+                        '<div class="book-meta">' +
+                            '<strong>Автор:</strong> ' + book.author + '<br>' +
+                            '<strong>Год:</strong> ' + (book.year || 'Не указан') + '<br>' +
+                            '<strong>Страниц:</strong> ' + (book.pages ? book.pages.length : 0) +
+                        '</div>' +
+                        '<button class="btn" data-id="' + book.id + '">📖 Читать</button>';
+                    
+                    card.querySelector('.btn').onclick = (function(b) {
+                        return function() { openBook(b); };
+                    })(book);
+                    
+                    booksGrid.appendChild(card);
+                }
+                
+            } catch(error) {
+                console.error('Ошибка:', error);
+                booksGrid.innerHTML = '<div class="error">❌ Ошибка загрузки книг</div>';
             }
         }
-    }
-    
-    killAllToasts();
-    setInterval(killAllToasts, 100);
+        
+        // Читалка
+        function openBook(book) {
+            var pages = book.pages;
+            var currentPage = 1;
+            
+            var content = '<div style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; overflow:auto; padding:40px;">';
+            content += '<button style="position:fixed; top:20px; right:20px; padding:10px 20px; background:red; color:white; border:none; border-radius:5px; cursor:pointer;" onclick="this.parentNode.remove()">✕ Закрыть</button>';
+            content += '<h2 style="text-align:center; margin-bottom:30px;">' + book.title + '</h2>';
+            content += '<div id="bookContent" style="max-width:800px; margin:0 auto; font-size:18px; line-height:1.8;">' + pages[0] + '</div>';
+            content += '<div style="position:fixed; bottom:20px; left:0; right:0; text-align:center; padding:20px; background:white; box-shadow:0 -2px 10px rgba(0,0,0,0.1);">';
+            content += '<button id="prevBtn" style="padding:10px 20px; margin:0 10px; cursor:pointer;">← Назад</button>';
+            content += '<span id="pageNum">1 / ' + pages.length + '</span>';
+            content += '<button id="nextBtn" style="padding:10px 20px; margin:0 10px; cursor:pointer;">Вперед →</button>';
+            content += '</div></div>';
+            
+            var div = document.createElement('div');
+            div.innerHTML = content;
+            document.body.appendChild(div);
+            
+            var bookContent = div.querySelector('#bookContent');
+            var pageNum = div.querySelector('#pageNum');
+            
+            div.querySelector('#prevBtn').onclick = function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    bookContent.innerHTML = pages[currentPage - 1];
+                    pageNum.textContent = currentPage + ' / ' + pages.length;
+                    bookContent.scrollTop = 0;
+                }
+            };
+            
+            div.querySelector('#nextBtn').onclick = function() {
+                if (currentPage < pages.length) {
+                    currentPage++;
+                    bookContent.innerHTML = pages[currentPage - 1];
+                    pageNum.textContent = currentPage + ' / ' + pages.length;
+                    bookContent.scrollTop = 0;
+                }
+            };
+        }
+        
+        // Запускаем загрузку
+        loadBooks();
     </script>
 </body>
 </html>
