@@ -32,13 +32,24 @@
             <h2>Добро пожаловать!</h2>
             <p>В нашей библиотеке вы можете читать произведения совершенно бесплатно. Выбирайте книгу и начинайте чтение прямо сейчас!</p>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">Используйте кнопки справа вверху для переключения между светлой и темной темой</p>
-            <div class="loading" id="loadingIndicator">
-                Загрузка книг...
-            </div>
+            <!-- Убрал дублирующуюся надпись "Загрузка книг..." -->
         </section>
         
         <section>
             <h2>Коллекция книг</h2>
+            <!-- Добавил отдельный индикатор загрузки -->
+            <div class="loading" id="loadingIndicator" style="display: none; text-align: center; padding: 40px;">
+                <div class="spinner" style="
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 20px;
+                "></div>
+                <p>Загрузка книг...</p>
+            </div>
             <div class="books-grid" id="booksGrid">
                 <!-- Книги будут добавлены через JavaScript -->
             </div>
@@ -83,61 +94,67 @@
     <button class="exit-fullscreen-btn" id="exitFullscreenBtn" title="Выйти из полноэкранного режима (ESC)">✕</button>
 
     <script src="script.js"></script>
-<!-- В самый конец body -->
-<script>
-// Список разрешенных доменов
-const allowedDomains = [
-  'rafstar.vercel.app',
-  '.rafstar.com',
-  'localhost'
-];
+    <!-- В самый конец body -->
+    <script>
+    // Список разрешенных доменов
+    const allowedDomains = [
+      'rafstar.vercel.app',
+      '.rafstar.com',
+      'localhost'
+    ];
 
-const currentDomain = window.location.hostname;
+    const currentDomain = window.location.hostname;
 
-// Проверяем, есть ли текущий домен в списке разрешенных
-if (!allowedDomains.some(domain => currentDomain.includes(domain))) {
-  // Создаем полноэкранное окно
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: red;
-    color: white;
-    font-size: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999999;
-    font-weight: bold;
-    text-align: center;
-    flex-direction: column;
-    cursor: not-allowed;
-  `;
-  
-  overlay.innerHTML = `
-    <div>🚨 Данный сайт не является оригинальным 🚨</div>
-    <div style="font-size: 24px; margin-top: 20px;">
-      Этот код принадлежит владельцу сайта
-    </div>
-  `;
-  
-  document.body.innerHTML = '';
-  document.body.appendChild(overlay);
-  
-  // Блокируем все действия
-  document.addEventListener('keydown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  });
-  
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-  });
-}
-</script>
-<div id="connection-status" style="display: none;"></div>
+    // Проверяем, есть ли текущий домен в списке разрешенных
+    if (!allowedDomains.some(domain => currentDomain.includes(domain))) {
+      // Создаем полноэкранное окно
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: red;
+        color: white;
+        font-size: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        font-weight: bold;
+        text-align: center;
+        flex-direction: column;
+        cursor: not-allowed;
+      `;
+      
+      overlay.innerHTML = `
+        <div>🚨 Данный сайт не является оригинальным 🚨</div>
+        <div style="font-size: 24px; margin-top: 20px;">
+          Этот код принадлежит владельцу сайта
+        </div>
+      `;
+      
+      document.body.innerHTML = '';
+      document.body.appendChild(overlay);
+      
+      // Блокируем все действия
+      document.addEventListener('keydown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+      });
+    }
+    </script>
+    <style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    </style>
+    <div id="connection-status" style="display: none;"></div>
 </body>
 </html>
