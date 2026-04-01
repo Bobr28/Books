@@ -326,6 +326,28 @@ window.openBook = function(bookId) {
     currentBook = book;
     currentPage = getReadingProgress(bookId);
     if (currentPage > book.pages.length) currentPage = 1;
+// Полностью отключаем все уведомления
+setTimeout(function() {
+    // Удаляем элемент тоста если он есть
+    var toast = document.getElementById('dynamic-toast');
+    if (toast && toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+    }
+    
+    // Заменяем функцию showToast на пустышку
+    window.showToast = function() {};
+    
+    // Находим и удаляем все элементы с этой надписью
+    var allDivs = document.getElementsByTagName('*');
+    for (var i = 0; i < allDivs.length; i++) {
+        if (allDivs[i].innerHTML && allDivs[i].innerHTML.indexOf('📚') !== -1 && allDivs[i].innerHTML.indexOf('Загрузка книг') !== -1) {
+            allDivs[i].style.display = 'none';
+            if (allDivs[i].parentNode) {
+                allDivs[i].parentNode.removeChild(allDivs[i]);
+            }
+        }
+    }
+}, 10);
     
     const readerTitle = document.getElementById('readerTitle');
     const readerContent = document.getElementById('readerContent');
