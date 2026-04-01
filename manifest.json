@@ -3,7 +3,7 @@
   "dir": "ltr",
   "display": "standalone",
   "name": "Reading world",
-  "orientation": "any",
+  "orientation": "portrait",
   "scope": "/",
   "short_name": "Reading world",
   "start_url": "https://rafstar.vercel.app/",
@@ -16,15 +16,12 @@
       "isWebp": false,
       "isJpg": false,
       "width": 0,
-      "is512x512": true,
+      "is512x512": false,
       "is256x256": false,
       "is192x192": false
     }
   ],
-  "id": "1",
+  "id": "1243",
   "description": "Читайте книги онлайн и офлайн",
-  "lang": "ru",
-  "categories": [
-    "books"
-  ]
+  "lang": "ru"
 }
