@@ -233,6 +233,30 @@ h2 {
     display: flex;
     flex-direction: column;
     border: 1px solid #eee;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Единый эффект нажатия для обеих тем */
+.book-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+/* Эффект hover только для устройств с поддержкой hover (не мобильные) */
+@media (hover: hover) {
+    .book-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .light-theme .book-card:hover {
+        box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+    }
+    
+    .dark-theme .book-card:hover {
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
 }
 
 .light-theme .book-card {
@@ -257,23 +281,16 @@ h2 {
     transition: transform 0.5s ease;
 }
 
-.light-theme .book-card:hover::before {
-    transform: translateX(0);
-}
-
-.book-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+@media (hover: hover) {
+    .light-theme .book-card:hover::before {
+        transform: translateX(0);
+    }
 }
 
 .dark-theme .book-card {
     background-color: #2a2a2a;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     border-color: #444;
-}
-
-.dark-theme .book-card:hover {
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
 }
 
 .book-cover {
@@ -377,6 +394,7 @@ h2 {
     transition: all 0.3s ease;
     flex: 1;
     font-size: 1rem;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-read {
@@ -677,6 +695,7 @@ footer {
     transition: all 0.3s ease;
     font-weight: bold;
     font-size: 1rem;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .light-theme .close-btn {
@@ -709,6 +728,7 @@ footer {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     font-size: 1rem;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .light-theme .reader-btn {
@@ -769,6 +789,7 @@ footer {
     font-weight: bold;
     font-size: 1.2rem;
     transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .light-theme .font-btn {
@@ -803,6 +824,7 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .light-theme .fullscreen-btn {
@@ -864,6 +886,7 @@ footer {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
     opacity: 0.8;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .light-theme .page-nav-btn {
