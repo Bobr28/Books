@@ -115,6 +115,12 @@ let fontSize = 18;
 let isFullscreen = false;
 let isLoading = false;
 
+// ДЕФОЛТНЫЙ СПИСОК КНИГ (если books-list.json не загрузится)
+const DEFAULT_BOOK_FILES = [
+    'book1.json', 'book2.json', 'book3.json', 'book4.json', 
+    'book5.json', 'book6.json', 'book7.json', 'book8.json'
+];
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', async () => {
     cacheDomElements();
@@ -144,56 +150,101 @@ async function loadAllBooks() {
     if (DOM.booksGrid) DOM.booksGrid.innerHTML = '';
     
     try {
-        // Пытаемся загрузить из кэша сначала
+        // 1. Сначала пытаемся загрузить из кэша
         if (await loadFromCache()) {
             isLoading = false;
             if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none';
             return;
         }
         
-        // Загружаем список файлов
-        const response = await fetch('books-list.json');
-        if (!response.ok) throw new Error('books-list.json not found');
+        // 2. Пытаемся загрузить список файлов из books-list.json
+        let bookFiles = [];
+        let listLoaded = false;
         
-        const bookFiles = await response.json();
-        if (!Array.isArray(bookFiles) || bookFiles.length === 0) throw new Error('Empty list');
+        try {
+            const response = await fetch('books-list.json?t=' + Date.now());
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    bookFiles = data;
+                    listLoaded = true;
+                    console.log('✅ Загружен books-list.json:', bookFiles);
+                }
+            }
+        } catch(e) {
+            console.warn('⚠️ Не удалось загрузить books-list.json, используем список по умолчанию');
+        }
         
-        // Параллельная загрузка всех книг
+        // 3. Если books-list.json не загрузился, используем список по умолчанию
+        if (!listLoaded || bookFiles.length === 0) {
+            bookFiles = DEFAULT_BOOK_FILES;
+            console.log('📚 Используем список книг по умолчанию:', bookFiles);
+        }
+        
+        // 4. Загружаем книги параллельно
         const bookPromises = bookFiles.map(async (filename, index) => {
             try {
-                const res = await fetch(filename);
-                if (!res.ok) return null;
-                const data = await res.json();
-                if (data.title && data.author && data.pages) {
-                    data.id = index + 1;
-                    return data;
+                // Пробуем загрузить с обходом кэша
+                const res = await fetch(filename + '?t=' + Date.now());
+                if (!res.ok) {
+                    console.warn(`❌ Книга ${filename} не найдена (${res.status})`);
+                    return null;
                 }
-            } catch(e) { return null; }
+                const data = await res.json();
+                if (data.title && data.author && data.pages && data.pages.length > 0) {
+                    data.id = index + 1;
+                    console.log(`✅ Загружена книга ${index + 1}: ${data.title}`);
+                    return data;
+                } else {
+                    console.warn(`❌ Книга ${filename} имеет неверную структуру`);
+                    return null;
+                }
+            } catch(e) {
+                console.warn(`❌ Ошибка загрузки ${filename}:`, e.message);
+                return null;
+            }
         });
         
         const results = await Promise.all(bookPromises);
         allBooks = results.filter(b => b !== null);
         
-        if (allBooks.length === 0) throw new Error('No books loaded');
+        console.log(`📊 Итого загружено книг: ${allBooks.length} из ${bookFiles.length}`);
         
-        renderBooks(allBooks);
-        
-        // Сохраняем в кэш
-        try {
-            CACHE.books = allBooks;
-            CACHE.timestamp = Date.now();
-            CACHE.bookFiles = bookFiles;
-            localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
-            localStorage.setItem('cachedBookFiles', JSON.stringify(bookFiles));
-            localStorage.setItem('cacheTimestamp', CACHE.timestamp.toString());
-        } catch(e) {}
+        // 5. Если книги загрузились - отображаем
+        if (allBooks.length > 0) {
+            renderBooks(allBooks);
+            
+            // Сохраняем в кэш
+            try {
+                localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
+                localStorage.setItem('cachedBookFiles', JSON.stringify(bookFiles));
+                localStorage.setItem('cacheTimestamp', Date.now().toString());
+            } catch(e) {}
+        } else {
+            // 6. Если ни одной книги не загрузилось - показываем ошибку
+            throw new Error('Не удалось загрузить ни одной книги');
+        }
         
     } catch(error) {
-        console.error('Error:', error);
+        console.error('❌ Критическая ошибка:', error);
+        
+        // Последняя попытка - загрузить из кэша
         const cacheLoaded = await loadFromCache();
+        
         if (!cacheLoaded && DOM.errorMessage) {
             DOM.errorMessage.style.display = 'block';
-            DOM.errorMessage.innerHTML = `<h3>❌ Ошибка загрузки</h3><p>Не удалось загрузить книги.</p><button onclick="retryLoading()" class="btn btn-read">🔄 Повторить</button>`;
+            DOM.errorMessage.innerHTML = `
+                <h3>❌ Ошибка загрузки книг</h3>
+                <p>Не удалось загрузить книги. Проверьте наличие файлов:</p>
+                <ul style="text-align:left;display:inline-block;margin:10px 0;">
+                    <li>books-list.json (список книг)</li>
+                    <li>book1.json, book2.json и т.д. (сами книги)</li>
+                </ul>
+                <p style="margin-top:15px;">
+                    <button onclick="retryLoading()" class="btn btn-read">🔄 Повторить</button>
+                    <button onclick="loadDefaultBooks()" class="btn btn-details" style="margin-left:10px;">📚 Загрузить по умолчанию</button>
+                </p>
+            `;
         }
     } finally {
         isLoading = false;
@@ -201,12 +252,52 @@ async function loadAllBooks() {
     }
 }
 
+// Загрузка книг по умолчанию (без books-list.json)
+window.loadDefaultBooks = async function() {
+    if (DOM.errorMessage) DOM.errorMessage.style.display = 'none';
+    if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'block';
+    
+    try {
+        const bookPromises = DEFAULT_BOOK_FILES.map(async (filename, index) => {
+            try {
+                const res = await fetch(filename + '?t=' + Date.now());
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (data.title && data.author && data.pages) {
+                    data.id = index + 1;
+                    return data;
+                }
+                return null;
+            } catch(e) {
+                return null;
+            }
+        });
+        
+        const results = await Promise.all(bookPromises);
+        allBooks = results.filter(b => b !== null);
+        
+        if (allBooks.length > 0) {
+            renderBooks(allBooks);
+            // Сохраняем в кэш
+            localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
+            localStorage.setItem('cacheTimestamp', Date.now().toString());
+        } else {
+            throw new Error('Нет книг');
+        }
+    } catch(e) {
+        alert('Не удалось загрузить книги. Убедитесь, что файлы book1.json...book8.json существуют.');
+    } finally {
+        if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none';
+    }
+};
+
 // Загрузка из кэша
 async function loadFromCache() {
     try {
         const cached = localStorage.getItem('cachedBooks');
         const timestamp = localStorage.getItem('cacheTimestamp');
         
+        // Используем кэш если ему меньше 24 часов
         if (cached && timestamp && (Date.now() - parseInt(timestamp) < 86400000)) {
             allBooks = JSON.parse(cached);
             if (allBooks.length > 0) {
@@ -435,6 +526,10 @@ window.closeReader = function() {
 
 window.retryLoading = function() {
     if (DOM.errorMessage) DOM.errorMessage.style.display = 'none';
+    // Очищаем кэш перед повторной попыткой
+    localStorage.removeItem('cachedBooks');
+    localStorage.removeItem('cacheTimestamp');
+    allBooks = [];
     loadAllBooks();
 };
 
