@@ -565,18 +565,6 @@ window.addEventListener('offline', () => {
 // ========== 📚 ОСНОВНАЯ ЛОГИКА БИБЛИОТЕКИ ==========
 // ==================================================
 
-// Конфигурация - пути к файлам книг (прямо в корне)
-const BOOKS_CONFIG = [
-    { id: 1, filename: 'book1.json' },
-    { id: 2, filename: 'book2.json' },
-    { id: 3, filename: 'book3.json' },
-    { id: 4, filename: 'book4.json' },
-    { id: 5, filename: 'book5.json' },
-    { id: 6, filename: 'book6.json' },
-    { id: 7, filename: 'book7.json' },
-    { id: 8, filename: 'book8.json' }
-];
-
 // Глобальные переменные для работы читалки
 let allBooks = [];
 let currentBook = null;
@@ -777,7 +765,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setupThemeSwitcher();
     loadSavedTheme();
-    loadAllBooks();
     setupReader();
     updateConnectionStatus();
     
@@ -819,6 +806,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
+    
+    // Загружаем книги
+    loadAllBooks();
 });
 
 // Следим за изменением размера экрана
@@ -884,7 +874,7 @@ function loadSavedTheme() {
     });
 }
 
-// Загрузка всех книг
+// Загрузка всех книг ИЗ ФАЙЛА books-list.json
 async function loadAllBooks() {
     const loadingIndicator = document.getElementById('loadingIndicator');
     const errorMessage = document.getElementById('errorMessage');
@@ -895,18 +885,35 @@ async function loadAllBooks() {
         errorMessage.style.display = 'none';
         booksGrid.innerHTML = '';
         
+        // 1. Сначала загружаем список файлов из books-list.json
+        const listResponse = await fetch('books-list.json');
+        
+        if (!listResponse.ok) {
+            throw new Error(`Не удалось загрузить books-list.json (${listResponse.status})`);
+        }
+        
+        const bookFiles = await listResponse.json();
+        
+        if (!Array.isArray(bookFiles) || bookFiles.length === 0) {
+            throw new Error('books-list.json пуст или имеет неверный формат');
+        }
+        
+        console.log('📚 Загружены файлы книг:', bookFiles);
+        
+        // 2. Загружаем каждую книгу по очереди
         allBooks = [];
         
-        for (const config of BOOKS_CONFIG) {
+        for (let i = 0; i < bookFiles.length; i++) {
+            const filename = bookFiles[i];
             try {
-                const bookData = await loadBookFile(config.filename);
+                const bookData = await loadBookFile(filename);
                 if (bookData) {
-                    bookData.id = config.id;
+                    bookData.id = i + 1; // Устанавливаем ID (начиная с 1)
                     allBooks.push(bookData);
-                    console.log(`Загружена книга: ${bookData.title}`);
+                    console.log(`✅ Загружена книга: ${bookData.title}`);
                 }
             } catch (error) {
-                console.warn(`Не удалось загрузить книгу ${config.filename}:`, error);
+                console.warn(`⚠️ Не удалось загрузить книгу ${filename}:`, error);
             }
         }
         
@@ -914,51 +921,68 @@ async function loadAllBooks() {
             renderBooks(allBooks);
             loadingIndicator.style.display = 'none';
             
+            // Сохраняем книги в localStorage для кэширования
             try {
                 localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
                 localStorage.setItem('cacheTimestamp', Date.now().toString());
+                localStorage.setItem('cachedBookFiles', JSON.stringify(bookFiles));
             } catch (e) {
                 console.warn('Не удалось кэшировать книги:', e);
             }
         } else {
-            try {
-                const cachedBooks = localStorage.getItem('cachedBooks');
-                const cacheTimestamp = localStorage.getItem('cacheTimestamp');
-                
-                if (cachedBooks && cacheTimestamp) {
-                    const cacheAge = Date.now() - parseInt(cacheTimestamp);
-                    if (cacheAge < 3600000) {
-                        allBooks = JSON.parse(cachedBooks);
-                        renderBooks(allBooks);
-                        loadingIndicator.style.display = 'none';
-                        console.log('Используем кэшированные книги');
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.warn('Ошибка при чтении кэша:', e);
+            // Пробуем загрузить из кэша
+            const cacheLoaded = await loadFromCache();
+            if (!cacheLoaded) {
+                throw new Error('Не удалось загрузить ни одной книги');
             }
-            
-            throw new Error('Не удалось загрузить ни одной книги');
+            loadingIndicator.style.display = 'none';
         }
         
     } catch (error) {
         console.error('Ошибка при загрузке книг:', error);
-        loadingIndicator.style.display = 'none';
-        errorMessage.style.display = 'block';
-        errorMessage.innerHTML = `
-            <h3>Ошибка загрузки</h3>
-            <p>Не удалось загрузить книги. Возможные причины:</p>
-            <ul style="text-align: left; display: inline-block;">
-                <li>Файлы книг не найдены на сервере</li>
-                <li>Проблемы с интернет-соединением</li>
-                <li>Некорректный формат файлов</li>
-            </ul>
-            <p style="margin-top: 15px;">
-                <button onclick="retryLoading()" class="btn btn-read" style="margin: 0 auto;">Повторить попытку</button>
-            </p>
-        `;
+        
+        // Пробуем загрузить из кэша
+        const cacheLoaded = await loadFromCache();
+        
+        if (!cacheLoaded) {
+            loadingIndicator.style.display = 'none';
+            errorMessage.style.display = 'block';
+            errorMessage.innerHTML = `
+                <h3>❌ Ошибка загрузки</h3>
+                <p>Не удалось загрузить книги.</p>
+                <p style="font-size: 0.9em; color: #666;">Файл books-list.json не найден или имеет неверный формат.</p>
+                <p style="margin-top: 15px;">
+                    <button onclick="retryLoading()" class="btn btn-read" style="margin: 0 auto;">🔄 Повторить попытку</button>
+                </p>
+            `;
+        } else {
+            loadingIndicator.style.display = 'none';
+        }
     }
+}
+
+// Загрузка из кэша localStorage
+async function loadFromCache() {
+    try {
+        const cachedBooks = localStorage.getItem('cachedBooks');
+        const cachedBookFiles = localStorage.getItem('cachedBookFiles');
+        const cacheTimestamp = localStorage.getItem('cacheTimestamp');
+        
+        if (cachedBooks && cacheTimestamp) {
+            const cacheAge = Date.now() - parseInt(cacheTimestamp);
+            // Используем кэш если ему меньше 24 часов
+            if (cacheAge < 86400000) {
+                allBooks = JSON.parse(cachedBooks);
+                renderBooks(allBooks);
+                console.log(`📦 Используем кэшированные книги (${allBooks.length} шт.)`);
+                showToast('📚 Книги загружены из кэша');
+                return true;
+            }
+        }
+    } catch (e) {
+        console.warn('Ошибка при чтении кэша:', e);
+    }
+    return false;
 }
 
 // Функция повторной загрузки
@@ -985,6 +1009,7 @@ async function loadBookFile(filename) {
         
         const bookData = JSON.parse(text);
         
+        // Проверяем обязательные поля
         if (!bookData.title || !bookData.author || !bookData.pages) {
             throw new Error('Некорректная структура книги');
         }
@@ -1002,7 +1027,7 @@ function renderBooks(books) {
     booksGrid.innerHTML = '';
     
     if (books.length === 0) {
-        booksGrid.innerHTML = '<p class="no-books">Книги не найдены</p>';
+        booksGrid.innerHTML = '<p class="no-books">📭 Книги не найдены</p>';
         return;
     }
     
@@ -1010,22 +1035,23 @@ function renderBooks(books) {
         const bookCard = document.createElement('div');
         bookCard.className = 'book-card';
         bookCard.innerHTML = `
-            <div class="book-cover">${book.cover || book.title}</div>
-            <div class="book-title">${book.title}</div>
+            <div class="book-cover">${escapeHtml(book.cover || book.title)}</div>
+            <div class="book-title">${escapeHtml(book.title)}</div>
             <div class="book-meta">
-                <p><strong>Автор:</strong> ${book.author}</p>
-                <p><strong>Год:</strong> ${book.year || 'Не указан'}</p>
+                <p><strong>Автор:</strong> ${escapeHtml(book.author)}</p>
+                <p><strong>Год:</strong> ${escapeHtml(book.year || 'Не указан')}</p>
                 <p><strong>Страниц:</strong> ${book.pages ? book.pages.length : 0}</p>
             </div>
             <div class="book-buttons">
-                <button class="btn btn-read" data-id="${book.id}">Читать</button>
-                <button class="btn btn-details" data-id="${book.id}">Подробнее</button>
+                <button class="btn btn-read" data-id="${book.id}">📖 Читать</button>
+                <button class="btn btn-details" data-id="${book.id}">ℹ️ Подробнее</button>
             </div>
         `;
         
         booksGrid.appendChild(bookCard);
     });
     
+    // Назначаем обработчики для кнопок
     document.querySelectorAll('.btn-read').forEach(button => {
         button.addEventListener('click', function() {
             const bookId = parseInt(this.getAttribute('data-id'));
@@ -1038,6 +1064,16 @@ function renderBooks(books) {
             const bookId = parseInt(this.getAttribute('data-id'));
             showBookDetails(bookId);
         });
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
     });
 }
 
@@ -1078,8 +1114,8 @@ function showBookDetails(bookId) {
     const book = allBooks.find(b => b.id === bookId);
     if (!book) return;
     
-    const message = `${book.title}\n\nАвтор: ${book.author}\nГод: ${book.year || 'Не указан'}\nСтраниц: ${book.pages ? book.pages.length : 0}\n\nПервые строки:\n${book.pages && book.pages[0] ? book.pages[0].replace(/<[^>]*>/g, '').substring(0, 150) : ''}...`;
-    alert(message);
+    const preview = book.pages && book.pages[0] ? book.pages[0].replace(/<[^>]*>/g, '').substring(0, 200) : '';
+    alert(`${book.title}\n\n📝 Автор: ${book.author}\n📅 Год: ${book.year || 'Не указан'}\n📄 Страниц: ${book.pages ? book.pages.length : 0}\n\n📖 Первые строки:\n${preview}...`);
 }
 
 // Настройка читалки
@@ -1212,7 +1248,7 @@ window.toggleFullscreen = function() {
     if (!isFullscreen) {
         readerWindow.classList.add('fullscreen');
         if (fullscreenBtn) {
-            fullscreenBtn.innerHTML = '⛶';
+            fullscreenBtn.innerHTML = '✕';
             fullscreenBtn.title = 'Обычный режим';
         }
         if (exitFullscreenBtn) exitFullscreenBtn.style.display = 'flex';
