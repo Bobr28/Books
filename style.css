@@ -1,1 +1,655 @@
-обэмэ
+    * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        /* Светлая тема (по умолчанию) */
+        body.light-theme {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        /* Темная тема */
+        body.dark-theme {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Стили для заголовков в разных темах */
+        .light-theme header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+        }
+        
+        .dark-theme header {
+            background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
+            color: #e0e0e0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .light-theme h2 {
+            color: #2c3e50;
+        }
+        
+        .dark-theme h2 {
+            color: #90caf9;
+        }
+        
+        header {
+            padding: 25px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        h2 {
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 2rem;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        /* Контролы тем */
+        .theme-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .theme-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .theme-btn.active {
+            transform: scale(1.1);
+            border: 2px solid gold;
+            box-shadow: 0 0 15px gold;
+        }
+        
+        #theme-light {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        #theme-dark {
+            background-color: #333;
+            color: white;
+        }
+        
+        .intro {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .light-theme .intro {
+            background-color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .dark-theme .intro {
+            background-color: #2a2a2a;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .book-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #eee;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .light-theme .book-card {
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-color: #eee;
+        }
+        
+        .dark-theme .book-card {
+            background-color: #2a2a2a;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-color: #444;
+        }
+        
+        .dark-theme .book-card:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+        
+        .book-cover {
+            height: 220px;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .light-theme .book-cover {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+        }
+        
+        .dark-theme .book-cover {
+            background: linear-gradient(135deg, #444, #2a2a2a);
+        }
+        
+        .book-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            min-height: 65px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+        
+        .dark-theme .book-title {
+            color: #e0e0e0;
+        }
+        
+        .book-meta {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .dark-theme .book-meta {
+            color: #aaa;
+        }
+        
+        .book-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+        
+        .btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex: 1;
+            font-size: 1rem;
+        }
+        
+        .btn-read {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .btn-read:hover {
+            background: linear-gradient(135deg, #2980b9, #2573a7);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .dark-theme .btn-read {
+            background: linear-gradient(135deg, #444, #333);
+        }
+        
+        .dark-theme .btn-read:hover {
+            background: linear-gradient(135deg, #555, #444);
+        }
+        
+        .btn-details {
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            color: #2c3e50;
+        }
+        
+        .btn-details:hover {
+            background: linear-gradient(135deg, #bdc3c7, #a1a9b0);
+            transform: translateY(-2px);
+        }
+        
+        .dark-theme .btn-details {
+            background: linear-gradient(135deg, #444, #333);
+            color: #e0e0e0;
+        }
+        
+        .dark-theme .btn-details:hover {
+            background: linear-gradient(135deg, #555, #444);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 25px;
+            color: #7f8c8d;
+            border-top: 1px solid #eee;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .dark-theme footer {
+            color: #aaa;
+            border-top-color: #333;
+        }
+        
+        /* Стили для читалки */
+        .reader-window {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 1000px;
+            height: 95vh;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Полноэкранный режим */
+        .reader-window.fullscreen {
+            top: 0;
+            left: 0;
+            transform: none;
+            width: 100%;
+            height: 100vh;
+            max-width: none;
+            border-radius: 0;
+            box-shadow: none;
+            z-index: 1001;
+        }
+        
+        /* В полноэкранном режиме скрываем верхнюю панель и панель управления */
+        .reader-window.fullscreen .reader-header,
+        .reader-window.fullscreen .reader-controls {
+            display: none;
+        }
+        
+        /* Кнопка возврата из полноэкранного режима */
+        .exit-fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.5rem;
+            z-index: 1002;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .reader-window.fullscreen + .exit-fullscreen-btn {
+            display: flex;
+        }
+        
+        .exit-fullscreen-btn:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        }
+        
+        .dark-theme .reader-window {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .dark-theme .reader-window.fullscreen {
+            box-shadow: none;
+        }
+        
+        .reader-header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dark-theme .reader-header {
+            background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
+        }
+        
+        .reader-controls {
+            padding: 15px 25px;
+            background-color: #f8f9fa;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            align-items: center;
+        }
+        
+        .dark-theme .reader-controls {
+            background-color: #333;
+        }
+        
+        .reader-content {
+            padding: 30px;
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 18px;
+            line-height: 1.8;
+            transition: all 0.3s ease;
+            text-align: justify;
+            hyphens: auto;
+            max-height: calc(95vh - 140px);
+            background-color: #fffef7;
+        }
+        
+        .reader-window.fullscreen .reader-content {
+            max-height: 100vh;
+            padding-top: 50px;
+            padding-bottom: 50px;
+        }
+        
+        .dark-theme .reader-content {
+            background-color: #1e1e1e;
+        }
+        
+        .reader-content p {
+            margin-bottom: 1.5em;
+            text-indent: 1.5em;
+        }
+        
+        .reader-content h3, 
+        .reader-content h4 {
+            margin: 1.5em 0 0.8em 0;
+            text-align: left;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .dark-theme .reader-content h3,
+        .dark-theme .reader-content h4 {
+            color: #90caf9;
+            border-bottom-color: #444;
+        }
+        
+        .reader-content .chapter-start {
+            margin-top: 2em;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .dark-theme .reader-content .chapter-start {
+            color: #90caf9;
+        }
+        
+        .close-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+    
+        .close-btn:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+        
+        .reader-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .reader-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #2573a7);
+            transform: translateY(-2px);
+        }
+        
+        .dark-theme .reader-btn {
+            background: linear-gradient(135deg, #444, #333);
+        }
+        
+        .dark-theme .reader-btn:hover {
+            background: linear-gradient(135deg, #555, #444);
+        }
+        
+        .page-indicator {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 0 15px;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .font-controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .font-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .font-btn:hover {
+            background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
+            transform: scale(1.1);
+        }
+        
+        .fullscreen-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fullscreen-btn:hover {
+            background: linear-gradient(135deg, #8e44ad, #7d3c98);
+            transform: scale(1.1);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 999;
+            display: none;
+            backdrop-filter: blur(3px);
+        }
+        
+        /* Скрываем оверлей в полноэкранном режиме */
+        .reader-window.fullscreen + .overlay {
+            display: none;
+        }
+        
+        /* Кнопки навигации в полноэкранном режиме */
+        .page-nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.9), rgba(41, 128, 185, 0.9));
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.8rem;
+            z-index: 1003;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+        
+        .page-nav-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            opacity: 1;
+        }
+        
+        .page-nav-btn.prev-page {
+            left: 20px;
+        }
+        
+        .page-nav-btn.next-page {
+            right: 20px;
+        }
+        
+        .reader-window.fullscreen ~ .page-nav-btn {
+            display: flex;
+        }
+
+        /* Стили для кнопок навигации по тапам (для мобильных устройств) */
+        .tap-navigation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1004;
+            display: none;
+        }
+
+        .tap-navigation.active {
+            display: block;
+        }
+
+        .tap-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .tap-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40%;
+            height: 100%;
+            cursor: pointer;
+        }
+        /* Применить ко всему сайту */
+body {
+  -webkit-touch-callout: none; /* Отключает контекстное меню при долгом нажатии в iOS Safari */
+  -webkit-user-select: none;   /* Safari, Chrome, Opera, Android */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* Internet Explorer/Edge */
+  user-select: none;           /* Стандартный синтаксис */
+}
