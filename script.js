@@ -573,7 +573,8 @@ const BOOKS_CONFIG = [
     { id: 4, filename: 'book4.json' },
     { id: 5, filename: 'book5.json' },
     { id: 6, filename: 'book6.json' },
-    { id: 7, filename: 'book7.json' }
+    { id: 7, filename: 'book7.json' },
+    { id: 8, filename: 'book8.json' }
 ];
 
 // Глобальные переменные для работы читалки
