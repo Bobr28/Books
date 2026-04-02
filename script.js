@@ -32,7 +32,7 @@ function updateConnectionStatus() {
     statusDiv.style.background = 'rgba(46, 125, 50, 0.9)';
   } else {
     statusDiv.textContent = '○ Офлайн';
-    statusDiv.style.background = 'rgba(198, 40, 40, 0.9)';
+    statusDiv.style.background = 'rgba(128, 128, 128, 0.9)';
   }
 }
 
