@@ -90,7 +90,7 @@ if ('serviceWorker' in navigator) {
       if (typeof loadAllBooks === 'function') {
         loadAllBooks();
       }
-      showToast('Новые книги загружены');
+      showToast('Книги загружены');
     }
   });
 }
