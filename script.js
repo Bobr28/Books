@@ -69,7 +69,7 @@ function splitHtmlIntoPages(htmlContent, charsPerPage) {
     return pages;
 }
 
-// БЕЗОПАСНАЯ функция escapeHtml (исправлена)
+// БЕЗОПАСНАЯ функция escapeHtml
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     if (typeof str !== 'string') str = String(str);
@@ -125,7 +125,7 @@ const DEFAULT_BOOK_FILES = [
     'book5.json', 'book6.json', 'book7.json', 'book8.json'
 ];
 
-// === ПОИСК КНИГ ===
+// === ПОИСК КНИГ (ТОЛЬКО ПО НАЗВАНИЮ И АВТОРУ) ===
 function addSearchBar() {
     // Находим intro секцию
     const introSection = document.querySelector('.intro');
@@ -135,91 +135,15 @@ function addSearchBar() {
     if (document.getElementById('globalSearchInput')) return;
     
     const searchHTML = `
-        <div class="search-container" style="margin: 25px 0 30px 0; position: relative;">
+        <div class="search-container">
             <input type="text" id="globalSearchInput" class="search-input" 
-                   placeholder="🔍 Поиск по названию, автору или тексту книги..." 
-                   autocomplete="off"
-                   style="width: 100%; padding: 14px 20px; font-size: 16px; border: 2px solid #e0e0e0; border-radius: 12px; background: white; transition: all 0.3s; box-sizing: border-box;">
-            <div id="globalSearchResults" class="search-results-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; margin-top: 8px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.15);"></div>
+                   placeholder="🔍 Поиск по названию или автору..." 
+                   autocomplete="off">
+            <div id="globalSearchResults" class="search-results-dropdown" style="display: none;"></div>
         </div>
     `;
     
     introSection.insertAdjacentHTML('afterend', searchHTML);
-    
-    // Добавляем стили для поиска
-    const searchStyles = document.createElement('style');
-    searchStyles.textContent = `
-        .dark-theme .search-input {
-            background: #2d2d2d;
-            color: #e0e0e0;
-            border-color: #444;
-        }
-        .dark-theme .search-results-dropdown {
-            background: #2d2d2d;
-            border-color: #444;
-        }
-        .search-result-item {
-            padding: 14px 16px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .search-result-item:hover {
-            background: #f5f5f5;
-        }
-        .dark-theme .search-result-item {
-            border-color: #3a3a3a;
-        }
-        .dark-theme .search-result-item:hover {
-            background: #383838;
-        }
-        .search-result-title {
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 4px;
-        }
-        .search-result-author {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-        .dark-theme .search-result-author {
-            color: #aaa;
-        }
-        .search-result-match {
-            font-size: 11px;
-            color: #4CAF50;
-            margin-bottom: 6px;
-        }
-        .search-result-preview {
-            font-size: 12px;
-            color: #888;
-            font-style: italic;
-            line-height: 1.4;
-        }
-        .dark-theme .search-result-preview {
-            color: #aaa;
-        }
-        .search-loading, .search-no-results {
-            padding: 20px;
-            text-align: center;
-            color: #666;
-        }
-        .search-results-header {
-            padding: 12px 16px;
-            background: #f5f5f5;
-            font-size: 13px;
-            color: #666;
-            border-bottom: 1px solid #e0e0e0;
-            border-radius: 12px 12px 0 0;
-        }
-        .dark-theme .search-results-header {
-            background: #252525;
-            color: #aaa;
-            border-color: #444;
-        }
-    `;
-    document.head.appendChild(searchStyles);
     
     // Настройка поиска
     const searchInput = document.getElementById('globalSearchInput');
@@ -266,41 +190,22 @@ function addSearchBar() {
             const titleMatch = book.title?.toLowerCase().includes(lowerQuery);
             const authorMatch = book.author?.toLowerCase().includes(lowerQuery);
             
-            let textMatch = false;
-            let preview = '';
-            
-            if (book.pages && book.pages.length) {
-                const fullText = book.pages.join(' ').toLowerCase();
-                textMatch = fullText.includes(lowerQuery);
-                
-                if (textMatch && !titleMatch && !authorMatch) {
-                    const index = fullText.indexOf(lowerQuery);
-                    const start = Math.max(0, index - 50);
-                    const end = Math.min(fullText.length, index + 70);
-                    preview = fullText.substring(start, end).replace(/<[^>]*>/g, ' ').trim();
-                    if (start > 0) preview = '...' + preview;
-                    if (end < fullText.length) preview = preview + '...';
-                }
-            }
-            
-            if (titleMatch || authorMatch || textMatch) {
+            if (titleMatch || authorMatch) {
                 let matchType = '';
                 if (titleMatch) matchType = '📖 в названии';
                 else if (authorMatch) matchType = '✍️ у автора';
-                else matchType = '📄 в тексте';
                 
                 results.push({
                     id: book.id,
                     title: book.title || 'Без названия',
                     author: book.author || 'Автор неизвестен',
-                    matchType: matchType,
-                    preview: preview
+                    matchType: matchType
                 });
             }
         }
         
         if (results.length === 0) {
-            resultsDiv.innerHTML = '<div class="search-no-results">Ничего не найдено</div>';
+            resultsDiv.innerHTML = '<div class="search-no-results">😔 Ничего не найдено</div>';
             return;
         }
         
@@ -311,7 +216,6 @@ function addSearchBar() {
                     <div class="search-result-title">📖 ${escapeHtml(book.title)}</div>
                     <div class="search-result-author">✍️ ${escapeHtml(book.author)}</div>
                     <div class="search-result-match">${book.matchType}</div>
-                    ${book.preview ? `<div class="search-result-preview">${escapeHtml(book.preview)}</div>` : ''}
                 </div>
             `).join('')}
         `;
@@ -462,7 +366,7 @@ async function loadFromCache() {
     return false;
 }
 
-// Отрисовка книг (исправлена)
+// Отрисовка книг
 function renderBooks(books) {
     if (!DOM.booksGrid) return;
     if (!books || books.length === 0) {
