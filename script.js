@@ -137,7 +137,7 @@ function addSearchBar() {
     const searchHTML = `
         <div class="search-container">
             <input type="text" id="globalSearchInput" class="search-input" 
-                   placeholder="🔍 Поиск по названию или автору..." 
+                   placeholder="Поиск по названию или автору..." 
                    autocomplete="off">
             <div id="globalSearchResults" class="search-results-dropdown" style="display: none;"></div>
         </div>
@@ -205,7 +205,7 @@ function addSearchBar() {
         }
         
         if (results.length === 0) {
-            resultsDiv.innerHTML = '<div class="search-no-results">😔 Ничего не найдено</div>';
+            resultsDiv.innerHTML = '<div class="search-no-results">Ничего не найдено</div>';
             return;
         }
         
