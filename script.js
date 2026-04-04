@@ -32,44 +32,14 @@ function getDeviceType() {
     return cachedDeviceType;
 }
 
-// Настройки устройств
+// Настройки устройств (только для отступов и межстрочного интервала)
 const DEVICE_CONFIG = {
-    mobile: { charsPerPage: 800, fontSize: 14, lineHeight: 1.5, padding: 15 },
-    tablet: { charsPerPage: 1200, fontSize: 16, lineHeight: 1.6, padding: 25 },
-    desktop: { charsPerPage: 1800, fontSize: 18, lineHeight: 1.8, padding: 40 }
+    mobile: { lineHeight: 1.5, padding: 15 },
+    tablet: { lineHeight: 1.6, padding: 25 },
+    desktop: { lineHeight: 1.8, padding: 40 }
 };
 
-// Быстрое разбиение на страницы
-function splitHtmlIntoPages(htmlContent, charsPerPage) {
-    if (!htmlContent || typeof htmlContent !== 'string') return [''];
-    if (htmlContent.length <= charsPerPage) return [htmlContent];
-    
-    const cleanText = htmlContent.replace(/\s+/g, ' ');
-    const totalChars = cleanText.length;
-    
-    if (totalChars <= charsPerPage) return [htmlContent];
-    
-    const pages = [];
-    let start = 0;
-    
-    while (start < totalChars) {
-        let end = start + charsPerPage;
-        if (end >= totalChars) {
-            pages.push(cleanText.substring(start));
-            break;
-        }
-        
-        while (end > start && cleanText[end] !== ' ') end--;
-        if (end === start) end = start + charsPerPage;
-        
-        pages.push(cleanText.substring(start, end));
-        start = end;
-    }
-    
-    return pages;
-}
-
-// БЕЗОПАСНАЯ функция escapeHtml
+// Безопасная функция escapeHtml
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     if (typeof str !== 'string') str = String(str);
@@ -81,14 +51,12 @@ function escapeHtml(str) {
     });
 }
 
-// Применение стилей устройства
-function applyDeviceStyles() {
+// Применение стилей устройства (только padding и line-height, шрифт не трогаем)
+function applyDeviceLayout() {
+    if (!DOM.readerContent) return;
     const config = DEVICE_CONFIG[getDeviceType()];
-    if (DOM.readerContent) {
-        DOM.readerContent.style.fontSize = config.fontSize + 'px';
-        DOM.readerContent.style.lineHeight = config.lineHeight;
-        DOM.readerContent.style.padding = config.padding + 'px';
-    }
+    DOM.readerContent.style.lineHeight = config.lineHeight;
+    DOM.readerContent.style.padding = config.padding + 'px';
 }
 
 // Сохранение прогресса
@@ -115,7 +83,7 @@ function getReadingProgress(bookId) {
 let allBooks = [];
 let currentBook = null;
 let currentPage = 1;
-let fontSize = 18;
+let fontSize = 18;      // начальное значение, будет переопределено при открытии книги
 let isFullscreen = false;
 let isLoading = false;
 
@@ -127,11 +95,8 @@ const DEFAULT_BOOK_FILES = [
 
 // === ПОИСК КНИГ (ТОЛЬКО ПО НАЗВАНИЮ И АВТОРУ) ===
 function addSearchBar() {
-    // Находим intro секцию
     const introSection = document.querySelector('.intro');
     if (!introSection) return;
-    
-    // Проверяем, нет ли уже поиска
     if (document.getElementById('globalSearchInput')) return;
     
     const searchHTML = `
@@ -145,10 +110,8 @@ function addSearchBar() {
     
     introSection.insertAdjacentHTML('afterend', searchHTML);
     
-    // Настройка поиска
     const searchInput = document.getElementById('globalSearchInput');
     const resultsDiv = document.getElementById('globalSearchResults');
-    
     if (!searchInput) return;
     
     let searchTimeout;
@@ -156,21 +119,15 @@ function addSearchBar() {
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
         const query = e.target.value.trim();
-        
         if (query.length < 2) {
             resultsDiv.style.display = 'none';
             return;
         }
-        
         resultsDiv.style.display = 'block';
         resultsDiv.innerHTML = '<div class="search-loading">🔍 Поиск...</div>';
-        
-        searchTimeout = setTimeout(() => {
-            performGlobalSearch(query);
-        }, 400);
+        searchTimeout = setTimeout(() => performGlobalSearch(query), 400);
     });
     
-    // Скрываем результаты при клике вне
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
             resultsDiv.style.display = 'none';
@@ -182,19 +139,13 @@ function addSearchBar() {
             resultsDiv.innerHTML = '<div class="search-no-results">📚 Книги ещё загружаются, попробуйте позже</div>';
             return;
         }
-        
         const lowerQuery = query.toLowerCase();
         const results = [];
-        
         for (const book of allBooks) {
             const titleMatch = book.title?.toLowerCase().includes(lowerQuery);
             const authorMatch = book.author?.toLowerCase().includes(lowerQuery);
-            
             if (titleMatch || authorMatch) {
-                let matchType = '';
-                if (titleMatch) matchType = '📖 в названии';
-                else if (authorMatch) matchType = '✍️ у автора';
-                
+                let matchType = titleMatch ? '📖 в названии' : '✍️ у автора';
                 results.push({
                     id: book.id,
                     title: book.title || 'Без названия',
@@ -203,12 +154,10 @@ function addSearchBar() {
                 });
             }
         }
-        
         if (results.length === 0) {
             resultsDiv.innerHTML = '<div class="search-no-results">Ничего не найдено</div>';
             return;
         }
-        
         resultsDiv.innerHTML = `
             <div class="search-results-header">🔎 Найдено ${results.length} книг по запросу «${escapeHtml(query)}»</div>
             ${results.map(book => `
@@ -225,21 +174,21 @@ function addSearchBar() {
 // Инициализация
 document.addEventListener('DOMContentLoaded', async () => {
     cacheDomElements();
-    
     if (DOM.currentYear) DOM.currentYear.textContent = new Date().getFullYear();
-    
     setupTheme();
     setupReader();
     updateConnectionStatus();
     
-    // Добавляем CSS
+    // Динамические CSS-правила (только необходимые)
     const style = document.createElement('style');
-    style.textContent = `:root{--reader-font-size:18px;--reader-line-height:1.8;--reader-padding:40px}.reader-content{font-size:var(--reader-font-size);line-height:var(--reader-line-height);padding:var(--reader-padding)}@media(max-width:768px){.page-nav-btn{width:40px;height:40px}.reader-btn{padding:8px 12px}.font-btn,.fullscreen-btn{width:35px;height:35px}}`;
+    style.textContent = `
+        .reader-content {
+            transition: padding 0.2s ease, line-height 0.2s ease;
+        }
+    `;
     document.head.appendChild(style);
     
     await loadAllBooks();
-    
-    // Добавляем поиск после загрузки книг
     addSearchBar();
 });
 
@@ -247,22 +196,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadAllBooks() {
     if (isLoading) return;
     isLoading = true;
-    
     if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'block';
     if (DOM.errorMessage) DOM.errorMessage.style.display = 'none';
     
     try {
-        // 1. Сначала пытаемся загрузить из кэша
         if (await loadFromCache()) {
             isLoading = false;
             if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none';
             return;
         }
         
-        // 2. Пытаемся загрузить список файлов
         let bookFiles = [];
         let listLoaded = false;
-        
         try {
             const response = await fetch('books-list.json?t=' + Date.now());
             if (response.ok) {
@@ -282,9 +227,7 @@ async function loadAllBooks() {
             console.log('📚 Используем список по умолчанию');
         }
         
-        // 3. Загружаем книги последовательно (чтобы не перегружать)
         allBooks = [];
-        
         for (let i = 0; i < bookFiles.length; i++) {
             const filename = bookFiles[i];
             try {
@@ -307,11 +250,8 @@ async function loadAllBooks() {
         }
         
         console.log(`📊 Загружено книг: ${allBooks.length}`);
-        
         if (allBooks.length > 0) {
             renderBooks(allBooks);
-            
-            // Сохраняем в кэш
             try {
                 localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
                 localStorage.setItem('cacheTimestamp', Date.now().toString());
@@ -319,12 +259,9 @@ async function loadAllBooks() {
         } else {
             throw new Error('Не удалось загрузить ни одной книги');
         }
-        
     } catch(error) {
         console.error('❌ Ошибка:', error);
-        
         const cacheLoaded = await loadFromCache();
-        
         if (!cacheLoaded && DOM.errorMessage) {
             DOM.errorMessage.style.display = 'block';
             DOM.errorMessage.innerHTML = `
@@ -334,9 +271,7 @@ async function loadAllBooks() {
                     <li>Файл books-list.json в корне сайта</li>
                     <li>Файлы book1.json...book8.json в корне</li>
                 </ul>
-                <p style="margin-top:15px;">
-                    <button onclick="retryLoading()" class="btn btn-read">🔄 Повторить</button>
-                </p>
+                <p style="margin-top:15px;"><button onclick="retryLoading()" class="btn btn-read">🔄 Повторить</button></p>
             `;
         }
     } finally {
@@ -350,7 +285,6 @@ async function loadFromCache() {
     try {
         const cached = localStorage.getItem('cachedBooks');
         const timestamp = localStorage.getItem('cacheTimestamp');
-        
         if (cached && timestamp && (Date.now() - parseInt(timestamp) < 86400000)) {
             allBooks = JSON.parse(cached);
             if (allBooks && allBooks.length > 0) {
@@ -372,19 +306,14 @@ function renderBooks(books) {
         DOM.booksGrid.innerHTML = '<div style="text-align:center;padding:40px;">📭 Книги не найдены</div>';
         return;
     }
-    
     const fragment = document.createDocumentFragment();
-    
     for (let i = 0; i < books.length; i++) {
         const book = books[i];
-        
-        // Безопасное получение значений
         const cover = escapeHtml(book.cover || book.title || 'Книга');
         const title = escapeHtml(book.title || 'Без названия');
         const author = escapeHtml(book.author || 'Неизвестен');
         const year = escapeHtml(book.year || 'Не указан');
         const pagesCount = (book.pages && Array.isArray(book.pages)) ? book.pages.length : 0;
-        
         const card = document.createElement('div');
         card.className = 'book-card';
         card.setAttribute('data-id', book.id);
@@ -401,16 +330,12 @@ function renderBooks(books) {
                 <button class="btn btn-details">ℹ️ Подробнее</button>
             </div>
         `;
-        
         const readBtn = card.querySelector('.btn-read');
         const detailsBtn = card.querySelector('.btn-details');
-        
         readBtn.onclick = (function(b) { return function() { openBook(b.id); }; })(book);
         detailsBtn.onclick = (function(b) { return function() { showBookDetails(b.id); }; })(book);
-        
         fragment.appendChild(card);
     }
-    
     DOM.booksGrid.innerHTML = '';
     DOM.booksGrid.appendChild(fragment);
 }
@@ -423,26 +348,13 @@ window.openBook = function(bookId) {
         return;
     }
     
-    currentBook = JSON.parse(JSON.stringify(book));
-    
-    if (!currentBook.originalPages) {
-        currentBook.originalPages = currentBook.pages.slice();
-    }
-    
-    const device = getDeviceType();
-    const config = DEVICE_CONFIG[device];
-    
-    const newPages = [];
-    for (var i = 0; i < currentBook.originalPages.length; i++) {
-        var split = splitHtmlIntoPages(currentBook.originalPages[i], config.charsPerPage);
-        for (var j = 0; j < split.length; j++) {
-            newPages.push(split[j]);
-        }
-    }
-    currentBook.pages = newPages;
-    
+    currentBook = JSON.parse(JSON.stringify(book)); // копия оригинальных страниц
     currentPage = getReadingProgress(bookId);
     if (currentPage > currentBook.pages.length) currentPage = 1;
+    
+    // Устанавливаем размер шрифта согласно конфигу устройства
+    const device = getDeviceType();
+    fontSize = (device === 'mobile') ? 14 : (device === 'tablet') ? 16 : 18;
     
     if (DOM.readerTitle) DOM.readerTitle.textContent = currentBook.title;
     if (DOM.readerContent) {
@@ -455,18 +367,16 @@ window.openBook = function(bookId) {
     if (DOM.readerWindow) DOM.readerWindow.style.display = 'flex';
     if (DOM.overlay) DOM.overlay.style.display = 'block';
     
-    applyDeviceStyles();
+    applyDeviceLayout(); // только отступы и line-height
 };
 
 function showBookDetails(bookId) {
     const book = allBooks.find(function(b) { return b.id === bookId; });
     if (!book) return;
-    
     let preview = '';
     if (book.pages && book.pages[0]) {
         preview = book.pages[0].replace(/<[^>]*>/g, '').substring(0, 150);
     }
-    
     alert(book.title + '\n\nАвтор: ' + book.author + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
 }
 
@@ -474,10 +384,8 @@ function showBookDetails(bookId) {
 function setupTheme() {
     const savedTheme = localStorage.getItem('selectedTheme') || 'light';
     document.body.classList.add(savedTheme + '-theme');
-    
     const themeLight = document.getElementById('theme-light');
     const themeDark = document.getElementById('theme-dark');
-    
     if (themeLight) {
         themeLight.onclick = function() {
             document.body.classList.remove('dark-theme');
@@ -488,7 +396,6 @@ function setupTheme() {
         };
         if (savedTheme === 'light') themeLight.classList.add('active');
     }
-    
     if (themeDark) {
         themeDark.onclick = function() {
             document.body.classList.remove('light-theme');
@@ -510,7 +417,6 @@ function setupReader() {
             saveReadingProgress(currentBook.id, currentPage);
         }
     };
-    
     const nextPage = function() {
         if (currentBook && currentPage < currentBook.pages.length) {
             currentPage++;
@@ -534,7 +440,6 @@ function setupReader() {
             if (DOM.readerContent) DOM.readerContent.style.fontSize = fontSize + 'px';
         };
     }
-    
     if (DOM.fontMinus) {
         DOM.fontMinus.onclick = function() {
             fontSize = Math.max(fontSize - 2, 14);
@@ -544,7 +449,6 @@ function setupReader() {
     
     document.addEventListener('keydown', function(e) {
         if (DOM.readerWindow && DOM.readerWindow.style.display !== 'flex') return;
-        
         if (e.key === 'Escape') {
             if (isFullscreen) toggleFullscreen();
             else closeReader();
@@ -577,31 +481,19 @@ function updateReaderContent() {
     if (DOM.currentPage) DOM.currentPage.textContent = currentPage;
 }
 
+// Полноэкранный режим (только класс, отображение кнопок через CSS)
 window.toggleFullscreen = function() {
     if (!DOM.readerWindow) return;
-    
     if (!isFullscreen) {
         DOM.readerWindow.classList.add('fullscreen');
-        if (DOM.exitFullscreenBtn) DOM.exitFullscreenBtn.style.display = 'flex';
-        if (DOM.fullscreenPrevBtn) DOM.fullscreenPrevBtn.style.display = 'flex';
-        if (DOM.fullscreenNextBtn) DOM.fullscreenNextBtn.style.display = 'flex';
         if (DOM.overlay) DOM.overlay.style.display = 'none';
         isFullscreen = true;
-        if (DOM.readerContent) {
-            DOM.readerContent.style.paddingLeft = '50px';
-            DOM.readerContent.style.paddingRight = '50px';
-        }
     } else {
         DOM.readerWindow.classList.remove('fullscreen');
-        if (DOM.exitFullscreenBtn) DOM.exitFullscreenBtn.style.display = 'none';
-        if (DOM.fullscreenPrevBtn) DOM.fullscreenPrevBtn.style.display = 'none';
-        if (DOM.fullscreenNextBtn) DOM.fullscreenNextBtn.style.display = 'none';
         if (DOM.overlay) DOM.overlay.style.display = 'block';
         isFullscreen = false;
-        if (DOM.readerContent) {
-            DOM.readerContent.style.paddingLeft = '30px';
-            DOM.readerContent.style.paddingRight = '30px';
-        }
+        // Восстанавливаем отступы после выхода из fullscreen (CSS мог их переопределить)
+        applyDeviceLayout();
     }
 };
 
@@ -610,9 +502,6 @@ window.closeReader = function() {
     if (isFullscreen) toggleFullscreen();
     if (DOM.readerWindow) DOM.readerWindow.style.display = 'none';
     if (DOM.overlay) DOM.overlay.style.display = 'none';
-    if (DOM.exitFullscreenBtn) DOM.exitFullscreenBtn.style.display = 'none';
-    if (DOM.fullscreenPrevBtn) DOM.fullscreenPrevBtn.style.display = 'none';
-    if (DOM.fullscreenNextBtn) DOM.fullscreenNextBtn.style.display = 'none';
 };
 
 window.retryLoading = function() {
@@ -639,27 +528,20 @@ function updateConnectionStatus() {
 window.addEventListener('online', updateConnectionStatus);
 window.addEventListener('offline', updateConnectionStatus);
 
+// Ресайз: обновляем layout (отступы, line-height), но не трогаем шрифт
 let resizeTimer;
 window.addEventListener('resize', function() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function() {
-        cachedDeviceType = null;
+        cachedDeviceType = null; // сброс кэша устройства
         if (currentBook && DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
-            const oldPage = currentPage;
-            const config = DEVICE_CONFIG[getDeviceType()];
-            
-            const newPages = [];
-            for (var i = 0; i < currentBook.originalPages.length; i++) {
-                var split = splitHtmlIntoPages(currentBook.originalPages[i], config.charsPerPage);
-                for (var j = 0; j < split.length; j++) newPages.push(split[j]);
+            applyDeviceLayout();
+            // Корректируем номер страницы, если он вышел за пределы (на случай, если книга изменилась)
+            if (currentPage > currentBook.pages.length) {
+                currentPage = currentBook.pages.length;
+                updateReaderContent();
+                saveReadingProgress(currentBook.id, currentPage);
             }
-            currentBook.pages = newPages;
-            
-            currentPage = Math.min(oldPage, currentBook.pages.length);
-            updateReaderContent();
-            if (DOM.totalPages) DOM.totalPages.textContent = currentBook.pages.length;
-            saveReadingProgress(currentBook.id, currentPage);
-            applyDeviceStyles();
         }
     }, 150);
 });
