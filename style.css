@@ -5,7 +5,6 @@
     font-family: 'Georgia', serif;
 }
 
-/* Основные стили body (объединены) */
 body {
     background-color: #f5f5f5;
     color: #333;
@@ -18,13 +17,11 @@ body {
     user-select: none;
 }
 
-/* Светлая тема (по умолчанию) */
 body.light-theme {
     background: linear-gradient(135deg, #fef9f0 0%, #f8f3e8 100%);
     color: #2c3e2f;
 }
 
-/* Темная тема */
 body.dark-theme {
     background-color: #1a1a1a;
     color: #e0e0e0;
@@ -36,7 +33,6 @@ body.dark-theme {
     padding: 20px;
 }
 
-/* Стили для заголовков в разных темах */
 .light-theme header {
     background: linear-gradient(135deg, #8b5a2b, #c49a6c);
     color: white;
@@ -50,7 +46,6 @@ body.dark-theme {
     padding: 25px 0;
 }
 
-/* Стили для h2 в светлой теме */
 .light-theme h2 {
     color: #8b5a2b;
     font-size: 2rem;
@@ -83,11 +78,6 @@ h1 {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
 
-.light-theme h1 {
-    font-size: 2.8rem;
-}
-
-/* Контролы тем */
 .theme-controls {
     position: fixed;
     top: 20px;
@@ -180,11 +170,6 @@ h1 {
     border: 1px solid rgba(139, 90, 43, 0.1);
 }
 
-.light-theme .intro p {
-    font-size: 1rem;
-    line-height: 1.6;
-}
-
 .dark-theme .intro {
     background-color: #2a2a2a;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -219,11 +204,9 @@ h1 {
     .book-card:hover {
         transform: translateY(-8px);
     }
-    
     .light-theme .book-card:hover {
         box-shadow: 0 8px 30px rgba(0,0,0,0.2);
     }
-    
     .dark-theme .book-card:hover {
         box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     }
@@ -333,23 +316,16 @@ h1 {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
     }
-    
     .light-theme .btn-read:hover {
         background: linear-gradient(135deg, #b88956, #7a4d23);
         box-shadow: 0 4px 12px rgba(139, 90, 43, 0.4);
     }
-    
     .dark-theme .btn-read:hover {
         background: linear-gradient(135deg, #555, #444);
     }
 }
 
 .btn-details {
-    background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
-    color: #2c3e50;
-}
-
-.light-theme .btn-details {
     background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
     color: #2c3e50;
 }
@@ -364,7 +340,6 @@ h1 {
         background: linear-gradient(135deg, #bdc3c7, #a1a9b0);
         transform: translateY(-2px);
     }
-    
     .dark-theme .btn-details:hover {
         background: linear-gradient(135deg, #555, #444);
     }
@@ -380,19 +355,12 @@ footer {
     font-size: 0.9rem;
 }
 
-.light-theme footer {
-    margin-top: 50px;
-    padding: 25px;
-    color: #7f8c8d;
-    border-top: 1px solid #eee;
-}
-
 .dark-theme footer {
     color: #aaa;
     border-top-color: #333;
 }
 
-/* Стили для читалки */
+/* ========== ЧИТАЛКА ========== */
 .reader-window {
     position: fixed;
     top: 50%;
@@ -431,44 +399,11 @@ footer {
     display: none;
 }
 
-.exit-fullscreen-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1.5rem;
-    z-index: 1002;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
-}
-
-.light-theme .exit-fullscreen-btn {
-    background: linear-gradient(135deg, #e8b87a, #c49a6c);
-}
-
-@media (hover: hover) {
-    .exit-fullscreen-btn:hover {
-        background: linear-gradient(135deg, #c0392b, #a93226);
-        transform: scale(1.1);
-    }
-    
-    .light-theme .exit-fullscreen-btn:hover {
-        background: linear-gradient(135deg, #c49a6c, #8b5a2b);
-    }
-}
-
-.reader-window.fullscreen + .exit-fullscreen-btn {
-    display: flex;
+/* Отступы для контента в полноэкранном режиме */
+.reader-window.fullscreen .reader-content {
+    max-height: 100vh;
+    padding-left: 50px !important;
+    padding-right: 50px !important;
 }
 
 .dark-theme .reader-window {
@@ -531,12 +466,6 @@ footer {
     background: linear-gradient(135deg, #fffef7, #ffffff);
 }
 
-.reader-window.fullscreen .reader-content {
-    max-height: 100vh;
-    padding-top: 50px;
-    padding-bottom: 50px;
-}
-
 .dark-theme .reader-content {
     background-color: #1e1e1e;
 }
@@ -567,22 +496,6 @@ footer {
     border-bottom-color: #444;
 }
 
-.reader-content .chapter-start {
-    margin-top: 2em;
-    font-size: 1.3em;
-    font-weight: bold;
-    color: #2c3e50;
-    text-align: center;
-}
-
-.light-theme .reader-content .chapter-start {
-    color: #8b5a2b;
-}
-
-.dark-theme .reader-content .chapter-start {
-    color: #90caf9;
-}
-
 .close-btn {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: white;
@@ -605,7 +518,6 @@ footer {
         background: linear-gradient(135deg, #c0392b, #a93226);
         transform: translateY(-2px);
     }
-    
     .light-theme .close-btn:hover {
         background: linear-gradient(135deg, #c49a6c, #8b5a2b);
     }
@@ -637,11 +549,9 @@ footer {
         background: linear-gradient(135deg, #2980b9, #2573a7);
         transform: translateY(-2px);
     }
-    
     .light-theme .reader-btn:hover {
         background: linear-gradient(135deg, #b88956, #7a4d23);
     }
-    
     .dark-theme .reader-btn:hover {
         background: linear-gradient(135deg, #555, #444);
     }
@@ -685,7 +595,6 @@ footer {
         background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
         transform: scale(1.1);
     }
-    
     .light-theme .font-btn:hover {
         background: linear-gradient(135deg, #b88956, #7a4d23);
     }
@@ -718,7 +627,6 @@ footer {
         background: linear-gradient(135deg, #8e44ad, #7d3c98);
         transform: scale(1.1);
     }
-    
     .light-theme .fullscreen-btn:hover {
         background: linear-gradient(135deg, #c49a6c, #8b5a2b);
     }
@@ -736,10 +644,7 @@ footer {
     backdrop-filter: blur(3px);
 }
 
-.reader-window.fullscreen + .overlay {
-    display: none;
-}
-
+/* Кнопки навигации в полноэкранном режиме (показываются только при fullscreen) */
 .page-nav-btn {
     position: fixed;
     top: 50%;
@@ -781,44 +686,53 @@ footer {
     right: 20px;
 }
 
+/* Показываем кнопки навигации при fullscreen (соседние элементы) */
 .reader-window.fullscreen ~ .page-nav-btn {
     display: flex;
 }
 
-.tap-navigation {
+/* Кнопка выхода из полноэкранного режима (непосредственно после читалки) */
+.exit-fullscreen-btn {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1004;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.5rem;
+    z-index: 1002;
     display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
 }
 
-.tap-navigation.active {
-    display: block;
+.light-theme .exit-fullscreen-btn {
+    background: linear-gradient(135deg, #e8b87a, #c49a6c);
 }
 
-.tap-left {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 40%;
-    height: 100%;
-    cursor: pointer;
+@media (hover: hover) {
+    .exit-fullscreen-btn:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+        transform: scale(1.1);
+    }
+    .light-theme .exit-fullscreen-btn:hover {
+        background: linear-gradient(135deg, #c49a6c, #8b5a2b);
+    }
 }
 
-.tap-right {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 40%;
-    height: 100%;
-    cursor: pointer;
+/* Показываем кнопку выхода, если читалка в fullscreen и она находится сразу после неё */
+.reader-window.fullscreen + .exit-fullscreen-btn {
+    display: flex;
 }
 
-/* ===== СТИЛИ ДЛЯ ПОИСКА ===== */
-
+/* ========== СТИЛИ ДЛЯ ПОИСКА ========== */
 .search-container {
     margin: 25px 0 30px 0;
     position: relative;
@@ -843,7 +757,6 @@ footer {
     box-shadow: 0 0 0 3px rgba(196, 154, 108, 0.2);
 }
 
-/* Стили для тёмной темы */
 .dark-theme .search-input {
     background: #2d2d2d;
     color: #e0e0e0;
@@ -855,7 +768,6 @@ footer {
     box-shadow: 0 0 0 3px rgba(144, 202, 249, 0.2);
 }
 
-/* Выпадающий список результатов */
 .search-results-dropdown {
     position: absolute;
     top: 100%;
@@ -876,7 +788,6 @@ footer {
     border-color: #444;
 }
 
-/* Заголовок результатов */
 .search-results-header {
     padding: 12px 16px;
     background: #f5f5f5;
@@ -893,7 +804,6 @@ footer {
     border-color: #444;
 }
 
-/* Элемент результата поиска */
 .search-result-item {
     padding: 14px 16px;
     border-bottom: 1px solid #f0f0f0;
@@ -918,7 +828,6 @@ footer {
     background: #383838;
 }
 
-/* Название книги в результатах */
 .search-result-title {
     font-weight: bold;
     font-size: 15px;
@@ -931,7 +840,6 @@ footer {
     color: #e0e0e0;
 }
 
-/* Автор в результатах */
 .search-result-author {
     font-size: 13px;
     color: #666;
@@ -943,7 +851,6 @@ footer {
     color: #aaa;
 }
 
-/* Тип совпадения */
 .search-result-match {
     font-size: 11px;
     color: #4CAF50;
@@ -955,24 +862,6 @@ footer {
     color: #81c784;
 }
 
-/* Отрывок текста */
-.search-result-preview {
-    font-size: 12px;
-    color: #888;
-    font-style: italic;
-    line-height: 1.4;
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px dashed #eee;
-    font-family: 'Georgia', serif;
-}
-
-.dark-theme .search-result-preview {
-    color: #aaa;
-    border-top-color: #3a3a3a;
-}
-
-/* Состояния загрузки и отсутствия результатов */
 .search-loading,
 .search-no-results {
     padding: 20px;
@@ -986,7 +875,6 @@ footer {
     color: #aaa;
 }
 
-/* Анимация для появления результатов */
 @keyframes searchFadeIn {
     from {
         opacity: 0;
@@ -1002,25 +890,20 @@ footer {
     animation: searchFadeIn 0.2s ease;
 }
 
-/* Адаптация для мобильных устройств */
 @media (max-width: 768px) {
     .search-input {
         padding: 12px 16px;
         font-size: 14px;
     }
-    
     .search-result-item {
         padding: 12px 14px;
     }
-    
     .search-result-title {
         font-size: 14px;
     }
-    
     .search-result-author {
         font-size: 12px;
     }
-    
     .search-results-dropdown {
         max-height: 300px;
     }
