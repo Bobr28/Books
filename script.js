@@ -121,8 +121,8 @@ let isLoading = false;
 
 // ДЕФОЛТНЫЙ СПИСОК КНИГ
 const DEFAULT_BOOK_FILES = [
-    'book1.json', 'book2.json', 'book3.json', 'book4.json', 
-    'book5.json', 'book6.json', 'book7.json', 'book8.json'
+    'book8.json', 'book7.json', 'book6.json', 'book5.json', 
+    'book4.json', 'book3.json', 'book2.json', 'book1.json'
 ];
 
 // === ПОИСК КНИГ (ТОЛЬКО ПО НАЗВАНИЮ И АВТОРУ) ===
