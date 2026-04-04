@@ -250,7 +250,6 @@ async function loadAllBooks() {
     
     if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'block';
     if (DOM.errorMessage) DOM.errorMessage.style.display = 'none';
-    if (DOM.booksGrid) DOM.booksGrid.innerHTML = '<div style="text-align:center;padding:40px;">📚 Загрузка книг...</div>';
     
     try {
         // 1. Сначала пытаемся загрузить из кэша
