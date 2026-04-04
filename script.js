@@ -3,12 +3,12 @@ const DOM = {};
 
 // Инициализация DOM элементов (однократно)
 function cacheDomElements() {
-    const ids = ['booksGrid', 'loadingIndicator', 'errorMessage', 'readerWindow', 'overlay', 
+    const ids = ['booksGrid', 'loadingIndicator', 'errorMessage', 'readerWindow', 'overlay',
                  'readerTitle', 'readerContent', 'currentPage', 'totalPages', 'currentYear',
-                 'themeLight', 'themeDark', 'closeReader', 'prevPage', 'nextPage', 
+                 'themeLight', 'themeDark', 'closeReader', 'prevPage', 'nextPage',
                  'fontPlus', 'fontMinus', 'fullscreenBtn', 'exitFullscreenBtn',
                  'fullscreenPrevBtn', 'fullscreenNextBtn'];
-    
+
     ids.forEach(id => {
         DOM[id] = document.getElementById(id);
     });
@@ -21,14 +21,14 @@ let cachedWidth = 0;
 function getDeviceType() {
     const width = window.innerWidth;
     if (width === cachedWidth && cachedDeviceType) return cachedDeviceType;
-    
+
     cachedWidth = width;
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
+
     if (width <= 480 || (isMobile && width <= 768)) cachedDeviceType = 'mobile';
     else if (width <= 768) cachedDeviceType = 'tablet';
     else cachedDeviceType = 'desktop';
-    
+
     return cachedDeviceType;
 }
 
@@ -89,7 +89,7 @@ let isLoading = false;
 
 // ДЕФОЛТНЫЙ СПИСОК КНИГ
 const DEFAULT_BOOK_FILES = [
-    'book8.json', 'book7.json', 'book6.json', 'book5.json', 
+    'book8.json', 'book7.json', 'book6.json', 'book5.json',
     'book4.json', 'book3.json', 'book2.json', 'book1.json'
 ];
 
@@ -98,24 +98,24 @@ function addSearchBar() {
     const introSection = document.querySelector('.intro');
     if (!introSection) return;
     if (document.getElementById('globalSearchInput')) return;
-    
+
     const searchHTML = `
         <div class="search-container">
-            <input type="text" id="globalSearchInput" class="search-input" 
-                   placeholder="Поиск по названию или автору..." 
+            <input type="text" id="globalSearchInput" class="search-input"
+                   placeholder="Поиск по названию или автору..."
                    autocomplete="off">
             <div id="globalSearchResults" class="search-results-dropdown" style="display: none;"></div>
         </div>
     `;
-    
+
     introSection.insertAdjacentHTML('afterend', searchHTML);
-    
+
     const searchInput = document.getElementById('globalSearchInput');
     const resultsDiv = document.getElementById('globalSearchResults');
     if (!searchInput) return;
-    
+
     let searchTimeout;
-    
+
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
         const query = e.target.value.trim();
@@ -127,13 +127,13 @@ function addSearchBar() {
         resultsDiv.innerHTML = '<div class="search-loading">🔍 Поиск...</div>';
         searchTimeout = setTimeout(() => performGlobalSearch(query), 400);
     });
-    
+
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
             resultsDiv.style.display = 'none';
         }
     });
-    
+
     function performGlobalSearch(query) {
         if (!allBooks || allBooks.length === 0) {
             resultsDiv.innerHTML = '<div class="search-no-results">📚 Книги ещё загружаются, попробуйте позже</div>';
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTheme();
     setupReader();
     updateConnectionStatus();
-    
+
     // Динамические CSS-правила (только необходимые)
     const style = document.createElement('style');
     style.textContent = `
@@ -187,10 +187,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     `;
     document.head.appendChild(style);
-    
+
     await loadAllBooks();
     addSearchBar();
+    registerServiceWorker(); // регистрация SW
 });
+
+// Регистрация Service Worker
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                console.log('SW registered:', reg);
+                // Автоматическая проверка обновлений раз в час
+                setInterval(() => reg.update(), 60 * 60 * 1000);
+            }).catch(err => console.error('SW registration failed:', err));
+        });
+
+        // Обработка сообщений от SW (например, об обновлении книг)
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data.type === 'BOOKS_UPDATED') {
+                console.log('Получено обновление книг, перезагружаем список');
+                if (typeof loadAllBooks === 'function') {
+                    loadAllBooks();
+                }
+            }
+        });
+    }
+}
 
 // Быстрая загрузка книг
 async function loadAllBooks() {
@@ -198,14 +222,14 @@ async function loadAllBooks() {
     isLoading = true;
     if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'block';
     if (DOM.errorMessage) DOM.errorMessage.style.display = 'none';
-    
+
     try {
         if (await loadFromCache()) {
             isLoading = false;
             if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none';
             return;
         }
-        
+
         let bookFiles = [];
         let listLoaded = false;
         try {
@@ -221,12 +245,12 @@ async function loadAllBooks() {
         } catch(e) {
             console.warn('⚠️ Не удалось загрузить books-list.json');
         }
-        
+
         if (!listLoaded || bookFiles.length === 0) {
             bookFiles = DEFAULT_BOOK_FILES;
             console.log('📚 Используем список по умолчанию');
         }
-        
+
         allBooks = [];
         for (let i = 0; i < bookFiles.length; i++) {
             const filename = bookFiles[i];
@@ -248,7 +272,7 @@ async function loadAllBooks() {
                 console.warn(`⚠️ Ошибка: ${filename}`, e.message);
             }
         }
-        
+
         console.log(`📊 Загружено книг: ${allBooks.length}`);
         if (allBooks.length > 0) {
             renderBooks(allBooks);
@@ -347,15 +371,15 @@ window.openBook = function(bookId) {
         alert('Ошибка: книга не найдена');
         return;
     }
-    
+
     currentBook = JSON.parse(JSON.stringify(book)); // копия оригинальных страниц
     currentPage = getReadingProgress(bookId);
     if (currentPage > currentBook.pages.length) currentPage = 1;
-    
+
     // Устанавливаем размер шрифта согласно конфигу устройства
     const device = getDeviceType();
     fontSize = (device === 'mobile') ? 14 : (device === 'tablet') ? 16 : 18;
-    
+
     if (DOM.readerTitle) DOM.readerTitle.textContent = currentBook.title;
     if (DOM.readerContent) {
         DOM.readerContent.innerHTML = currentBook.pages[currentPage - 1];
@@ -366,7 +390,7 @@ window.openBook = function(bookId) {
     if (DOM.totalPages) DOM.totalPages.textContent = currentBook.pages.length;
     if (DOM.readerWindow) DOM.readerWindow.style.display = 'flex';
     if (DOM.overlay) DOM.overlay.style.display = 'block';
-    
+
     applyDeviceLayout(); // только отступы и line-height
 };
 
@@ -424,7 +448,7 @@ function setupReader() {
             saveReadingProgress(currentBook.id, currentPage);
         }
     };
-    
+
     if (DOM.prevPage) DOM.prevPage.onclick = prevPage;
     if (DOM.nextPage) DOM.nextPage.onclick = nextPage;
     if (DOM.fullscreenPrevBtn) DOM.fullscreenPrevBtn.onclick = prevPage;
@@ -433,7 +457,7 @@ function setupReader() {
     if (DOM.overlay) DOM.overlay.onclick = closeReader;
     if (DOM.exitFullscreenBtn) DOM.exitFullscreenBtn.onclick = toggleFullscreen;
     if (DOM.fullscreenBtn) DOM.fullscreenBtn.onclick = toggleFullscreen;
-    
+
     if (DOM.fontPlus) {
         DOM.fontPlus.onclick = function() {
             fontSize = Math.min(fontSize + 2, 30);
@@ -446,7 +470,7 @@ function setupReader() {
             if (DOM.readerContent) DOM.readerContent.style.fontSize = fontSize + 'px';
         };
     }
-    
+
     document.addEventListener('keydown', function(e) {
         if (DOM.readerWindow && DOM.readerWindow.style.display !== 'flex') return;
         if (e.key === 'Escape') {
