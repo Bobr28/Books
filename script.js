@@ -119,7 +119,7 @@ function addSearchBar() {
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
         const query = e.target.value.trim();
-        if (query.length < 2) {
+        if (query.length < 1) {
             resultsDiv.style.display = 'none';
             return;
         }
