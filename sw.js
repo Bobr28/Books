@@ -1,4 +1,4 @@
-const CACHE_NAME = 'library-v1.1.0';
+const CACHE_NAME = 'library-v1.2.0'; // 👈 Обязательно изменил версию!
 const STATIC_FILES = [
   '/',
   '/index.html',
@@ -13,7 +13,12 @@ const STATIC_FILES = [
 // Установка — кэшируем статические файлы
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_FILES))
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('🔄 Кэширую статические файлы...');
+      return cache.addAll(STATIC_FILES).catch(err => {
+        console.warn('⚠️ Не все статические файлы удалось закэшировать:', err);
+      });
+    })
   );
   self.skipWaiting();
 });
@@ -23,7 +28,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter(key => key !== CACHE_NAME).map(key => {
+          console.log('🗑️ Удаляю старый кэш:', key);
+          return caches.delete(key);
+        })
       );
     })
   );
@@ -38,13 +46,26 @@ self.addEventListener('fetch', (event) => {
   // 1. Для JSON-файлов книг в корне (book1.json, book2.json, ...)
   if (pathname.match(/\/book\d+\.json$/)) {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
+      caches.open(CACHE_NAME).then(cache => {
+        return fetch(event.request)
+          .then(response => {
+            // ✅ Кэшируем ТОЛЬКО успешные ответы (статус 200)
+            if (response.ok) {
+              console.log('✅ Кэширую книгу:', pathname);
+              cache.put(event.request, response.clone());
+            } else {
+              console.warn('⚠️ Книга не найдена (404):', pathname);
+            }
+            return response;
+          })
+          .catch(error => {
+            // Если сети нет — пробуем отдать из кэша
+            console.log('📦 Офлайн, пробую кэш для:', pathname);
+            return cache.match(event.request).then(cached => {
+              return cached || new Response('Книга недоступна офлайн', { status: 404 });
+            });
+          });
+      })
     );
     return;
   }
@@ -52,72 +73,41 @@ self.addEventListener('fetch', (event) => {
   // 2. Для books-list.json
   if (pathname === '/books-list.json') {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
+      caches.open(CACHE_NAME).then(cache => {
+        return fetch(event.request)
+          .then(response => {
+            if (response.ok) {
+              console.log('✅ Обновляю список книг');
+              cache.put(event.request, response.clone());
+            }
+            return response;
+          })
+          .catch(() => cache.match(event.request))
+          .then(cached => cached || new Response('[]', {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+      })
     );
     return;
   }
 
-  // 3. Для статических файлов (с учётом query-параметров)
-  if (STATIC_FILES.includes(pathname)) {
+  // 3. Для статических файлов — сначала кэш, потом сеть
+  if (STATIC_FILES.includes(pathname) || pathname === '/' || pathname.endsWith('.html')) {
     event.respondWith(
-      caches.match(event.request).then(response => response || fetch(event.request))
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (response.ok) {
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+          }
+          return response;
+        });
+      })
     );
     return;
   }
 
-  // Для всего остального – стандартное поведение (не кэшируем)
+  // 4. Для всего остального — только сеть (не кэшируем)
+  event.respondWith(fetch(event.request));
 });
-
-// Фоновая синхронизация (опционально)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-books') {
-    event.waitUntil(syncNewBooks());
-  }
-});
-
-async function syncNewBooks() {
-  try {
-    const cache = await caches.open(CACHE_NAME);
-    // Получаем актуальный список книг
-    const response = await fetch('/books-list.json');
-    const serverBooks = await response.json();
-
-    // Получаем уже кэшированные книги (из корня)
-    const cachedRequests = await cache.keys();
-    const cachedBookFiles = cachedRequests
-      .filter(req => req.url.match(/\/book\d+\.json$/))
-      .map(req => {
-        const parts = req.url.split('/');
-        return parts[parts.length - 1];
-      });
-
-    // Загружаем новые книги
-    const newBooks = serverBooks.filter(book => !cachedBookFiles.includes(book));
-    for (const bookFile of newBooks) {
-      const bookResponse = await fetch(`/${bookFile}`);  // ← исправлен путь
-      if (bookResponse.ok) {
-        await cache.put(`/${bookFile}`, bookResponse);
-      }
-    }
-
-    // Обновляем books-list.json в кэше
-    const listResponse = await fetch('/books-list.json');
-    if (listResponse.ok) {
-      await cache.put('/books-list.json', listResponse);
-    }
-
-    // Сообщаем клиенту об обновлении
-    const clients = await self.clients.matchAll();
-    clients.forEach(client => {
-      client.postMessage({ type: 'BOOKS_UPDATED' });
-    });
-  } catch (error) {
-    console.error('Sync failed:', error);
-  }
-}
