@@ -1,4 +1,4 @@
-const CACHE_NAME = 'library-v1.2.0'; // 👈 Обязательно изменил версию!
+const CACHE_NAME = 'library-v1.2.1'; // 👈 Обязательно изменил версию!
 const STATIC_FILES = [
   '/',
   '/index.html',
