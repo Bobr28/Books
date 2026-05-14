@@ -1,20 +1,21 @@
 // Кэш для DOM элементов
 const DOM = {};
 
-// Инициализация DOM элементов (однократно)
+// Инициализация DOM элементов
 function cacheDomElements() {
     const ids = ['booksGrid', 'loadingIndicator', 'errorMessage', 'readerWindow', 'overlay',
                  'readerTitle', 'readerContent', 'currentPage', 'totalPages', 'currentYear',
                  'themeToggle', 'closeReader', 'prevPage', 'nextPage',
                  'fontPlus', 'fontMinus', 'fullscreenBtn', 'exitFullscreenBtn',
-                 'fullscreenPrevBtn', 'fullscreenNextBtn'];
+                 'fullscreenPrevBtn', 'fullscreenNextBtn', 'mainPage', 'genresPage', 'authorsPage',
+                 'genresList', 'authorsList'];
 
     ids.forEach(id => {
         DOM[id] = document.getElementById(id);
     });
 }
 
-// Определение устройства (кэшируется)
+// Определение устройства
 let cachedDeviceType = null;
 let cachedWidth = 0;
 
@@ -32,14 +33,12 @@ function getDeviceType() {
     return cachedDeviceType;
 }
 
-// Настройки устройств (только для отступов и межстрочного интервала)
 const DEVICE_CONFIG = {
     mobile: { lineHeight: 1.5, padding: 15 },
     tablet: { lineHeight: 1.6, padding: 25 },
     desktop: { lineHeight: 1.8, padding: 40 }
 };
 
-// Безопасная функция escapeHtml
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     if (typeof str !== 'string') str = String(str);
@@ -51,7 +50,6 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-// Применение стилей устройства
 function applyDeviceLayout() {
     if (!DOM.readerContent) return;
     const config = DEVICE_CONFIG[getDeviceType()];
@@ -59,7 +57,6 @@ function applyDeviceLayout() {
     DOM.readerContent.style.padding = config.padding + 'px';
 }
 
-// Сохранение прогресса
 function saveReadingProgress(bookId, page) {
     if (!bookId) return;
     try {
@@ -79,7 +76,6 @@ function getReadingProgress(bookId) {
     } catch(e) { return 1; }
 }
 
-// Глобальные переменные
 let allBooks = [];
 let currentBook = null;
 let currentPage = 1;
@@ -87,8 +83,8 @@ let fontSize = 18;
 let isFullscreen = false;
 let isLoading = false;
 let menuActive = false;
+let currentView = 'main'; // 'main', 'genres', 'authors'
 
-// ДЕФОЛТНЫЙ СПИСОК КНИГ
 const DEFAULT_BOOK_FILES = [
     'book8.json', 'book7.json', 'book6.json', 'book5.json',
     'book4.json', 'book3.json', 'book2.json', 'book1.json'
@@ -181,13 +177,41 @@ function addSearchBar() {
     }
 }
 
+// Переключение страниц
+function showPage(page) {
+    const pages = {
+        main: DOM.mainPage,
+        genres: DOM.genresPage,
+        authors: DOM.authorsPage
+    };
+
+    Object.keys(pages).forEach(key => {
+        if (pages[key]) {
+            pages[key].classList.remove('active');
+        }
+    });
+
+    if (pages[page]) {
+        pages[page].classList.add('active');
+        currentView = page;
+    }
+
+    // Скрываем поиск на страницах жанров/авторов
+    const searchContainer = document.querySelector('.search-container');
+    if (searchContainer) {
+        searchContainer.style.display = page === 'main' ? 'block' : 'none';
+    }
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', async () => {
     cacheDomElements();
     if (DOM.currentYear) DOM.currentYear.textContent = new Date().getFullYear();
+    showPage('main');
     setupTheme();
     setupReader();
     setupSideMenu();
+    setupCategoryPages();
     updateConnectionStatus();
 
     const style = document.createElement('style');
@@ -203,7 +227,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerServiceWorker();
 });
 
-// Регистрация Service Worker
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -227,7 +250,6 @@ function registerServiceWorker() {
     }
 }
 
-// Быстрая загрузка книг
 async function loadAllBooks() {
     if (isLoading) return;
     isLoading = true;
@@ -318,7 +340,6 @@ async function loadAllBooks() {
     }
 }
 
-// Загрузка из кэша
 async function loadFromCache() {
     try {
         const cached = localStorage.getItem('cachedBooks');
@@ -337,7 +358,6 @@ async function loadFromCache() {
     return false;
 }
 
-// Отрисовка книг
 function renderBooks(books) {
     if (!DOM.booksGrid) return;
     if (!books || books.length === 0) {
@@ -378,7 +398,6 @@ function renderBooks(books) {
     DOM.booksGrid.appendChild(fragment);
 }
 
-// Открытие книги
 window.openBook = function(bookId) {
     const book = allBooks.find(function(b) { return b.id === bookId; });
     if (!book || !book.pages || !book.pages.length) {
@@ -417,6 +436,84 @@ function showBookDetails(bookId) {
     alert(book.title + '\n\nАвтор: ' + book.author + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
 }
 
+// ========== НАСТРОЙКА СТРАНИЦ ЖАНРОВ/АВТОРОВ ==========
+function setupCategoryPages() {
+    document.getElementById('backFromGenres')?.addEventListener('click', () => showPage('main'));
+    document.getElementById('backFromAuthors')?.addEventListener('click', () => showPage('main'));
+}
+
+function showGenresPage() {
+    if (!allBooks || allBooks.length === 0) return;
+    
+    const genresMap = new Map();
+    allBooks.forEach(book => {
+        const genre = book.genre || 'Без жанра';
+        if (!genresMap.has(genre)) {
+            genresMap.set(genre, []);
+        }
+        genresMap.get(genre).push(book);
+    });
+
+    const fragment = document.createDocumentFragment();
+    Array.from(genresMap.entries()).forEach(([genre, books]) => {
+        const item = document.createElement('button');
+        item.className = 'category-item';
+        item.innerHTML = `
+            <span>${escapeHtml(genre)}</span>
+            <span class="count">${books.length} кн.</span>
+        `;
+        item.addEventListener('click', () => {
+            const filtered = allBooks.filter(book => (book.genre || 'Без жанра') === genre);
+            renderBooks(filtered);
+            showPage('main');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        fragment.appendChild(item);
+    });
+
+    DOM.genresList.innerHTML = '';
+    DOM.genresList.appendChild(fragment);
+    showPage('genres');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showAuthorsPage() {
+    if (!allBooks || allBooks.length === 0) return;
+    
+    const authorsMap = new Map();
+    allBooks.forEach(book => {
+        const author = book.author || 'Неизвестный автор';
+        if (!authorsMap.has(author)) {
+            authorsMap.set(author, []);
+        }
+        authorsMap.get(author).push(book);
+    });
+
+    const fragment = document.createDocumentFragment();
+    Array.from(authorsMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .forEach(([author, books]) => {
+            const item = document.createElement('button');
+            item.className = 'category-item';
+            item.innerHTML = `
+                <span>${escapeHtml(author)}</span>
+                <span class="count">${books.length} кн.</span>
+            `;
+            item.addEventListener('click', () => {
+                const filtered = allBooks.filter(book => (book.author || 'Неизвестный автор') === author);
+                renderBooks(filtered);
+                showPage('main');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            fragment.appendChild(item);
+        });
+
+    DOM.authorsList.innerHTML = '';
+    DOM.authorsList.appendChild(fragment);
+    showPage('authors');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // ========== БОКОВОЕ МЕНЮ С ПОДДЕРЖКОЙ СВАЙПА ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
@@ -433,20 +530,6 @@ function setupSideMenu() {
     let currentX = 0;
     let isSwiping = false;
 
-    // Открыть меню
-    burgerBtn.addEventListener('click', () => {
-        openMenu();
-    });
-
-    // Закрыть меню
-    function closeMenu() {
-        sideMenu.classList.remove('active');
-        menuOverlay.classList.remove('active');
-        menuActive = false;
-        document.body.style.overflow = '';
-        sideMenu.style.right = '';
-    }
-
     function openMenu() {
         sideMenu.classList.add('active');
         menuOverlay.classList.add('active');
@@ -455,14 +538,64 @@ function setupSideMenu() {
         sideMenu.style.right = '0';
     }
 
+    function closeMenu() {
+        sideMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        menuActive = false;
+        document.body.style.overflow = '';
+        sideMenu.style.right = '';
+        menuOverlay.style.opacity = '';
+    }
+
+    burgerBtn.addEventListener('click', openMenu);
     sideMenuClose.addEventListener('click', closeMenu);
     menuOverlay.addEventListener('click', closeMenu);
 
-    // Закрытие по Escape
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && menuActive) {
-            closeMenu();
+        if (e.key === 'Escape' && menuActive) closeMenu();
+    });
+
+    // Свайп для открытия меню (с правого края экрана)
+    document.addEventListener('touchstart', (e) => {
+        if (menuActive) return;
+        const touchX = e.touches[0].clientX;
+        if (touchX > window.innerWidth - 30) {
+            startX = touchX;
+            isSwiping = true;
         }
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isSwiping || menuActive) return;
+        currentX = e.touches[0].clientX;
+        const diff = startX - currentX;
+        
+        if (diff > 0 && diff < 300) {
+            sideMenu.style.right = `-${300 - diff}px`;
+            sideMenu.style.transition = 'none';
+            const progress = diff / 300;
+            menuOverlay.style.display = 'block';
+            menuOverlay.style.opacity = progress;
+        }
+    });
+
+    document.addEventListener('touchend', () => {
+        if (!isSwiping || menuActive) return;
+        isSwiping = false;
+        
+        const diff = startX - currentX;
+        
+        if (diff > 80) {
+            openMenu();
+        } else {
+            sideMenu.style.right = '';
+            menuOverlay.style.display = 'none';
+            menuOverlay.style.opacity = '';
+        }
+        sideMenu.style.transition = '';
+        
+        startX = 0;
+        currentX = 0;
     });
 
     // Свайп для закрытия меню
@@ -477,10 +610,8 @@ function setupSideMenu() {
         currentX = e.touches[0].clientX;
         const diff = currentX - startX;
         
-        // Свайп вправо (закрытие)
         if (diff > 0) {
             sideMenu.style.right = `-${diff}px`;
-            // Затемняем оверлей в зависимости от положения
             const progress = Math.min(diff / 300, 1);
             menuOverlay.style.opacity = 1 - progress;
         }
@@ -493,12 +624,9 @@ function setupSideMenu() {
         
         const diff = currentX - startX;
         
-        // Если свайпнули больше 100px - закрываем
         if (diff > 100) {
             closeMenu();
-            menuOverlay.style.opacity = '';
         } else {
-            // Возвращаем меню обратно
             sideMenu.style.right = '0';
             menuOverlay.style.opacity = '';
         }
@@ -507,188 +635,35 @@ function setupSideMenu() {
         currentX = 0;
     });
 
-    // Поддержка свайпа мышью для десктопа
-    sideMenu.addEventListener('mousedown', (e) => {
-        startX = e.clientX;
-        isSwiping = true;
-        sideMenu.classList.add('swiping');
-        e.preventDefault();
-    });
-
+    // Поддержка мыши
     document.addEventListener('mousemove', (e) => {
-        if (!isSwiping || !menuActive) return;
-        currentX = e.clientX;
-        const diff = currentX - startX;
-        
-        if (diff > 0) {
-            sideMenu.style.right = `-${diff}px`;
-            const progress = Math.min(diff / 300, 1);
-            menuOverlay.style.opacity = 1 - progress;
+        if (!menuActive && e.clientX > window.innerWidth - 30) {
+            document.body.style.cursor = 'ew-resize';
+        } else if (!menuActive) {
+            document.body.style.cursor = '';
         }
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (!isSwiping) return;
-        isSwiping = false;
-        sideMenu.classList.remove('swiping');
-        
-        const diff = currentX - startX;
-        
-        if (diff > 100) {
-            closeMenu();
-            menuOverlay.style.opacity = '';
-        } else {
-            sideMenu.style.right = '0';
-            menuOverlay.style.opacity = '';
-        }
-        
-        startX = 0;
-        currentX = 0;
     });
 
     // Кнопки меню
     menuGenres.addEventListener('click', () => {
         closeMenu();
-        showGenresModal();
+        showGenresPage();
     });
 
     menuAuthors.addEventListener('click', () => {
         closeMenu();
-        showAuthorsModal();
+        showAuthorsPage();
     });
 
     menuAll.addEventListener('click', () => {
         closeMenu();
         renderBooks(allBooks);
+        showPage('main');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
 
-// ========== МОДАЛЬНОЕ ОКНО ЖАНРОВ ==========
-function showGenresModal() {
-    if (!allBooks || allBooks.length === 0) {
-        alert('Книги ещё загружаются');
-        return;
-    }
-
-    const genresMap = new Map();
-    allBooks.forEach(book => {
-        const genre = book.genre || 'Без жанра';
-        if (!genresMap.has(genre)) {
-            genresMap.set(genre, []);
-        }
-        genresMap.get(genre).push(book);
-    });
-
-    const modalHTML = `
-        <div class="modal-overlay" id="genresModalOverlay"></div>
-        <div class="modal active" id="genresModal">
-            <div class="modal-header">
-                <h3>📂 Жанры</h3>
-                <button class="modal-close" id="closeGenresModal">✕</button>
-            </div>
-            <div class="modal-list">
-                ${Array.from(genresMap.entries()).map(([genre, books]) => `
-                    <button class="modal-list-item" data-genre="${escapeHtml(genre)}">
-                        ${escapeHtml(genre)}
-                        <span class="count">${books.length} кн.</span>
-                    </button>
-                `).join('')}
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    const overlay = document.getElementById('genresModalOverlay');
-    const closeBtn = document.getElementById('closeGenresModal');
-    const modal = document.getElementById('genresModal');
-
-    function removeModal() {
-        modal.remove();
-        overlay.remove();
-    }
-
-    overlay.addEventListener('click', removeModal);
-    closeBtn.addEventListener('click', removeModal);
-
-    modal.querySelectorAll('.modal-list-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const genre = item.dataset.genre;
-            const filtered = allBooks.filter(book => 
-                (book.genre || 'Без жанра') === genre
-            );
-            renderBooks(filtered);
-            removeModal();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    });
-}
-
-// ========== МОДАЛЬНОЕ ОКНО АВТОРОВ ==========
-function showAuthorsModal() {
-    if (!allBooks || allBooks.length === 0) {
-        alert('Книги ещё загружаются');
-        return;
-    }
-
-    const authorsMap = new Map();
-    allBooks.forEach(book => {
-        const author = book.author || 'Неизвестный автор';
-        if (!authorsMap.has(author)) {
-            authorsMap.set(author, []);
-        }
-        authorsMap.get(author).push(book);
-    });
-
-    const modalHTML = `
-        <div class="modal-overlay" id="authorsModalOverlay"></div>
-        <div class="modal active" id="authorsModal">
-            <div class="modal-header">
-                <h3>✍️ Авторы</h3>
-                <button class="modal-close" id="closeAuthorsModal">✕</button>
-            </div>
-            <div class="modal-list">
-                ${Array.from(authorsMap.entries())
-                    .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([author, books]) => `
-                    <button class="modal-list-item" data-author="${escapeHtml(author)}">
-                        ${escapeHtml(author)}
-                        <span class="count">${books.length} кн.</span>
-                    </button>
-                `).join('')}
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    const overlay = document.getElementById('authorsModalOverlay');
-    const closeBtn = document.getElementById('closeAuthorsModal');
-    const modal = document.getElementById('authorsModal');
-
-    function removeModal() {
-        modal.remove();
-        overlay.remove();
-    }
-
-    overlay.addEventListener('click', removeModal);
-    closeBtn.addEventListener('click', removeModal);
-
-    modal.querySelectorAll('.modal-list-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const author = item.dataset.author;
-            const filtered = allBooks.filter(book => 
-                (book.author || 'Неизвестный автор') === author
-            );
-            renderBooks(filtered);
-            removeModal();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    });
-}
-
-// Настройка темы (ОДНА КНОПКА)
+// ========== ТЕМА ==========
 function setupTheme() {
     const savedTheme = localStorage.getItem('selectedTheme') || 'light';
     document.body.classList.add(savedTheme + '-theme');
@@ -729,7 +704,7 @@ function updateThemeIcon(theme) {
     }
 }
 
-// Настройка читалки
+// ========== ЧИТАЛКА ==========
 function setupReader() {
     const prevPage = function() {
         if (currentBook && currentPage > 1) {
@@ -756,19 +731,19 @@ function setupReader() {
     if (DOM.fullscreenBtn) DOM.fullscreenBtn.addEventListener('click', toggleFullscreen);
 
     if (DOM.fontPlus) {
-        DOM.fontPlus.addEventListener('click', function() {
+        DOM.fontPlus.addEventListener('click', () => {
             fontSize = Math.min(fontSize + 2, 30);
             if (DOM.readerContent) DOM.readerContent.style.fontSize = fontSize + 'px';
         });
     }
     if (DOM.fontMinus) {
-        DOM.fontMinus.addEventListener('click', function() {
+        DOM.fontMinus.addEventListener('click', () => {
             fontSize = Math.max(fontSize - 2, 14);
             if (DOM.readerContent) DOM.readerContent.style.fontSize = fontSize + 'px';
         });
     }
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', (e) => {
         if (DOM.readerWindow && DOM.readerWindow.style.display !== 'flex') return;
         if (e.key === 'Escape') {
             if (isFullscreen) toggleFullscreen();
@@ -847,9 +822,9 @@ window.addEventListener('online', updateConnectionStatus);
 window.addEventListener('offline', updateConnectionStatus);
 
 let resizeTimer;
-window.addEventListener('resize', function() {
+window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function() {
+    resizeTimer = setTimeout(() => {
         cachedDeviceType = null;
         if (currentBook && DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
             applyDeviceLayout();
