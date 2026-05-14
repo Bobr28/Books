@@ -8,7 +8,7 @@ const STATIC_FILES = [
   '/books-list.json',
   '/launchericon-192x192.png',
   '/launchericon-512x512.png',
-  '/vercel
+  '/vercel.json'
 ];
 
 // Установка — кэшируем статические файлы
