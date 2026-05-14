@@ -799,7 +799,7 @@ function updateConnectionStatus() {
     if (!statusDiv) {
         statusDiv = document.createElement('div');
         statusDiv.id = 'connection-status';
-        statusDiv.style.cssText = 'position:fixed;bottom:80px;right:16px;padding:6px 12px;border-radius:20px;font-size:12px;z-index:1000;background:rgba(0,0,0,0.7);color:white;pointer-events:none;';
+        statusDiv.style.cssText = 'position:fixed;bottom:90px;right:16px;padding:6px 12px;border-radius:20px;font-size:12px;z-index:1000;background:rgba(0,0,0,0.7);color:white;pointer-events:none;';
         document.body.appendChild(statusDiv);
     }
     statusDiv.textContent = navigator.onLine ? '● Онлайн' : '○ Офлайн';
