@@ -83,7 +83,7 @@ let fontSize = 18;
 let isFullscreen = false;
 let isLoading = false;
 let menuActive = false;
-let currentView = 'main'; // 'main', 'genres', 'authors'
+let currentView = 'main';
 
 const DEFAULT_BOOK_FILES = [
     'book8.json', 'book7.json', 'book6.json', 'book5.json',
@@ -92,7 +92,7 @@ const DEFAULT_BOOK_FILES = [
 
 // === ПОИСК КНИГ ===
 function addSearchBar() {
-    const introSection = document.querySelector('.intro');
+    const introSection = document.querySelector('#mainPage .intro');
     if (!introSection) return;
     if (document.getElementById('globalSearchInput')) return;
 
@@ -177,30 +177,27 @@ function addSearchBar() {
     }
 }
 
-// Переключение страниц
+// Переключение страниц - теперь скрывает/показывает
 function showPage(page) {
-    const pages = {
-        main: DOM.mainPage,
-        genres: DOM.genresPage,
-        authors: DOM.authorsPage
-    };
+    // Скрываем все страницы
+    if (DOM.mainPage) DOM.mainPage.style.display = 'none';
+    if (DOM.genresPage) DOM.genresPage.style.display = 'none';
+    if (DOM.authorsPage) DOM.authorsPage.style.display = 'none';
 
-    Object.keys(pages).forEach(key => {
-        if (pages[key]) {
-            pages[key].classList.remove('active');
-        }
-    });
-
-    if (pages[page]) {
-        pages[page].classList.add('active');
-        currentView = page;
+    // Показываем нужную
+    switch(page) {
+        case 'main':
+            if (DOM.mainPage) DOM.mainPage.style.display = 'block';
+            break;
+        case 'genres':
+            if (DOM.genresPage) DOM.genresPage.style.display = 'block';
+            break;
+        case 'authors':
+            if (DOM.authorsPage) DOM.authorsPage.style.display = 'block';
+            break;
     }
 
-    // Скрываем поиск на страницах жанров/авторов
-    const searchContainer = document.querySelector('.search-container');
-    if (searchContainer) {
-        searchContainer.style.display = page === 'main' ? 'block' : 'none';
-    }
+    currentView = page;
 }
 
 // Инициализация
@@ -633,15 +630,6 @@ function setupSideMenu() {
         
         startX = 0;
         currentX = 0;
-    });
-
-    // Поддержка мыши
-    document.addEventListener('mousemove', (e) => {
-        if (!menuActive && e.clientX > window.innerWidth - 30) {
-            document.body.style.cursor = 'ew-resize';
-        } else if (!menuActive) {
-            document.body.style.cursor = '';
-        }
     });
 
     // Кнопки меню
