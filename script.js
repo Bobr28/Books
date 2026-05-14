@@ -634,7 +634,7 @@ function setupSideMenu() {
         const diff = swipeType === 'open' ? (startX - lastX) : (lastX - startX);
         
         if (swipeType === 'open' && !menuActive) {
-            if (diff > 60) {
+            if (diff > 20) {
                 openMenu(true);
             } else {
                 sideMenu.style.transition = 'right 0.3s ease';
@@ -680,7 +680,7 @@ function setupSideMenu() {
             renderBooks(allBooks);
             showPage('main');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 20);
+        }, 100);
     });
 }
 
