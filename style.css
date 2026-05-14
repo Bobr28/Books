@@ -57,7 +57,7 @@ body.dark-theme {
 }
 
 .dark-theme .theme-toggle-btn {
-    background: linear-gradient(135deg, #444, #2a2a2a);
+    background: linear-gradient(135deg, #555, #333);
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
 }
 
@@ -83,7 +83,7 @@ body.dark-theme {
     transition: transform 0.1s ease;
 }
 
-/* ========== КОМПАКТНЫЙ HEADER ========== */
+/* ========== КОМПАКТНЫЙ HEADER С ГРАДИЕНТОМ ========== */
 header {
     padding: 12px 0;
     margin-bottom: 20px;
@@ -93,6 +93,17 @@ header {
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     transition: background 0.3s ease;
+}
+
+.light-theme header {
+    background: linear-gradient(135deg, #8b5a2b, #c49a6c);
+    color: white;
+}
+
+.dark-theme header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #e0e0e0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .header-container {
@@ -107,17 +118,6 @@ header {
     font-size: 1.6rem;
     margin: 0;
     white-space: nowrap;
-}
-
-.light-theme header {
-    background: rgba(139, 90, 43, 0.95);
-    color: white;
-}
-
-.dark-theme header {
-    background: rgba(10, 10, 10, 0.95);
-    color: #e0e0e0;
-    border-bottom: 1px solid #333;
 }
 
 /* Бургер-кнопка */
@@ -157,6 +157,10 @@ header {
     background: white;
     border-radius: 2px;
     transition: all 0.3s ease;
+}
+
+.dark-theme .burger-btn span {
+    background: #e0e0e0;
 }
 
 /* ========== ВЫЕЗЖАЮЩЕЕ МЕНЮ (СПРАВА) ========== */
@@ -211,6 +215,11 @@ header {
     border-bottom: 1px solid #eee;
     background: linear-gradient(135deg, #8b5a2b, #c49a6c);
     color: white;
+}
+
+.dark-theme .side-menu-header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 .side-menu-header h3 {
@@ -318,11 +327,6 @@ header {
     background: #2a2a2a;
 }
 
-.dark-theme .side-menu-header {
-    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
-    border-bottom-color: #444;
-}
-
 .dark-theme .menu-item {
     color: #e0e0e0;
 }
@@ -343,12 +347,7 @@ header {
 
 /* ========== СТРАНИЦЫ ЖАНРОВ/АВТОРОВ ========== */
 .category-page {
-    display: none;
     animation: fadeIn 0.3s ease;
-}
-
-.category-page.active {
-    display: block;
 }
 
 .category-page-header {
@@ -390,7 +389,7 @@ header {
 }
 
 .dark-theme .back-btn {
-    background: linear-gradient(135deg, #444, #2a2a2a);
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
 }
 
 .category-page-header h2 {
@@ -772,7 +771,7 @@ footer {
 }
 
 .dark-theme .reader-header {
-    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
 }
 
 .reader-controls {
