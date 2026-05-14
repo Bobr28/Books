@@ -799,8 +799,7 @@ function updateConnectionStatus() {
     if (!statusDiv) {
         statusDiv = document.createElement('div');
         statusDiv.id = 'connection-status';
-        // Изменено с bottom:80px на bottom:85px чтобы быть ниже кнопки темы
-        statusDiv.style.cssText = 'position:fixed;bottom:100px;right:16px;padding:6px 12px;border-radius:20px;font-size:12px;z-index:999;background:rgba(0,0,0,0.7);color:white;pointer-events:none;';
+        statusDiv.style.cssText = 'position:fixed;bottom:10px;right:16px;padding:6px 12px;border-radius:20px;font-size:12px;z-index:999;background:rgba(0,0,0,0.7);color:white;pointer-events:none;';
         document.body.appendChild(statusDiv);
     }
     statusDiv.textContent = navigator.onLine ? '● Онлайн' : '○ Офлайн';
