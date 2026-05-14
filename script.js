@@ -5,7 +5,7 @@ const DOM = {};
 function cacheDomElements() {
     const ids = ['booksGrid', 'loadingIndicator', 'errorMessage', 'readerWindow', 'overlay',
                  'readerTitle', 'readerContent', 'currentPage', 'totalPages', 'currentYear',
-                 'themeLight', 'themeDark', 'closeReader', 'prevPage', 'nextPage',
+                 'themeToggle', 'closeReader', 'prevPage', 'nextPage',
                  'fontPlus', 'fontMinus', 'fullscreenBtn', 'exitFullscreenBtn',
                  'fullscreenPrevBtn', 'fullscreenNextBtn'];
 
@@ -601,31 +601,45 @@ function showAuthorsModal() {
     });
 }
 
-// Настройка темы
+// Настройка темы (ОДНА КНОПКА)
 function setupTheme() {
     const savedTheme = localStorage.getItem('selectedTheme') || 'light';
     document.body.classList.add(savedTheme + '-theme');
-    const themeLight = document.getElementById('theme-light');
-    const themeDark = document.getElementById('theme-dark');
-    if (themeLight) {
-        themeLight.onclick = function() {
-            document.body.classList.remove('dark-theme');
-            document.body.classList.add('light-theme');
-            localStorage.setItem('selectedTheme', 'light');
-            themeLight.classList.add('active');
-            if (themeDark) themeDark.classList.remove('active');
-        };
-        if (savedTheme === 'light') themeLight.classList.add('active');
-    }
-    if (themeDark) {
-        themeDark.onclick = function() {
+    
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    // Показываем правильную иконку при загрузке
+    updateThemeIcon(savedTheme);
+    
+    themeToggle.addEventListener('click', () => {
+        if (document.body.classList.contains('light-theme')) {
             document.body.classList.remove('light-theme');
             document.body.classList.add('dark-theme');
             localStorage.setItem('selectedTheme', 'dark');
-            themeDark.classList.add('active');
-            if (themeLight) themeLight.classList.remove('active');
-        };
-        if (savedTheme === 'dark') themeDark.classList.add('active');
+            updateThemeIcon('dark');
+        } else {
+            document.body.classList.remove('dark-theme');
+            document.body.classList.add('light-theme');
+            localStorage.setItem('selectedTheme', 'light');
+            updateThemeIcon('light');
+        }
+    });
+}
+
+function updateThemeIcon(theme) {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const lightIcon = themeToggle.querySelector('.theme-icon-light');
+    const darkIcon = themeToggle.querySelector('.theme-icon-dark');
+    
+    if (theme === 'dark') {
+        lightIcon.style.display = 'none';
+        darkIcon.style.display = 'inline';
+    } else {
+        lightIcon.style.display = 'inline';
+        darkIcon.style.display = 'none';
     }
 }
 
@@ -736,7 +750,7 @@ function updateConnectionStatus() {
     if (!statusDiv) {
         statusDiv = document.createElement('div');
         statusDiv.id = 'connection-status';
-        statusDiv.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:6px 12px;border-radius:20px;font-size:12px;z-index:1000;background:rgba(0,0,0,0.7);color:white;pointer-events:none;';
+        statusDiv.style.cssText = 'position:fixed;bottom:80px;right:16px;padding:6px 12px;border-radius:20px;font-size:12px;z-index:1000;background:rgba(0,0,0,0.7);color:white;pointer-events:none;';
         document.body.appendChild(statusDiv);
     }
     statusDiv.textContent = navigator.onLine ? '● Онлайн' : '○ Офлайн';
