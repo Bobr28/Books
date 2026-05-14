@@ -177,7 +177,7 @@ function addSearchBar() {
     }
 }
 
-// Переключение страниц - теперь скрывает/показывает
+// Переключение страниц
 function showPage(page) {
     if (DOM.mainPage) DOM.mainPage.style.display = 'none';
     if (DOM.genresPage) DOM.genresPage.style.display = 'none';
@@ -564,7 +564,6 @@ function setupSideMenu() {
         const endX = e.changedTouches[0].clientX;
         const diff = startX - endX;
         
-        // Свайп справа налево больше 50px
         if (startX > window.innerWidth - 40 && diff > 50) {
             openMenu();
         }
@@ -630,105 +629,6 @@ function setupSideMenu() {
     });
 }
 
-    // Кнопки
-    burgerBtn.addEventListener('click', openMenu);
-    sideMenuClose.addEventListener('click', closeMenu);
-    menuOverlay.addEventListener('click', closeMenu);
-    
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && menuActive) closeMenu();
-    });
-
-    // Свайп для открытия — только touchstart и touchend, без move
-    document.addEventListener('touchstart', (e) => {
-        if (menuActive) return;
-        const x = e.touches[0].clientX;
-        if (x > window.innerWidth - 25) {
-            touchStart = x;
-            isDragging = true;
-        }
-    }, { passive: true });
-
-    document.addEventListener('touchend', () => {
-        if (!isDragging || menuActive) {
-            isDragging = false;
-            return;
-        }
-        isDragging = false;
-        
-        // Проверяем, был ли это свайп влево
-        if (touchEnd > 0 && touchStart - touchEnd > 50) {
-            openMenu();
-        }
-        
-        touchStart = 0;
-        touchEnd = 0;
-    });
-
-    // Отслеживаем только последнюю позицию
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging && !menuActive) {
-            touchEnd = e.touches[0].clientX;
-        }
-    }, { passive: true });
-
-    // Свайп для закрытия — на самом меню
-    sideMenu.addEventListener('touchstart', (e) => {
-        if (!menuActive) return;
-        touchStart = e.touches[0].clientX;
-        isDragging = true;
-    }, { passive: true });
-
-    sideMenu.addEventListener('touchmove', (e) => {
-        if (!isDragging || !menuActive) return;
-        touchEnd = e.touches[0].clientX;
-        const diff = touchEnd - touchStart;
-        if (diff > 0) {
-            const move = Math.min(diff, 300);
-            sideMenu.style.right = '-' + move + 'px';
-            menuOverlay.style.opacity = 1 - (move / 300);
-        }
-    }, { passive: true });
-
-    sideMenu.addEventListener('touchend', () => {
-        if (!isDragging || !menuActive) {
-            isDragging = false;
-            return;
-        }
-        isDragging = false;
-        
-        const diff = touchEnd - touchStart;
-        if (diff > 80) {
-            closeMenu();
-        } else {
-            sideMenu.style.right = '0px';
-            menuOverlay.style.opacity = '1';
-        }
-        
-        touchStart = 0;
-        touchEnd = 0;
-    });
-
-    // Кнопки меню
-    menuGenres.addEventListener('click', () => {
-        closeMenu();
-        setTimeout(() => showGenresPage(), 300);
-    });
-
-    menuAuthors.addEventListener('click', () => {
-        closeMenu();
-        setTimeout(() => showAuthorsPage(), 300);
-    });
-
-    menuAll.addEventListener('click', () => {
-        closeMenu();
-        setTimeout(() => {
-            renderBooks(allBooks);
-            showPage('main');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 300);
-    });
-}
 // ========== ТЕМА ==========
 function setupTheme() {
     const savedTheme = localStorage.getItem('selectedTheme') || 'light';
