@@ -9,7 +9,6 @@
     <meta name="theme-color" content="#4CAF50">
     <link rel="manifest" href="/manifest.json">
     
-    <!-- Защита от несанкционированного использования (выполняется до загрузки контента) -->
     <script>
         (function() {
             const allowedDomains = [
@@ -57,6 +56,7 @@
     </script>
 </head>
 <body>
+    <!-- Бургер-меню -->
     <nav class="side-menu" id="sideMenu">
         <div class="side-menu-header">
             <h3>📚 Меню</h3>
@@ -80,7 +80,7 @@
     </nav>
     <div class="menu-overlay" id="menuOverlay"></div>
 
-    <!-- Кнопка смены темы (внизу) -->
+    <!-- Кнопка смены темы -->
     <button class="theme-toggle-btn" id="themeToggle" title="Сменить тему">
         <span class="theme-icon-light">☀️</span>
         <span class="theme-icon-dark">🌙</span>
@@ -100,19 +100,40 @@
     </header>
     
     <main class="container">
-        <section class="intro">
-            <h2>Добро пожаловать!</h2>
-            <p>В нашей библиотеке вы можете читать произведения совершенно бесплатно. Выбирайте книгу и начинайте чтение прямо сейчас!</p>
-            <div class="loading" id="loadingIndicator">Загрузка книг...</div>
-        </section>    
-    
-        <section>
-            <h2>Коллекция книг</h2>
-            <div class="books-grid" id="booksGrid"></div>
-            <div class="error-message" id="errorMessage" style="display: none;">
-                Ошибка загрузки книг. Пожалуйста, обновите страницу.
+        <!-- Главная страница -->
+        <div id="mainPage">
+            <section class="intro">
+                <h2>Добро пожаловать!</h2>
+                <p>В нашей библиотеке вы можете читать произведения совершенно бесплатно. Выбирайте книгу и начинайте чтение прямо сейчас!</p>
+                <div class="loading" id="loadingIndicator">Загрузка книг...</div>
+            </section>    
+        
+            <section>
+                <h2>Коллекция книг</h2>
+                <div class="books-grid" id="booksGrid"></div>
+                <div class="error-message" id="errorMessage" style="display: none;">
+                    Ошибка загрузки книг. Пожалуйста, обновите страницу.
+                </div>
+            </section>
+        </div>
+
+        <!-- Страница жанров -->
+        <div class="category-page" id="genresPage">
+            <div class="category-page-header">
+                <button class="back-btn" id="backFromGenres">← Назад</button>
+                <h2>📂 Жанры</h2>
             </div>
-        </section>
+            <div class="category-list" id="genresList"></div>
+        </div>
+
+        <!-- Страница авторов -->
+        <div class="category-page" id="authorsPage">
+            <div class="category-page-header">
+                <button class="back-btn" id="backFromAuthors">← Назад</button>
+                <h2>✍️ Авторы</h2>
+            </div>
+            <div class="category-list" id="authorsList"></div>
+        </div>
     </main>
     
     <footer class="container">
@@ -147,7 +168,6 @@
     <button class="page-nav-btn prev-page" id="fullscreenPrevBtn" title="Предыдущая страница (←)">←</button>
     <button class="page-nav-btn next-page" id="fullscreenNextBtn" title="Следующая страница (→)">→</button>
 
-    <!-- Основной скрипт -->
     <script src="script.js"></script>
 </body>
 </html>
