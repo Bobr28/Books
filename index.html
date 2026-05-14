@@ -57,15 +57,45 @@
     </script>
 </head>
 <body>
+    <!-- Бургер-меню -->
+    <nav class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <h3>📚 Меню</h3>
+            <button class="side-menu-close" id="sideMenuClose">✕</button>
+        </div>
+        <div class="side-menu-content">
+            <button class="menu-item" id="menuGenres">
+                <span class="menu-icon">📂</span>
+                <span>Жанры</span>
+            </button>
+            <button class="menu-item" id="menuAuthors">
+                <span class="menu-icon">✍️</span>
+                <span>Авторы</span>
+            </button>
+            <div class="menu-divider"></div>
+            <button class="menu-item" id="menuAll">
+                <span class="menu-icon">📖</span>
+                <span>Все книги</span>
+            </button>
+        </div>
+    </nav>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
     <div class="theme-controls">
         <button class="theme-btn active" id="theme-light" title="Светлая тема">☀️</button>
         <button class="theme-btn" id="theme-dark" title="Темная тема">🌙</button>
     </div>
     
     <header>
-        <div class="container">
-            <h1>📚 Электронная библиотека</h1>
-            <p>Читайте книги онлайн бесплатно</p>
+        <div class="container header-container">
+            <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="header-title">
+                <h1>📚 Электронная библиотека</h1>
+            </div>
         </div>
     </header>
     
@@ -110,14 +140,14 @@
         <div class="reader-content" id="readerContent">Содержание книги...</div>
     </div>
 
-    <!-- Кнопка возврата из полноэкранного режима (сразу после читалки) -->
+    <!-- Кнопка возврата из полноэкранного режима -->
     <button class="exit-fullscreen-btn" id="exitFullscreenBtn" title="Выйти из полноэкранного режима (ESC)">✕</button>
 
     <!-- Кнопки навигации в полноэкранном режиме -->
     <button class="page-nav-btn prev-page" id="fullscreenPrevBtn" title="Предыдущая страница (←)">←</button>
     <button class="page-nav-btn next-page" id="fullscreenNextBtn" title="Следующая страница (→)">→</button>
 
-    <!-- Основной скрипт (один раз, в конце body) -->
+    <!-- Основной скрипт -->
     <script src="script.js"></script>
 </body>
 </html>
