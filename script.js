@@ -86,6 +86,7 @@ let currentPage = 1;
 let fontSize = 18;
 let isFullscreen = false;
 let isLoading = false;
+let menuActive = false;
 
 // ДЕФОЛТНЫЙ СПИСОК КНИГ
 const DEFAULT_BOOK_FILES = [
@@ -169,7 +170,6 @@ function addSearchBar() {
             `).join('')}
         `;
         
-        // ✅ ИСПРАВЛЕНО: Используем addEventListener вместо onclick в HTML
         resultsDiv.querySelectorAll('.search-result-item').forEach(item => {
             item.addEventListener('click', () => {
                 const bookId = parseInt(item.dataset.bookId);
@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (DOM.currentYear) DOM.currentYear.textContent = new Date().getFullYear();
     setupTheme();
     setupReader();
+    setupSideMenu();
     updateConnectionStatus();
 
     const style = document.createElement('style');
@@ -219,7 +220,6 @@ function registerServiceWorker() {
                     loadAllBooks();
                 }
             }
-            // ✅ ДОБАВЛЕНО: Принудительное обновление страницы при необходимости
             if (event.data.type === 'REFRESH_PAGE') {
                 window.location.reload();
             }
@@ -238,7 +238,6 @@ async function loadAllBooks() {
         if (await loadFromCache()) {
             isLoading = false;
             if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none';
-            // ✅ ИСПРАВЛЕНО: Скрываем ошибку при успешной загрузке из кэша
             if (DOM.errorMessage) DOM.errorMessage.style.display = 'none';
             return;
         }
@@ -289,7 +288,6 @@ async function loadAllBooks() {
         console.log(`📊 Загружено книг: ${allBooks.length}`);
         if (allBooks.length > 0) {
             renderBooks(allBooks);
-            // ✅ ИСПРАВЛЕНО: Скрываем сообщение об ошибке после успешной загрузки
             if (DOM.errorMessage) DOM.errorMessage.style.display = 'none';
             try {
                 localStorage.setItem('cachedBooks', JSON.stringify(allBooks));
@@ -312,7 +310,6 @@ async function loadAllBooks() {
                 </ul>
                 <p style="margin-top:15px;"><button id="retryButton" class="btn btn-read">🔄 Повторить</button></p>
             `;
-            // ✅ ИСПРАВЛЕНО: Используем addEventListener вместо onclick в HTML
             document.getElementById('retryButton')?.addEventListener('click', retryLoading);
         }
     } finally {
@@ -418,6 +415,190 @@ function showBookDetails(bookId) {
         preview = book.pages[0].replace(/<[^>]*>/g, '').substring(0, 150);
     }
     alert(book.title + '\n\nАвтор: ' + book.author + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
+}
+
+// ========== БОКОВОЕ МЕНЮ ==========
+function setupSideMenu() {
+    const burgerBtn = document.getElementById('burgerBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const sideMenuClose = document.getElementById('sideMenuClose');
+    const menuGenres = document.getElementById('menuGenres');
+    const menuAuthors = document.getElementById('menuAuthors');
+    const menuAll = document.getElementById('menuAll');
+
+    if (!burgerBtn || !sideMenu) return;
+
+    // Открыть меню
+    burgerBtn.addEventListener('click', () => {
+        sideMenu.classList.add('active');
+        menuOverlay.classList.add('active');
+        menuActive = true;
+        document.body.style.overflow = 'hidden';
+    });
+
+    // Закрыть меню
+    function closeMenu() {
+        sideMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        menuActive = false;
+        document.body.style.overflow = '';
+    }
+
+    sideMenuClose.addEventListener('click', closeMenu);
+    menuOverlay.addEventListener('click', closeMenu);
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menuActive) {
+            closeMenu();
+        }
+    });
+
+    // Кнопки меню
+    menuGenres.addEventListener('click', () => {
+        closeMenu();
+        showGenresModal();
+    });
+
+    menuAuthors.addEventListener('click', () => {
+        closeMenu();
+        showAuthorsModal();
+    });
+
+    menuAll.addEventListener('click', () => {
+        closeMenu();
+        renderBooks(allBooks);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+// ========== МОДАЛЬНОЕ ОКНО ЖАНРОВ ==========
+function showGenresModal() {
+    if (!allBooks || allBooks.length === 0) {
+        alert('Книги ещё загружаются');
+        return;
+    }
+
+    // Собираем жанры (если есть в данных книги)
+    const genresMap = new Map();
+    allBooks.forEach(book => {
+        const genre = book.genre || 'Без жанра';
+        if (!genresMap.has(genre)) {
+            genresMap.set(genre, []);
+        }
+        genresMap.get(genre).push(book);
+    });
+
+    const modalHTML = `
+        <div class="modal-overlay" id="genresModalOverlay"></div>
+        <div class="modal active" id="genresModal">
+            <div class="modal-header">
+                <h3>📂 Жанры</h3>
+                <button class="modal-close" id="closeGenresModal">✕</button>
+            </div>
+            <div class="modal-list">
+                ${Array.from(genresMap.entries()).map(([genre, books]) => `
+                    <button class="modal-list-item" data-genre="${escapeHtml(genre)}">
+                        ${escapeHtml(genre)}
+                        <span class="count">${books.length} кн.</span>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const overlay = document.getElementById('genresModalOverlay');
+    const closeBtn = document.getElementById('closeGenresModal');
+    const modal = document.getElementById('genresModal');
+
+    function removeModal() {
+        modal.remove();
+        overlay.remove();
+    }
+
+    overlay.addEventListener('click', removeModal);
+    closeBtn.addEventListener('click', removeModal);
+
+    // Выбор жанра
+    modal.querySelectorAll('.modal-list-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const genre = item.dataset.genre;
+            const filtered = allBooks.filter(book => 
+                (book.genre || 'Без жанра') === genre
+            );
+            renderBooks(filtered);
+            removeModal();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+}
+
+// ========== МОДАЛЬНОЕ ОКНО АВТОРОВ ==========
+function showAuthorsModal() {
+    if (!allBooks || allBooks.length === 0) {
+        alert('Книги ещё загружаются');
+        return;
+    }
+
+    // Собираем авторов
+    const authorsMap = new Map();
+    allBooks.forEach(book => {
+        const author = book.author || 'Неизвестный автор';
+        if (!authorsMap.has(author)) {
+            authorsMap.set(author, []);
+        }
+        authorsMap.get(author).push(book);
+    });
+
+    const modalHTML = `
+        <div class="modal-overlay" id="authorsModalOverlay"></div>
+        <div class="modal active" id="authorsModal">
+            <div class="modal-header">
+                <h3>✍️ Авторы</h3>
+                <button class="modal-close" id="closeAuthorsModal">✕</button>
+            </div>
+            <div class="modal-list">
+                ${Array.from(authorsMap.entries())
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([author, books]) => `
+                    <button class="modal-list-item" data-author="${escapeHtml(author)}">
+                        ${escapeHtml(author)}
+                        <span class="count">${books.length} кн.</span>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const overlay = document.getElementById('authorsModalOverlay');
+    const closeBtn = document.getElementById('closeAuthorsModal');
+    const modal = document.getElementById('authorsModal');
+
+    function removeModal() {
+        modal.remove();
+        overlay.remove();
+    }
+
+    overlay.addEventListener('click', removeModal);
+    closeBtn.addEventListener('click', removeModal);
+
+    // Выбор автора
+    modal.querySelectorAll('.modal-list-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const author = item.dataset.author;
+            const filtered = allBooks.filter(book => 
+                (book.author || 'Неизвестный автор') === author
+            );
+            renderBooks(filtered);
+            removeModal();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
 }
 
 // Настройка темы
