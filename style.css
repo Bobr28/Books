@@ -33,17 +33,326 @@ body.dark-theme {
     padding: 20px;
 }
 
+/* ========== НОВЫЙ КОМПАКТНЫЙ HEADER ========== */
+header {
+    padding: 12px 0;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 0 20px;
+}
+
+.header-title h1 {
+    font-size: 1.6rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
 .light-theme header {
     background: linear-gradient(135deg, #8b5a2b, #c49a6c);
     color: white;
-    padding: 25px 0;
 }
 
 .dark-theme header {
     background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
     color: #e0e0e0;
     border-bottom: 1px solid #333;
-    padding: 25px 0;
+}
+
+/* Бургер-кнопка */
+.burger-btn {
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.3s;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.burger-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.burger-btn span {
+    display: block;
+    width: 100%;
+    height: 2.5px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* ========== ВЫЕЗЖАЮЩЕЕ МЕНЮ ========== */
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 300px;
+    height: 100vh;
+    background: white;
+    z-index: 2000;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.side-menu.active {
+    left: 0;
+}
+
+.side-menu-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(135deg, #8b5a2b, #c49a6c);
+    color: white;
+}
+
+.side-menu-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.side-menu-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.side-menu-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.side-menu-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #333;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: 'Georgia', serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.menu-item:hover {
+    background: #f5f5f5;
+    transform: translateX(5px);
+}
+
+.menu-item:active {
+    transform: scale(0.98);
+}
+
+.menu-icon {
+    font-size: 1.3rem;
+    width: 24px;
+    text-align: center;
+}
+
+.menu-divider {
+    height: 1px;
+    background: #eee;
+    margin: 8px 0;
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    display: none;
+    backdrop-filter: blur(2px);
+}
+
+.menu-overlay.active {
+    display: block;
+}
+
+/* Тёмная тема для меню */
+.dark-theme .side-menu {
+    background: #2a2a2a;
+}
+
+.dark-theme .side-menu-header {
+    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
+}
+
+.dark-theme .menu-item {
+    color: #e0e0e0;
+}
+
+.dark-theme .menu-item:hover {
+    background: #383838;
+}
+
+.dark-theme .menu-divider {
+    background: #444;
+}
+
+.dark-theme .side-menu-header {
+    border-bottom-color: #444;
+}
+
+/* ========== МОДАЛЬНЫЕ ОКНА ДЛЯ ЖАНРОВ И АВТОРОВ ========== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2001;
+    backdrop-filter: blur(2px);
+}
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    z-index: 2002;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.modal-close {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.modal-close:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+.modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-list-item {
+    padding: 12px 16px;
+    background: #f8f8f8;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    transition: all 0.2s;
+    color: #333;
+    font-family: 'Georgia', serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.modal-list-item:hover {
+    background: #c49a6c;
+    color: white;
+    transform: translateX(5px);
+}
+
+.modal-list-item .count {
+    float: right;
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+/* Тёмная тема для модальных окон */
+.dark-theme .modal {
+    background: #2a2a2a;
+    color: #e0e0e0;
+}
+
+.dark-theme .modal-header {
+    border-bottom-color: #444;
+}
+
+.dark-theme .modal-list-item {
+    background: #383838;
+    color: #e0e0e0;
+}
+
+.dark-theme .modal-list-item:hover {
+    background: #4a4a4a;
 }
 
 .light-theme h2 {
@@ -62,20 +371,6 @@ body.dark-theme {
     padding-bottom: 10px;
     border-bottom: 2px solid #3498db;
     text-align: center;
-}
-
-header {
-    padding: 25px 0;
-    text-align: center;
-    margin-bottom: 30px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-h1 {
-    font-size: 2.8rem;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
 
 .theme-controls {
@@ -116,6 +411,7 @@ h1 {
     justify-content: center;
     font-size: 1.3rem;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .light-theme .theme-btn {
@@ -399,7 +695,6 @@ footer {
     display: none;
 }
 
-/* Отступы для контента в полноэкранном режиме */
 .reader-window.fullscreen .reader-content {
     max-height: 100vh;
     padding-left: 50px !important;
@@ -644,7 +939,7 @@ footer {
     backdrop-filter: blur(3px);
 }
 
-/* Кнопки навигации в полноэкранном режиме (показываются только при fullscreen) */
+/* Кнопки навигации в полноэкранном режиме */
 .page-nav-btn {
     position: fixed;
     top: 50%;
@@ -686,12 +981,11 @@ footer {
     right: 20px;
 }
 
-/* Показываем кнопки навигации при fullscreen (соседние элементы) */
 .reader-window.fullscreen ~ .page-nav-btn {
     display: flex;
 }
 
-/* Кнопка выхода из полноэкранного режима (непосредственно после читалки) */
+/* Кнопка выхода из полноэкранного режима */
 .exit-fullscreen-btn {
     position: fixed;
     top: 20px;
@@ -727,7 +1021,6 @@ footer {
     }
 }
 
-/* Показываем кнопку выхода, если читалка в fullscreen и она находится сразу после неё */
 .reader-window.fullscreen + .exit-fullscreen-btn {
     display: flex;
 }
@@ -906,5 +1199,19 @@ footer {
     }
     .search-results-dropdown {
         max-height: 300px;
+    }
+    
+    .side-menu {
+        width: 280px;
+        left: -280px;
+    }
+    
+    .header-title h1 {
+        font-size: 1.2rem;
+    }
+    
+    .modal {
+        width: 95%;
+        padding: 20px;
     }
 }
