@@ -57,7 +57,7 @@ body.dark-theme {
 }
 
 .dark-theme .theme-toggle-btn {
-    background: linear-gradient(135deg, #555, #333);
+    background: linear-gradient(135deg, #444, #2a2a2a);
     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
 }
 
@@ -101,9 +101,9 @@ header {
 }
 
 .dark-theme header {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
     color: #e0e0e0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid #333;
 }
 
 .header-container {
@@ -218,8 +218,8 @@ header {
 }
 
 .dark-theme .side-menu-header {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
+    border-bottom-color: #444;
 }
 
 .side-menu-header h3 {
@@ -389,7 +389,7 @@ header {
 }
 
 .dark-theme .back-btn {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
 }
 
 .category-page-header h2 {
@@ -771,7 +771,7 @@ footer {
 }
 
 .dark-theme .reader-header {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
 }
 
 .reader-controls {
