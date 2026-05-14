@@ -39,7 +39,7 @@ const DEVICE_CONFIG = {
     desktop: { lineHeight: 1.8, padding: 40 }
 };
 
-// Безопасная функция escapeHtml (исправлено: добавлена защита от кавычек)
+// Безопасная функция escapeHtml
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     if (typeof str !== 'string') str = String(str);
@@ -51,7 +51,7 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-// Применение стилей устройства (только padding и line-height, шрифт не трогаем)
+// Применение стилей устройства
 function applyDeviceLayout() {
     if (!DOM.readerContent) return;
     const config = DEVICE_CONFIG[getDeviceType()];
@@ -94,7 +94,7 @@ const DEFAULT_BOOK_FILES = [
     'book4.json', 'book3.json', 'book2.json', 'book1.json'
 ];
 
-// === ПОИСК КНИГ (ТОЛЬКО ПО НАЗВАНИЮ И АВТОРУ) ===
+// === ПОИСК КНИГ ===
 function addSearchBar() {
     const introSection = document.querySelector('.intro');
     if (!introSection) return;
@@ -417,7 +417,7 @@ function showBookDetails(bookId) {
     alert(book.title + '\n\nАвтор: ' + book.author + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
 }
 
-// ========== БОКОВОЕ МЕНЮ ==========
+// ========== БОКОВОЕ МЕНЮ С ПОДДЕРЖКОЙ СВАЙПА ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
     const sideMenu = document.getElementById('sideMenu');
@@ -429,12 +429,13 @@ function setupSideMenu() {
 
     if (!burgerBtn || !sideMenu) return;
 
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
     // Открыть меню
     burgerBtn.addEventListener('click', () => {
-        sideMenu.classList.add('active');
-        menuOverlay.classList.add('active');
-        menuActive = true;
-        document.body.style.overflow = 'hidden';
+        openMenu();
     });
 
     // Закрыть меню
@@ -443,6 +444,15 @@ function setupSideMenu() {
         menuOverlay.classList.remove('active');
         menuActive = false;
         document.body.style.overflow = '';
+        sideMenu.style.right = '';
+    }
+
+    function openMenu() {
+        sideMenu.classList.add('active');
+        menuOverlay.classList.add('active');
+        menuActive = true;
+        document.body.style.overflow = 'hidden';
+        sideMenu.style.right = '0';
     }
 
     sideMenuClose.addEventListener('click', closeMenu);
@@ -453,6 +463,87 @@ function setupSideMenu() {
         if (e.key === 'Escape' && menuActive) {
             closeMenu();
         }
+    });
+
+    // Свайп для закрытия меню
+    sideMenu.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+        sideMenu.classList.add('swiping');
+    });
+
+    sideMenu.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        
+        // Свайп вправо (закрытие)
+        if (diff > 0) {
+            sideMenu.style.right = `-${diff}px`;
+            // Затемняем оверлей в зависимости от положения
+            const progress = Math.min(diff / 300, 1);
+            menuOverlay.style.opacity = 1 - progress;
+        }
+    });
+
+    sideMenu.addEventListener('touchend', () => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        sideMenu.classList.remove('swiping');
+        
+        const diff = currentX - startX;
+        
+        // Если свайпнули больше 100px - закрываем
+        if (diff > 100) {
+            closeMenu();
+            menuOverlay.style.opacity = '';
+        } else {
+            // Возвращаем меню обратно
+            sideMenu.style.right = '0';
+            menuOverlay.style.opacity = '';
+        }
+        
+        startX = 0;
+        currentX = 0;
+    });
+
+    // Поддержка свайпа мышью для десктопа
+    sideMenu.addEventListener('mousedown', (e) => {
+        startX = e.clientX;
+        isSwiping = true;
+        sideMenu.classList.add('swiping');
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isSwiping || !menuActive) return;
+        currentX = e.clientX;
+        const diff = currentX - startX;
+        
+        if (diff > 0) {
+            sideMenu.style.right = `-${diff}px`;
+            const progress = Math.min(diff / 300, 1);
+            menuOverlay.style.opacity = 1 - progress;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        sideMenu.classList.remove('swiping');
+        
+        const diff = currentX - startX;
+        
+        if (diff > 100) {
+            closeMenu();
+            menuOverlay.style.opacity = '';
+        } else {
+            sideMenu.style.right = '0';
+            menuOverlay.style.opacity = '';
+        }
+        
+        startX = 0;
+        currentX = 0;
     });
 
     // Кнопки меню
@@ -480,7 +571,6 @@ function showGenresModal() {
         return;
     }
 
-    // Собираем жанры (если есть в данных книги)
     const genresMap = new Map();
     allBooks.forEach(book => {
         const genre = book.genre || 'Без жанра';
@@ -522,7 +612,6 @@ function showGenresModal() {
     overlay.addEventListener('click', removeModal);
     closeBtn.addEventListener('click', removeModal);
 
-    // Выбор жанра
     modal.querySelectorAll('.modal-list-item').forEach(item => {
         item.addEventListener('click', () => {
             const genre = item.dataset.genre;
@@ -543,7 +632,6 @@ function showAuthorsModal() {
         return;
     }
 
-    // Собираем авторов
     const authorsMap = new Map();
     allBooks.forEach(book => {
         const author = book.author || 'Неизвестный автор';
@@ -587,7 +675,6 @@ function showAuthorsModal() {
     overlay.addEventListener('click', removeModal);
     closeBtn.addEventListener('click', removeModal);
 
-    // Выбор автора
     modal.querySelectorAll('.modal-list-item').forEach(item => {
         item.addEventListener('click', () => {
             const author = item.dataset.author;
@@ -609,7 +696,6 @@ function setupTheme() {
     const themeToggle = document.getElementById('themeToggle');
     if (!themeToggle) return;
     
-    // Показываем правильную иконку при загрузке
     updateThemeIcon(savedTheme);
     
     themeToggle.addEventListener('click', () => {
