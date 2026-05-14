@@ -530,6 +530,8 @@ function setupSideMenu() {
     function openMenu() {
         sideMenu.classList.add('active');
         menuOverlay.classList.add('active');
+        menuOverlay.style.display = 'block';
+        menuOverlay.style.opacity = '1';
         menuActive = true;
         document.body.style.overflow = 'hidden';
         sideMenu.style.right = '0';
@@ -538,10 +540,11 @@ function setupSideMenu() {
     function closeMenu() {
         sideMenu.classList.remove('active');
         menuOverlay.classList.remove('active');
+        menuOverlay.style.display = 'none';
+        menuOverlay.style.opacity = '';
         menuActive = false;
         document.body.style.overflow = '';
         sideMenu.style.right = '';
-        menuOverlay.style.opacity = '';
     }
 
     burgerBtn.addEventListener('click', openMenu);
@@ -625,7 +628,7 @@ function setupSideMenu() {
             closeMenu();
         } else {
             sideMenu.style.right = '0';
-            menuOverlay.style.opacity = '';
+            menuOverlay.style.opacity = '1';
         }
         
         startX = 0;
