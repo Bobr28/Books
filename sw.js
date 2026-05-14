@@ -1,4 +1,4 @@
-const CACHE_NAME = 'library-v1.2.3';
+const CACHE_NAME = 'library-v1.0.0';
 const STATIC_FILES = [
   '/',
   '/index.html',
