@@ -509,7 +509,7 @@ function showAuthorsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ========== БОКОВОЕ МЕНЮ (МАКСИМАЛЬНО ПРОСТО) ==========
+// ========== БОКОВОЕ МЕНЮ (ОДИН СВАЙП) ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
     const sideMenu = document.getElementById('sideMenu');
@@ -520,11 +520,6 @@ function setupSideMenu() {
     const menuAll = document.getElementById('menuAll');
 
     if (!burgerBtn || !sideMenu) return;
-
-    // Переменные для свайпа
-    let touchStart = 0;
-    let touchEnd = 0;
-    let isDragging = false;
 
     function openMenu() {
         sideMenu.classList.add('active');
@@ -547,6 +542,93 @@ function setupSideMenu() {
             if (!menuActive) menuOverlay.style.display = 'none';
         }, 300);
     }
+
+    burgerBtn.addEventListener('click', openMenu);
+    sideMenuClose.addEventListener('click', closeMenu);
+    menuOverlay.addEventListener('click', closeMenu);
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menuActive) closeMenu();
+    });
+
+    // ===== ОТКРЫТИЕ СВАЙПОМ (один свайп) =====
+    let startX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+        if (menuActive) return;
+        startX = e.touches[0].clientX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        if (menuActive) return;
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
+        
+        // Свайп справа налево больше 50px
+        if (startX > window.innerWidth - 40 && diff > 50) {
+            openMenu();
+        }
+        
+        startX = 0;
+    });
+
+    // ===== ЗАКРЫТИЕ СВАЙПОМ =====
+    let menuStartX = 0;
+    let menuCurrentX = 0;
+    let menuSwiping = false;
+
+    sideMenu.addEventListener('touchstart', (e) => {
+        if (!menuActive) return;
+        menuStartX = e.touches[0].clientX;
+        menuCurrentX = menuStartX;
+        menuSwiping = true;
+    }, { passive: true });
+
+    sideMenu.addEventListener('touchmove', (e) => {
+        if (!menuSwiping || !menuActive) return;
+        menuCurrentX = e.touches[0].clientX;
+        const diff = menuCurrentX - menuStartX;
+        if (diff > 0) {
+            sideMenu.style.right = '-' + Math.min(diff, 300) + 'px';
+            menuOverlay.style.opacity = 1 - Math.min(diff / 300, 1);
+        }
+    }, { passive: true });
+
+    sideMenu.addEventListener('touchend', () => {
+        if (!menuSwiping || !menuActive) {
+            menuSwiping = false;
+            return;
+        }
+        menuSwiping = false;
+        
+        const diff = menuCurrentX - menuStartX;
+        if (diff > 80) {
+            closeMenu();
+        } else {
+            sideMenu.style.right = '0px';
+            menuOverlay.style.opacity = '1';
+        }
+    });
+
+    menuGenres.addEventListener('click', () => {
+        closeMenu();
+        setTimeout(() => showGenresPage(), 300);
+    });
+
+    menuAuthors.addEventListener('click', () => {
+        closeMenu();
+        setTimeout(() => showAuthorsPage(), 300);
+    });
+
+    menuAll.addEventListener('click', () => {
+        closeMenu();
+        setTimeout(() => {
+            renderBooks(allBooks);
+            showPage('main');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 300);
+    });
+}
 
     // Кнопки
     burgerBtn.addEventListener('click', openMenu);
