@@ -179,12 +179,10 @@ function addSearchBar() {
 
 // Переключение страниц - теперь скрывает/показывает
 function showPage(page) {
-    // Скрываем все страницы
     if (DOM.mainPage) DOM.mainPage.style.display = 'none';
     if (DOM.genresPage) DOM.genresPage.style.display = 'none';
     if (DOM.authorsPage) DOM.authorsPage.style.display = 'none';
 
-    // Показываем нужную
     switch(page) {
         case 'main':
             if (DOM.mainPage) DOM.mainPage.style.display = 'block';
@@ -510,6 +508,7 @@ function showAuthorsPage() {
     showPage('authors');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 // ========== БОКОВОЕ МЕНЮ С ПОДДЕРЖКОЙ СВАЙПА ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
@@ -525,7 +524,7 @@ function setupSideMenu() {
     let startX = 0;
     let lastX = 0;
     let isSwiping = false;
-    let swipeType = null; // 'open' или 'close'
+    let swipeType = null;
 
     function openMenu(animate = true) {
         sideMenu.classList.add('active');
@@ -568,7 +567,7 @@ function setupSideMenu() {
         if (e.key === 'Escape' && menuActive) closeMenu();
     });
 
-    // ===== СВАЙП ДЛЯ ОТКРЫТИЯ МЕНЮ (с правого края) =====
+    // Свайп для открытия меню (с правого края экрана)
     document.addEventListener('touchstart', (e) => {
         if (menuActive) return;
         const touch = e.touches[0];
@@ -600,7 +599,7 @@ function setupSideMenu() {
         }
     }, { passive: true });
 
-    // ===== СВАЙП ДЛЯ ЗАКРЫТИЯ МЕНЮ (на самом меню) =====
+    // Свайп для закрытия меню (на самом меню)
     sideMenu.addEventListener('touchstart', (e) => {
         if (!menuActive) return;
         const touch = e.touches[0];
@@ -626,7 +625,7 @@ function setupSideMenu() {
         }
     }, { passive: true });
 
-    // ===== ОБЩИЙ ОБРАБОТЧИК ОТПУСКАНИЯ =====
+    // Общий обработчик отпускания
     document.addEventListener('touchend', () => {
         if (!isSwiping) return;
         isSwiping = false;
@@ -638,7 +637,6 @@ function setupSideMenu() {
             if (diff > 60) {
                 openMenu(true);
             } else {
-                // Закрыть обратно
                 sideMenu.style.transition = 'right 0.3s ease';
                 sideMenu.style.right = '-320px';
                 menuOverlay.style.transition = 'opacity 0.3s ease';
@@ -653,7 +651,6 @@ function setupSideMenu() {
             if (diff > 80) {
                 closeMenu(true);
             } else {
-                // Вернуть меню
                 sideMenu.style.transition = 'right 0.3s ease';
                 sideMenu.style.right = '0px';
                 menuOverlay.style.transition = 'opacity 0.3s ease';
@@ -685,6 +682,47 @@ function setupSideMenu() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
     });
+}
+
+// ========== ТЕМА ==========
+function setupTheme() {
+    const savedTheme = localStorage.getItem('selectedTheme') || 'light';
+    document.body.classList.add(savedTheme + '-theme');
+    
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    updateThemeIcon(savedTheme);
+    
+    themeToggle.addEventListener('click', () => {
+        if (document.body.classList.contains('light-theme')) {
+            document.body.classList.remove('light-theme');
+            document.body.classList.add('dark-theme');
+            localStorage.setItem('selectedTheme', 'dark');
+            updateThemeIcon('dark');
+        } else {
+            document.body.classList.remove('dark-theme');
+            document.body.classList.add('light-theme');
+            localStorage.setItem('selectedTheme', 'light');
+            updateThemeIcon('light');
+        }
+    });
+}
+
+function updateThemeIcon(theme) {
+    const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return;
+    
+    const lightIcon = themeToggle.querySelector('.theme-icon-light');
+    const darkIcon = themeToggle.querySelector('.theme-icon-dark');
+    
+    if (theme === 'dark') {
+        lightIcon.style.display = 'none';
+        darkIcon.style.display = 'inline';
+    } else {
+        lightIcon.style.display = 'inline';
+        darkIcon.style.display = 'none';
+    }
 }
 
 // ========== ЧИТАЛКА ==========
