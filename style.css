@@ -9,7 +9,7 @@ body {
     background-color: #f5f5f5;
     color: #333;
     line-height: 1.6;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -34,7 +34,7 @@ body.dark-theme {
     padding: 20px;
 }
 
-/* ========== КНОПКА СМЕНЫ ТЕМЫ (ОДНА КНОПКА ВНИЗУ) ========== */
+/* ========== КНОПКА СМЕНЫ ТЕМЫ (ВНИЗУ) ========== */
 .theme-toggle-btn {
     position: fixed;
     bottom: 20px;
@@ -49,20 +49,11 @@ body.dark-theme {
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     background: linear-gradient(135deg, #c49a6c, #8b5a2b);
     color: white;
     -webkit-tap-highlight-color: transparent;
-}
-
-.theme-toggle-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.theme-toggle-btn:active {
-    transform: scale(0.95);
 }
 
 .dark-theme .theme-toggle-btn {
@@ -72,10 +63,27 @@ body.dark-theme {
 
 .theme-icon-light,
 .theme-icon-dark {
-    transition: all 0.3s ease;
+    transition: opacity 0.2s ease;
 }
 
-/* ========== НОВЫЙ КОМПАКТНЫЙ HEADER ========== */
+/* Ховер только для десктопа */
+@media (hover: hover) and (pointer: fine) {
+    .theme-toggle-btn:hover {
+        transform: scale(1.15);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+    }
+    
+    .dark-theme .theme-toggle-btn:hover {
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+    }
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.92);
+    transition: transform 0.1s ease;
+}
+
+/* ========== КОМПАКТНЫЙ HEADER ========== */
 header {
     padding: 12px 0;
     margin-bottom: 20px;
@@ -84,6 +92,7 @@ header {
     z-index: 100;
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: background 0.3s ease;
 }
 
 .header-container {
@@ -101,17 +110,17 @@ header {
 }
 
 .light-theme header {
-    background: linear-gradient(135deg, #8b5a2b, #c49a6c);
+    background: rgba(139, 90, 43, 0.95);
     color: white;
 }
 
 .dark-theme header {
-    background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
+    background: rgba(10, 10, 10, 0.95);
     color: #e0e0e0;
     border-bottom: 1px solid #333;
 }
 
-/* Бургер-кнопка (теперь справа) */
+/* Бургер-кнопка */
 .burger-btn {
     width: 36px;
     height: 36px;
@@ -124,14 +133,21 @@ header {
     gap: 5px;
     padding: 6px;
     border-radius: 8px;
-    transition: background 0.3s;
+    transition: background 0.2s ease, transform 0.2s ease;
     flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
     order: 2;
 }
 
-.burger-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+@media (hover: hover) and (pointer: fine) {
+    .burger-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+}
+
+.burger-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0.95);
 }
 
 .burger-btn span {
@@ -168,6 +184,25 @@ header {
     transition: none;
 }
 
+/* Индикатор свайпа для мобильных */
+@media (hover: none) and (pointer: coarse) {
+    .side-menu::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 30px;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 2px;
+    }
+    
+    .dark-theme .side-menu::before {
+        background: rgba(255, 255, 255, 0.15);
+    }
+}
+
 .side-menu-header {
     padding: 20px;
     display: flex;
@@ -195,12 +230,20 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.3s;
+    transition: background 0.2s ease, transform 0.2s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
-.side-menu-close:hover {
-    background: rgba(255, 255, 255, 0.2);
+@media (hover: hover) and (pointer: fine) {
+    .side-menu-close:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: rotate(90deg);
+    }
+}
+
+.side-menu-close:active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0.9);
 }
 
 .side-menu-content {
@@ -221,20 +264,24 @@ header {
     cursor: pointer;
     font-size: 1rem;
     color: #333;
-    transition: all 0.2s;
+    transition: background 0.2s ease, transform 0.2s ease;
     text-align: left;
     width: 100%;
     font-family: 'Georgia', serif;
     -webkit-tap-highlight-color: transparent;
 }
 
-.menu-item:hover {
-    background: #f5f5f5;
-    transform: translateX(-5px);
+@media (hover: hover) and (pointer: fine) {
+    .menu-item:hover {
+        background: #f5f5f5;
+        transform: translateX(-5px);
+    }
 }
 
 .menu-item:active {
+    background: #e8e8e8;
     transform: scale(0.98);
+    transition: transform 0.1s ease, background 0.1s ease;
 }
 
 .menu-icon {
@@ -266,27 +313,6 @@ header {
     display: block;
 }
 
-/* Индикатор свайпа */
-.side-menu::before {
-    content: '';
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 40px;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 2px;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-@media (hover: none) and (pointer: coarse) {
-    .side-menu::before {
-        opacity: 1;
-    }
-}
-
 /* Тёмная тема для меню */
 .dark-theme .side-menu {
     background: #2a2a2a;
@@ -294,138 +320,165 @@ header {
 
 .dark-theme .side-menu-header {
     background: linear-gradient(135deg, #0a0a0a, #2a2a2a);
+    border-bottom-color: #444;
 }
 
 .dark-theme .menu-item {
     color: #e0e0e0;
 }
 
-.dark-theme .menu-item:hover {
-    background: #383838;
+@media (hover: hover) and (pointer: fine) {
+    .dark-theme .menu-item:hover {
+        background: #383838;
+    }
+}
+
+.dark-theme .menu-item:active {
+    background: #333;
 }
 
 .dark-theme .menu-divider {
     background: #444;
 }
 
-.dark-theme .side-menu-header {
-    border-bottom-color: #444;
+/* ========== СТРАНИЦЫ ЖАНРОВ/АВТОРОВ ========== */
+.category-page {
+    display: none;
+    animation: fadeIn 0.3s ease;
 }
 
-/* ========== МОДАЛЬНЫЕ ОКНА ДЛЯ ЖАНРОВ И АВТОРОВ ========== */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 2001;
-    backdrop-filter: blur(2px);
+.category-page.active {
+    display: block;
 }
 
-.modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+.category-page-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 20px;
     background: white;
-    border-radius: 16px;
-    padding: 25px;
-    z-index: 2002;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.modal-header {
+.dark-theme .category-page-header {
+    background: #2a2a2a;
+}
+
+.back-btn {
+    background: linear-gradient(135deg, #8b5a2b, #c49a6c);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .back-btn:hover {
+        transform: translateX(-3px);
+        box-shadow: 0 4px 12px rgba(139, 90, 43, 0.3);
+    }
+}
+
+.back-btn:active {
+    transform: scale(0.95);
+}
+
+.dark-theme .back-btn {
+    background: linear-gradient(135deg, #444, #2a2a2a);
+}
+
+.category-page-header h2 {
+    margin: 0 !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+}
+
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.category-item {
+    padding: 16px 20px;
+    background: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1.05rem;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    color: #333;
+    font-family: 'Georgia', serif;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: 1.3rem;
-}
-
-.modal-close {
-    background: #e74c3c;
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     -webkit-tap-highlight-color: transparent;
 }
 
-.modal-close:hover {
-    background: #c0392b;
-    transform: scale(1.1);
+@media (hover: hover) and (pointer: fine) {
+    .category-item:hover {
+        transform: translateX(5px);
+        background: #c49a6c;
+        color: white;
+        box-shadow: 0 4px 15px rgba(139, 90, 43, 0.3);
+    }
 }
 
-.modal-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.modal-list-item {
-    padding: 12px 16px;
-    background: #f8f8f8;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: left;
-    font-size: 1rem;
-    transition: all 0.2s;
-    color: #333;
-    font-family: 'Georgia', serif;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.modal-list-item:hover {
-    background: #c49a6c;
+.category-item:active {
+    transform: scale(0.98);
+    background: #b88956;
     color: white;
-    transform: translateX(5px);
 }
 
-.modal-list-item .count {
-    float: right;
-    opacity: 0.7;
+.category-item .count {
     font-size: 0.9rem;
+    opacity: 0.7;
+    background: rgba(0,0,0,0.05);
+    padding: 4px 10px;
+    border-radius: 12px;
 }
 
-/* Тёмная тема для модальных окон */
-.dark-theme .modal {
+.dark-theme .category-item {
     background: #2a2a2a;
     color: #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.dark-theme .modal-header {
-    border-bottom-color: #444;
+@media (hover: hover) and (pointer: fine) {
+    .dark-theme .category-item:hover {
+        background: #4a4a4a;
+        color: white;
+    }
 }
 
-.dark-theme .modal-list-item {
-    background: #383838;
-    color: #e0e0e0;
+.dark-theme .category-item:active {
+    background: #3a3a3a;
 }
 
-.dark-theme .modal-list-item:hover {
-    background: #4a4a4a;
+.dark-theme .category-item .count {
+    background: rgba(255,255,255,0.1);
 }
 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== ЗАГОЛОВКИ ========== */
 .light-theme h2 {
     color: #8b5a2b;
     font-size: 2rem;
@@ -444,13 +497,14 @@ header {
     text-align: center;
 }
 
+/* ========== ВСТУПЛЕНИЕ ========== */
 .intro {
     background-color: white;
     padding: 25px;
     border-radius: 12px;
     margin-bottom: 30px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .light-theme .intro {
@@ -463,6 +517,7 @@ header {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
+/* ========== СЕТКА КНИГ ========== */
 .books-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -475,7 +530,7 @@ header {
     border-radius: 12px;
     padding: 25px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     border: 1px solid #eee;
@@ -488,7 +543,7 @@ header {
     transition: transform 0.1s ease;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .book-card:hover {
         transform: translateY(-8px);
     }
@@ -542,7 +597,7 @@ header {
     color: #2c3e50;
     margin-bottom: 12px;
     min-height: 65px;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease;
     font-weight: bold;
     line-height: 1.4;
 }
@@ -559,7 +614,7 @@ header {
     color: #7f8c8d;
     font-size: 0.95rem;
     margin-bottom: 20px;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease;
 }
 
 .dark-theme .book-meta {
@@ -578,7 +633,7 @@ header {
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     flex: 1;
     font-size: 1rem;
     -webkit-tap-highlight-color: transparent;
@@ -598,11 +653,9 @@ header {
     background: linear-gradient(135deg, #444, #333);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .btn-read:hover {
-        background: linear-gradient(135deg, #2980b9, #2573a7);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
     }
     .light-theme .btn-read:hover {
         background: linear-gradient(135deg, #b88956, #7a4d23);
@@ -611,6 +664,10 @@ header {
     .dark-theme .btn-read:hover {
         background: linear-gradient(135deg, #555, #444);
     }
+}
+
+.btn:active {
+    transform: scale(0.96);
 }
 
 .btn-details {
@@ -623,23 +680,24 @@ header {
     color: #e0e0e0;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .btn-details:hover {
-        background: linear-gradient(135deg, #bdc3c7, #a1a9b0);
         transform: translateY(-2px);
+        background: linear-gradient(135deg, #bdc3c7, #a1a9b0);
     }
     .dark-theme .btn-details:hover {
         background: linear-gradient(135deg, #555, #444);
     }
 }
 
+/* ========== ФУТЕР ========== */
 footer {
     text-align: center;
     margin-top: 50px;
     padding: 25px;
     color: #7f8c8d;
     border-top: 1px solid #eee;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, border-color 0.3s ease;
     font-size: 0.9rem;
 }
 
@@ -790,7 +848,7 @@ footer {
     padding: 8px 20px;
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, background 0.2s ease;
     font-weight: bold;
     font-size: 1rem;
     -webkit-tap-highlight-color: transparent;
@@ -800,14 +858,17 @@ footer {
     background: linear-gradient(135deg, #e8b87a, #c49a6c);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .close-btn:hover {
-        background: linear-gradient(135deg, #c0392b, #a93226);
         transform: translateY(-2px);
     }
     .light-theme .close-btn:hover {
         background: linear-gradient(135deg, #c49a6c, #8b5a2b);
     }
+}
+
+.close-btn:active {
+    transform: scale(0.95);
 }
 
 .reader-btn {
@@ -816,7 +877,7 @@ footer {
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, background 0.2s ease;
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     font-size: 1rem;
@@ -831,17 +892,14 @@ footer {
     background: linear-gradient(135deg, #444, #333);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .reader-btn:hover {
-        background: linear-gradient(135deg, #2980b9, #2573a7);
         transform: translateY(-2px);
     }
-    .light-theme .reader-btn:hover {
-        background: linear-gradient(135deg, #b88956, #7a4d23);
-    }
-    .dark-theme .reader-btn:hover {
-        background: linear-gradient(135deg, #555, #444);
-    }
+}
+
+.reader-btn:active {
+    transform: scale(0.95);
 }
 
 .page-indicator {
@@ -869,7 +927,7 @@ footer {
     cursor: pointer;
     font-weight: bold;
     font-size: 1.2rem;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, background 0.2s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -877,14 +935,14 @@ footer {
     background: linear-gradient(135deg, #c49a6c, #8b5a2b);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .font-btn:hover {
-        background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
-        transform: scale(1.1);
+        transform: scale(1.15);
     }
-    .light-theme .font-btn:hover {
-        background: linear-gradient(135deg, #b88956, #7a4d23);
-    }
+}
+
+.font-btn:active {
+    transform: scale(0.9);
 }
 
 .fullscreen-btn {
@@ -897,7 +955,7 @@ footer {
     cursor: pointer;
     font-weight: bold;
     font-size: 1.2rem;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, background 0.2s ease;
     margin-left: 10px;
     display: flex;
     align-items: center;
@@ -909,14 +967,14 @@ footer {
     background: linear-gradient(135deg, #e8b87a, #c49a6c);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .fullscreen-btn:hover {
-        background: linear-gradient(135deg, #8e44ad, #7d3c98);
-        transform: scale(1.1);
+        transform: scale(1.15);
     }
-    .light-theme .fullscreen-btn:hover {
-        background: linear-gradient(135deg, #c49a6c, #8b5a2b);
-    }
+}
+
+.fullscreen-btn:active {
+    transform: scale(0.9);
 }
 
 .overlay {
@@ -949,7 +1007,7 @@ footer {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
     opacity: 0.8;
     -webkit-tap-highlight-color: transparent;
 }
@@ -958,11 +1016,15 @@ footer {
     background: linear-gradient(135deg, rgba(196, 154, 108, 0.95), rgba(139, 90, 43, 0.95));
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .page-nav-btn:hover {
-        transform: translateY(-50%) scale(1.1);
+        transform: translateY(-50%) scale(1.15);
         opacity: 1;
     }
+}
+
+.page-nav-btn:active {
+    transform: translateY(-50%) scale(0.95);
 }
 
 .page-nav-btn.prev-page {
@@ -977,7 +1039,6 @@ footer {
     display: flex;
 }
 
-/* Кнопка выхода из полноэкранного режима */
 .exit-fullscreen-btn {
     position: fixed;
     top: 20px;
@@ -996,28 +1057,28 @@ footer {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .light-theme .exit-fullscreen-btn {
     background: linear-gradient(135deg, #e8b87a, #c49a6c);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
     .exit-fullscreen-btn:hover {
-        background: linear-gradient(135deg, #c0392b, #a93226);
-        transform: scale(1.1);
+        transform: scale(1.15);
     }
-    .light-theme .exit-fullscreen-btn:hover {
-        background: linear-gradient(135deg, #c49a6c, #8b5a2b);
-    }
+}
+
+.exit-fullscreen-btn:active {
+    transform: scale(0.9);
 }
 
 .reader-window.fullscreen + .exit-fullscreen-btn {
     display: flex;
 }
 
-/* ========== СТИЛИ ДЛЯ ПОИСКА ========== */
+/* ========== ПОИСК ========== */
 .search-container {
     margin: 25px 0 30px 0;
     position: relative;
@@ -1031,7 +1092,7 @@ footer {
     border-radius: 12px;
     background: white;
     color: #333;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     box-sizing: border-box;
     font-family: 'Georgia', serif;
 }
@@ -1113,6 +1174,10 @@ footer {
     background: #383838;
 }
 
+.search-result-item:active {
+    background: #e8e8e8;
+}
+
 .search-result-title {
     font-weight: bold;
     font-size: 15px;
@@ -1175,6 +1240,7 @@ footer {
     animation: searchFadeIn 0.2s ease;
 }
 
+/* ========== АДАПТИВНОСТЬ ========== */
 @media (max-width: 768px) {
     .search-input {
         padding: 12px 16px;
@@ -1202,16 +1268,16 @@ footer {
         font-size: 1.2rem;
     }
     
-    .modal {
-        width: 95%;
-        padding: 20px;
-    }
-    
     .theme-toggle-btn {
         width: 48px;
         height: 48px;
         bottom: 15px;
         right: 15px;
         font-size: 1.4rem;
+    }
+    
+    .books-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
     }
 }
