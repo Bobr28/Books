@@ -511,7 +511,7 @@ function showAuthorsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ========== БОКОВОЕ МЕНЮ С ПОДДЕРЖКОЙ СВАЙПА ==========
+// ========== БОКОВОЕ МЕНЮ С ПОДДЕРЖКОЙ СВАЙПА (ПОЛНОСТЬЮ ПЕРЕПИСАНО) ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
     const sideMenu = document.getElementById('sideMenu');
@@ -523,97 +523,141 @@ function setupSideMenu() {
 
     if (!burgerBtn || !sideMenu) return;
 
-    let startX = 0;
-    let currentX = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchCurrentX = 0;
     let isSwiping = false;
-    let swipeDirection = null; // 'open' или 'close'
+    let isMenuOpen = false;
 
-    function openMenu() {
-        sideMenu.classList.add('active');
-        sideMenu.style.transition = 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        sideMenu.style.right = '0';
-        menuOverlay.classList.add('active');
-        menuOverlay.style.display = 'block';
-        menuOverlay.style.transition = 'opacity 0.3s ease';
-        menuOverlay.style.opacity = '1';
+    // Открыть меню
+    function openMenu(animate = true) {
+        if (isMenuOpen) return;
+        isMenuOpen = true;
         menuActive = true;
+        
+        sideMenu.style.transition = animate ? 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
+        sideMenu.style.right = '0px';
+        sideMenu.classList.add('active');
+        
+        menuOverlay.style.display = 'block';
+        menuOverlay.style.transition = animate ? 'opacity 0.3s ease' : 'none';
+        menuOverlay.style.opacity = '1';
+        menuOverlay.classList.add('active');
+        
         document.body.style.overflow = 'hidden';
     }
 
-    function closeMenu() {
-        sideMenu.classList.remove('active');
-        sideMenu.style.transition = 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        sideMenu.style.right = '-320px';
-        menuOverlay.classList.remove('active');
-        menuOverlay.style.transition = 'opacity 0.3s ease';
-        menuOverlay.style.opacity = '0';
+    // Закрыть меню
+    function closeMenu(animate = true) {
+        if (!isMenuOpen) return;
+        isMenuOpen = false;
         menuActive = false;
+        
+        sideMenu.style.transition = animate ? 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none';
+        sideMenu.style.right = '-320px';
+        sideMenu.classList.remove('active');
+        
+        menuOverlay.style.transition = animate ? 'opacity 0.3s ease' : 'none';
+        menuOverlay.style.opacity = '0';
+        menuOverlay.classList.remove('active');
+        
         document.body.style.overflow = '';
         
-        // Скрываем оверлей после анимации
-        setTimeout(() => {
-            if (!menuActive) {
-                menuOverlay.style.display = 'none';
-            }
-        }, 300);
+        if (animate) {
+            setTimeout(() => {
+                if (!isMenuOpen) {
+                    menuOverlay.style.display = 'none';
+                }
+            }, 300);
+        } else {
+            menuOverlay.style.display = 'none';
+        }
     }
 
-    burgerBtn.addEventListener('click', openMenu);
-    sideMenuClose.addEventListener('click', closeMenu);
-    
+    // Кнопка бургера
+    burgerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openMenu();
+    });
+
+    // Кнопка закрытия
+    sideMenuClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeMenu();
+    });
+
+    // Клик по оверлею
     menuOverlay.addEventListener('click', (e) => {
         if (e.target === menuOverlay) {
             closeMenu();
         }
     });
 
+    // Escape
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && menuActive) closeMenu();
+        if (e.key === 'Escape' && isMenuOpen) {
+            closeMenu();
+        }
     });
 
-    // Свайп для открытия меню (с правого края экрана)
+    // Единый обработчик касаний
     document.addEventListener('touchstart', (e) => {
-        if (menuActive) return;
-        const touchX = e.touches[0].clientX;
-        if (touchX > window.innerWidth - 25) {
-            startX = touchX;
-            currentX = touchX;
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchCurrentX = touchStartX;
+        
+        // Определяем, можно ли начать свайп
+        if (!isMenuOpen && touchStartX > window.innerWidth - 30) {
+            // Свайп для открытия
             isSwiping = true;
-            swipeDirection = 'open';
             sideMenu.classList.add('swiping');
             menuOverlay.style.display = 'block';
             menuOverlay.style.opacity = '0';
+            sideMenu.style.right = '-320px';
         }
     }, { passive: false });
 
     document.addEventListener('touchmove', (e) => {
         if (!isSwiping) return;
         
-        if (swipeDirection === 'open' && !menuActive) {
-            currentX = e.touches[0].clientX;
-            const diff = startX - currentX;
-            
-            if (diff > 0) {
-                const progress = Math.min(diff / 300, 1);
-                const menuRight = -(300 - Math.min(diff, 300));
-                sideMenu.style.transition = 'none';
-                sideMenu.style.right = `${menuRight}px`;
-                menuOverlay.style.transition = 'none';
-                menuOverlay.style.opacity = progress;
+        touchCurrentX = e.touches[0].clientX;
+        const diffX = touchStartX - touchCurrentX;
+        const diffY = Math.abs(e.touches[0].clientY - touchStartY);
+        
+        // Если вертикальный скролл - отменяем свайп
+        if (diffY > Math.abs(diffX)) {
+            isSwiping = false;
+            sideMenu.classList.remove('swiping');
+            if (!isMenuOpen) {
+                menuOverlay.style.display = 'none';
+                menuOverlay.style.opacity = '0';
             }
+            return;
         }
         
-        if (swipeDirection === 'close' && menuActive) {
-            currentX = e.touches[0].clientX;
-            const diff = currentX - startX;
+        if (!isMenuOpen && diffX > 0) {
+            // Открываем меню
+            const progress = Math.min(diffX / 300, 1);
+            const menuRight = -(300 - Math.min(diffX, 300));
             
-            if (diff > 0) {
-                const progress = Math.min(diff / 300, 1);
-                sideMenu.style.transition = 'none';
-                sideMenu.style.right = `-${diff}px`;
-                menuOverlay.style.transition = 'none';
-                menuOverlay.style.opacity = 1 - progress;
-            }
+            sideMenu.style.transition = 'none';
+            sideMenu.style.right = `${menuRight}px`;
+            menuOverlay.style.transition = 'none';
+            menuOverlay.style.opacity = progress;
+        }
+        
+        if (isMenuOpen && diffX < 0) {
+            // Закрываем меню
+            const absDiff = Math.abs(diffX);
+            const progress = Math.min(absDiff / 300, 1);
+            
+            sideMenu.style.transition = 'none';
+            sideMenu.style.right = `-${absDiff}px`;
+            menuOverlay.style.transition = 'none';
+            menuOverlay.style.opacity = 1 - progress;
         }
     }, { passive: false });
 
@@ -622,71 +666,62 @@ function setupSideMenu() {
         isSwiping = false;
         sideMenu.classList.remove('swiping');
         
-        if (swipeDirection === 'open' && !menuActive) {
-            const diff = startX - currentX;
-            
-            if (diff > 60) {
-                // Открываем меню
+        const diffX = touchStartX - touchCurrentX;
+        
+        if (!isMenuOpen) {
+            // Пытались открыть
+            if (diffX > 60) {
                 openMenu();
             } else {
-                // Закрываем обратно
+                // Недостаточно свайпнули - закрываем обратно
                 sideMenu.style.transition = 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                 sideMenu.style.right = '-320px';
                 menuOverlay.style.transition = 'opacity 0.3s ease';
                 menuOverlay.style.opacity = '0';
                 setTimeout(() => {
-                    if (!menuActive) {
+                    if (!isMenuOpen) {
                         menuOverlay.style.display = 'none';
                     }
                 }, 300);
             }
-        }
-        
-        if (swipeDirection === 'close' && menuActive) {
-            const diff = currentX - startX;
-            
-            if (diff > 100) {
-                // Закрываем меню
+        } else {
+            // Пытались закрыть
+            if (diffX < -100) {
                 closeMenu();
             } else {
-                // Возвращаем меню обратно
+                // Недостаточно свайпнули - возвращаем меню
                 openMenu();
             }
         }
         
-        swipeDirection = null;
-        startX = 0;
-        currentX = 0;
+        touchStartX = 0;
+        touchCurrentX = 0;
     });
-
-    // Свайп для закрытия меню (на самом меню)
-    sideMenu.addEventListener('touchstart', (e) => {
-        if (!menuActive) return;
-        startX = e.touches[0].clientX;
-        currentX = startX;
-        isSwiping = true;
-        swipeDirection = 'close';
-        sideMenu.classList.add('swiping');
-    }, { passive: false });
 
     // Кнопки меню
-    menuGenres.addEventListener('click', () => {
+    menuGenres.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         closeMenu();
-        setTimeout(() => showGenresPage(), 300);
+        setTimeout(() => showGenresPage(), 350);
     });
 
-    menuAuthors.addEventListener('click', () => {
+    menuAuthors.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         closeMenu();
-        setTimeout(() => showAuthorsPage(), 300);
+        setTimeout(() => showAuthorsPage(), 350);
     });
 
-    menuAll.addEventListener('click', () => {
+    menuAll.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         closeMenu();
         setTimeout(() => {
             renderBooks(allBooks);
             showPage('main');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 300);
+        }, 350);
     });
 }
 // ========== ТЕМА ==========
