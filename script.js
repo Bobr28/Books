@@ -680,7 +680,7 @@ function setupSideMenu() {
             renderBooks(allBooks);
             showPage('main');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
+        }, 20);
     });
 }
 
