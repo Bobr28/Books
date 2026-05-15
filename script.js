@@ -366,6 +366,7 @@ function renderBooks(books) {
         const title = escapeHtml(book.title || 'Без названия');
         const author = escapeHtml(book.author || 'Неизвестен');
         const year = escapeHtml(book.year || 'Не указан');
+        const genre = escapeHtml(book.genre || 'неизвестен');
         const pagesCount = (book.pages && Array.isArray(book.pages)) ? book.pages.length : 0;
         const card = document.createElement('div');
         card.className = 'book-card';
