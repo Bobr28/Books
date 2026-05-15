@@ -99,7 +99,7 @@ function addSearchBar() {
     const searchHTML = `
         <div class="search-container">
             <input type="text" id="globalSearchInput" class="search-input"
-                   placeholder="Поиск по названию или автору..."
+                   placeholder="Поиск по названию, автору или жанру..."
                    autocomplete="off">
             <div id="globalSearchResults" class="search-results-dropdown" style="display: none;"></div>
         </div>
@@ -141,8 +141,14 @@ function addSearchBar() {
         for (const book of allBooks) {
             const titleMatch = book.title?.toLowerCase().includes(lowerQuery);
             const authorMatch = book.author?.toLowerCase().includes(lowerQuery);
-            if (titleMatch || authorMatch) {
-                let matchType = titleMatch ? '📖 в названии' : '✍️ у автора';
+            const genreMatch = book.genre?.toLowerCase().includes(lowerQuery);
+            
+            if (titleMatch || authorMatch || genreMatch) {
+                let matchType = '';
+                if (titleMatch) matchType = '📖 в названии';
+                else if (authorMatch) matchType = '✍️ у автора';
+                else if (genreMatch) matchType = '📂 в жанре';
+                
                 results.push({
                     id: book.id,
                     title: book.title || 'Без названия',
@@ -366,7 +372,7 @@ function renderBooks(books) {
         const title = escapeHtml(book.title || 'Без названия');
         const author = escapeHtml(book.author || 'Неизвестен');
         const year = escapeHtml(book.year || 'Не указан');
-        const genre = escapeHtml(book.genre || 'неизвестен');
+        const genre = escapeHtml(book.genre || 'Без жанра');
         const pagesCount = (book.pages && Array.isArray(book.pages)) ? book.pages.length : 0;
         const card = document.createElement('div');
         card.className = 'book-card';
@@ -376,6 +382,7 @@ function renderBooks(books) {
             <div class="book-title">${title}</div>
             <div class="book-meta">
                 <p><strong>Автор:</strong> ${author}</p>
+                <p><strong>Жанр:</strong> <span class="book-genre">${genre}</span></p>
                 <p><strong>Год:</strong> ${year}</p>
                 <p><strong>Страниц:</strong> ${pagesCount}</p>
             </div>
@@ -429,7 +436,7 @@ function showBookDetails(bookId) {
     if (book.pages && book.pages[0]) {
         preview = book.pages[0].replace(/<[^>]*>/g, '').substring(0, 150);
     }
-    alert(book.title + '\n\nАвтор: ' + book.author + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
+    alert(book.title + '\n\nАвтор: ' + book.author + '\nЖанр: ' + (book.genre || 'Не указан') + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
 }
 
 // ========== НАСТРОЙКА СТРАНИЦ ЖАНРОВ/АВТОРОВ ==========
