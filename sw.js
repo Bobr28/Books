@@ -1,4 +1,4 @@
-const CACHE_NAME = 'library-v1.0.2'; 
+const CACHE_NAME = 'library-v1.0.3';
 const STATIC_FILES = [
   '/',
   '/index.html',
@@ -7,11 +7,9 @@ const STATIC_FILES = [
   '/manifest.json',
   '/books-list.json',
   '/launchericon-192x192.png',
-  '/launchericon-512x512.png',
-  '/vercel.json'
+  '/launchericon-512x512.png'
 ];
 
-// Установка — кэшируем статические файлы
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -24,7 +22,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Активация — чистим старые кэши
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -39,29 +36,21 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Перехват запросов
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const pathname = url.pathname;
 
-  // 1. Для JSON-файлов книг в корне (book1.json, book2.json, ...)
   if (pathname.match(/\/book\d+\.json$/)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
         return fetch(event.request)
           .then(response => {
-            // ✅ Кэшируем ТОЛЬКО успешные ответы (статус 200)
             if (response.ok) {
-              console.log('✅ Кэширую книгу:', pathname);
               cache.put(event.request, response.clone());
-            } else {
-              console.warn('⚠️ Книга не найдена (404):', pathname);
             }
             return response;
           })
-          .catch(error => {
-            // Если сети нет — пробуем отдать из кэша
-            console.log('📦 Офлайн, пробую кэш для:', pathname);
+          .catch(() => {
             return cache.match(event.request).then(cached => {
               return cached || new Response('Книга недоступна офлайн', { status: 404 });
             });
@@ -71,14 +60,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Для books-list.json
   if (pathname === '/books-list.json') {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
         return fetch(event.request)
           .then(response => {
             if (response.ok) {
-              console.log('✅ Обновляю список книг');
               cache.put(event.request, response.clone());
             }
             return response;
@@ -93,7 +80,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Для статических файлов — сначала кэш, потом сеть
   if (STATIC_FILES.includes(pathname) || pathname === '/' || pathname.endsWith('.html')) {
     event.respondWith(
       caches.match(event.request).then(cached => {
@@ -109,6 +95,5 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. Для всего остального — только сеть (не кэшируем)
   event.respondWith(fetch(event.request));
 });
