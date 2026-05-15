@@ -233,16 +233,30 @@ function registerServiceWorker() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js').then(reg => {
                 console.log('SW registered:', reg);
+                
+                // Проверка обновлений каждый час
                 setInterval(() => reg.update(), 60 * 60 * 1000);
+                
+                // Если найден новый SW — применяем и перезагружаем
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('🔄 Новый SW установлен, перезагружаем...');
+                            // Очищаем кэш книг в localStorage
+                            localStorage.removeItem('cachedBooks');
+                            localStorage.removeItem('cacheTimestamp');
+                            // Перезагружаем страницу
+                            window.location.reload();
+                        }
+                    });
+                });
             }).catch(err => console.error('SW registration failed:', err));
         });
 
         navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data.type === 'BOOKS_UPDATED') {
-                console.log('Получено обновление книг, перезагружаем список');
-                if (typeof loadAllBooks === 'function') {
-                    loadAllBooks();
-                }
+                if (typeof loadAllBooks === 'function') loadAllBooks();
             }
             if (event.data.type === 'REFRESH_PAGE') {
                 window.location.reload();
