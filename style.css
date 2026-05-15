@@ -66,7 +66,6 @@ body.dark-theme {
     transition: opacity 0.2s ease;
 }
 
-/* Ховер только для десктопа */
 @media (hover: hover) and (pointer: fine) {
     .theme-toggle-btn:hover {
         transform: scale(1.15);
@@ -188,7 +187,6 @@ header {
     transition: none;
 }
 
-/* Индикатор свайпа для мобильных */
 @media (hover: none) and (pointer: coarse) {
     .side-menu::before {
         content: '';
@@ -624,23 +622,6 @@ header {
 
 .book-meta p {
     margin-bottom: 5px;
-}
-
-/* ========== СТИЛЬ ЖАНРА В КАРТОЧКЕ ========== */
-.book-genre {
-    display: inline-block;
-    background: #f0e6d3;
-    color: #8b5a2b;
-    padding: 3px 12px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    transition: background 0.3s ease, color 0.3s ease;
-}
-
-.dark-theme .book-genre {
-    background: #3a3a3a;
-    color: #c49a6c;
 }
 
 .book-buttons {
