@@ -6,7 +6,7 @@
   "orientation": "portrait",
   "scope": "/",
   "short_name": "Reading world",
-  "start_url": "https://rafstar.vercel.app/",
+  "start_url": "https://read-world.vercel.app/",
   "theme_color": "#4caf50",
   "icons": [
     {
