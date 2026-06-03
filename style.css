@@ -1246,6 +1246,216 @@ footer {
     color: #aaa;
 }
 
+/* ========== ОБРАТНАЯ СВЯЗЬ ========== */
+.feedback-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3000;
+}
+
+.feedback-modal.active {
+    display: block;
+}
+
+.feedback-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.feedback-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    width: 90%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: modalIn 0.3s ease;
+}
+
+.dark-theme .feedback-content {
+    background: #2a2a2a;
+    color: #e0e0e0;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.dark-theme .feedback-header {
+    border-bottom-color: #444;
+}
+
+.feedback-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.feedback-close {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.feedback-close:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.feedback-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.feedback-field label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.dark-theme .feedback-field label {
+    color: #bbb;
+}
+
+.feedback-field input,
+.feedback-field select,
+.feedback-field textarea {
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: 'Georgia', serif;
+    background: white;
+    color: #333;
+    transition: border-color 0.2s;
+}
+
+.feedback-field input:focus,
+.feedback-field select:focus,
+.feedback-field textarea:focus {
+    outline: none;
+    border-color: #c49a6c;
+}
+
+.dark-theme .feedback-field input,
+.dark-theme .feedback-field select,
+.dark-theme .feedback-field textarea {
+    background: #383838;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+.dark-theme .feedback-field input:focus,
+.dark-theme .feedback-field select:focus,
+.dark-theme .feedback-field textarea:focus {
+    border-color: #90caf9;
+}
+
+.feedback-field textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.btn-submit:active {
+    transform: scale(0.97);
+}
+
+.feedback-note {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 5px;
+}
+
+.feedback-note a {
+    color: #8b5a2b;
+    text-decoration: underline;
+}
+
+.dark-theme .feedback-note a {
+    color: #c49a6c;
+}
+
+.feedback-success {
+    text-align: center;
+    padding: 30px 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.feedback-success .success-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+}
+
+.feedback-success h3 {
+    color: #4CAF50;
+    margin-bottom: 10px;
+}
+
 /* ========== АДАПТИВНОСТЬ ========== */
 @media (min-width: 600px) {
     .books-grid {
