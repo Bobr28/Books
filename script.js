@@ -639,20 +639,22 @@ function toggleFavorite(bookId, button) {
 
 function showFavorites() {
     const favorites = getFavorites();
+    
+    // Всегда добавляем в историю
+    history.pushState({ page: 'favorites', navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#favorites');
+    
     if (favorites.length === 0) {
         renderBooks([]);
-        showPage('main');
+        showPage('main', false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
+    
     const filtered = allBooks.filter(book => favorites.includes(book.id));
     renderBooks(filtered);
-    showPage('main', false); // Не добавляем в историю навигации
-    // Вручную добавляем в историю браузера
-    history.pushState({ page: 'favorites', navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#favorites');
+    showPage('main', false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 // ========== БОКОВОЕ МЕНЮ ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
