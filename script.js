@@ -11,7 +11,7 @@ function cacheDomElements() {
                  'themeToggle', 'closeReader', 'prevPage', 'nextPage',
                  'fontPlus', 'fontMinus', 'fullscreenBtn', 'exitFullscreenBtn',
                  'fullscreenPrevBtn', 'fullscreenNextBtn', 'mainPage', 'genresPage', 'authorsPage',
-                 'genresList', 'authorsList', 'menuFavorites'];
+                 'genresList', 'authorsList', 'menuFavorites', 'menuFeedback'];
 
     ids.forEach(id => {
         DOM[id] = document.getElementById(id);
@@ -650,6 +650,7 @@ function setupSideMenu() {
     const menuGenres = document.getElementById('menuGenres');
     const menuAuthors = document.getElementById('menuAuthors');
     const menuFavorites = document.getElementById('menuFavorites');
+    const menuFeedback = document.getElementById('menuFeedback');
     const menuAll = document.getElementById('menuAll');
 
     if (!burgerBtn || !sideMenu) return;
@@ -760,6 +761,11 @@ function setupSideMenu() {
         setTimeout(() => showFavorites(), 300);
     });
 
+    menuFeedback.addEventListener('click', () => {
+        closeMenu(false);
+        setTimeout(() => openFeedback(), 300);
+    });
+
     menuAll.addEventListener('click', () => {
         closeMenu(false);
         setTimeout(() => {
@@ -768,6 +774,58 @@ function setupSideMenu() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 300);
     });
+}
+
+// ========== ОБРАТНАЯ СВЯЗЬ ==========
+function openFeedback() {
+    const modal = document.getElementById('feedbackModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    document.getElementById('feedbackClose').onclick = closeFeedback;
+    document.getElementById('feedbackOverlay').onclick = closeFeedback;
+    document.getElementById('feedbackForm').onsubmit = submitFeedback;
+}
+
+function closeFeedback() {
+    const modal = document.getElementById('feedbackModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function submitFeedback(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('feedbackName').value || 'Аноним';
+    const topic = document.getElementById('feedbackTopic').value;
+    const message = document.getElementById('feedbackMessage').value;
+    
+    const subject = `[Библиотека] ${getTopicText(topic)} от ${name}`;
+    const body = `Имя: ${name}\nТема: ${getTopicText(topic)}\n\n${message}\n\n---\nОтправлено из электронной библиотеки`;
+    
+    window.location.href = `mailto:your@email.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    const form = document.getElementById('feedbackForm');
+    form.innerHTML = `
+        <div class="feedback-success">
+            <div class="success-icon">✅</div>
+            <h3>Спасибо!</h3>
+            <p>Ваше сообщение отправлено.<br>Мы ответим в ближайшее время.</p>
+            <button type="button" class="btn-submit" onclick="closeFeedback()" style="margin-top:15px;">Закрыть</button>
+        </div>
+    `;
+}
+
+function getTopicText(topic) {
+    const topics = {
+        'bug': 'Ошибка',
+        'feature': 'Предложение',
+        'book': 'Предложить книгу',
+        'other': 'Другое'
+    };
+    return topics[topic] || topic;
 }
 
 // ========== ТЕМА ==========
