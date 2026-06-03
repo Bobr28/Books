@@ -858,9 +858,9 @@ function submitFeedback(e) {
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     
     if (isMobile) {
-        window.location.href = `mailto:your@email.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     } else {
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=your@email.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=cheburekus2012@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.open(gmailUrl, '_blank');
     }
 }
