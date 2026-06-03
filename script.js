@@ -95,7 +95,7 @@ const DEFAULT_BOOK_FILES = [
 
 // === ПОИСК КНИГ ===
 function addSearchBar() {
-    const introSection = document.querySelector('#mainPage .intro');
+    const introSection = document.querySelector('#mainPage h2');
     if (!introSection) return;
     if (document.getElementById('globalSearchInput')) return;
 
