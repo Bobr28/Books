@@ -647,9 +647,10 @@ function showFavorites() {
     }
     const filtered = allBooks.filter(book => favorites.includes(book.id));
     renderBooks(filtered);
-    // Добавляем в историю
-    history.pushState({ page: 'favorites', navHistory: [...navigationHistory, currentView], menuOpen: false, feedbackOpen: false }, '', '#favorites');
-    currentView = 'main';
+    // Добавляем в историю и меняем currentView
+    history.pushState({ page: 'favorites', navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#favorites');
+    navigationHistory.push(currentView);
+    currentView = 'favorites';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
