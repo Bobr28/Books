@@ -793,7 +793,6 @@ function openFeedback() {
             <select id="feedbackTopic">
                 <option value="bug">🐛 Нашёл ошибку</option>
                 <option value="feature">💡 Предложение</option>
-                <option value="book">📖 Предложить книгу</option>
                 <option value="other">💬 Другое</option>
             </select>
         </div>
@@ -802,7 +801,7 @@ function openFeedback() {
             <textarea id="feedbackMessage" rows="5" placeholder="Опишите проблему или предложение..." required></textarea>
         </div>
         <button type="submit" class="btn-submit">📨 Отправить</button>
-        <p class="feedback-note">Или напишите на почту: <a href="mailto:your@email.com">your@email.com</a></p>
+        <p class="feedback-note">Или напишите на почту: <a href="mailto:your@email.com"cheburekus2012@gmail.com</a></p>
     `;
     
     modal.classList.add('active');
