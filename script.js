@@ -842,14 +842,13 @@ function submitFeedback(e) {
     `;
     
     // Открываем почтовый клиент
-    window.location.href = `mailto:your@email.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function getTopicText(topic) {
     const topics = {
         'bug': 'Ошибка',
         'feature': 'Предложение',
-        'book': 'Предложить книгу',
         'other': 'Другое'
     };
     return topics[topic] || topic;
