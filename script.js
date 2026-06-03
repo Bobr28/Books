@@ -193,7 +193,7 @@ function showPage(page, addToHistory = true) {
         if (navigationHistory.length > 10) {
             navigationHistory.shift();
         }
-        history.pushState({ page: page, navHistory: [...navigationHistory], menuOpen: false }, '', '#' + page);
+        history.pushState({ page: page, navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#' + page);
     }
 
     if (DOM.mainPage) DOM.mainPage.style.display = 'none';
@@ -248,6 +248,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerServiceWorker();
 
     window.addEventListener('popstate', (e) => {
+        // Закрываем модалку обратной связи
+        const feedbackModal = document.getElementById('feedbackModal');
+        if (feedbackModal && feedbackModal.classList.contains('active')) {
+            closeFeedback(false);
+            return;
+        }
+
+        // Закрываем меню
         if (menuActive) {
             const sideMenu = document.getElementById('sideMenu');
             const menuOverlay = document.getElementById('menuOverlay');
@@ -263,11 +271,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Закрываем читалку
         if (DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
             closeReader(false);
             return;
         }
 
+        // Возвращаемся по истории
         if (e.state && e.state.navHistory) {
             navigationHistory = e.state.navHistory;
             if (e.state.page) {
@@ -281,7 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    history.replaceState({ page: 'main', navHistory: [], menuOpen: false }, '', window.location.href);
+    history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', window.location.href);
 });
 
 function registerServiceWorker() {
@@ -480,7 +490,7 @@ window.openBook = function(bookId) {
         return;
     }
 
-    history.pushState({ page: 'reader', bookId: bookId, navHistory: [...navigationHistory], menuOpen: false }, '', '#book-' + bookId);
+    history.pushState({ page: 'reader', bookId: bookId, navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#book-' + bookId);
 
     currentBook = JSON.parse(JSON.stringify(book));
     currentPage = getReadingProgress(bookId);
@@ -663,7 +673,7 @@ function setupSideMenu() {
         menuOverlay.style.opacity = '1';
         menuActive = true;
         document.body.style.overflow = 'hidden';
-        history.pushState({ page: currentView, menuOpen: true, navHistory: [...navigationHistory] }, '', '#menu');
+        history.pushState({ page: currentView, menuOpen: true, feedbackOpen: false, navHistory: [...navigationHistory] }, '', '#menu');
     }
 
     function closeMenu(addHistory = true) {
@@ -781,7 +791,10 @@ function openFeedback() {
     const modal = document.getElementById('feedbackModal');
     if (!modal) return;
     
-    // ВСЕГДА сбрасываем форму при открытии
+    // Добавляем в историю
+    history.pushState({ page: currentView, menuOpen: false, feedbackOpen: true, navHistory: [...navigationHistory] }, '', '#feedback');
+    
+    // Сбрасываем форму при открытии
     const form = document.getElementById('feedbackForm');
     form.innerHTML = `
         <div class="feedback-field">
@@ -808,16 +821,20 @@ function openFeedback() {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
-    document.getElementById('feedbackClose').onclick = closeFeedback;
-    document.getElementById('feedbackOverlay').onclick = closeFeedback;
+    document.getElementById('feedbackClose').onclick = () => closeFeedback(true);
+    document.getElementById('feedbackOverlay').onclick = () => closeFeedback(true);
     document.getElementById('feedbackForm').onsubmit = submitFeedback;
 }
 
-function closeFeedback() {
+function closeFeedback(useHistory = true) {
     const modal = document.getElementById('feedbackModal');
     if (!modal) return;
     modal.classList.remove('active');
     document.body.style.overflow = '';
+    
+    if (useHistory && history.state && history.state.feedbackOpen) {
+        history.back();
+    }
 }
 
 function submitFeedback(e) {
@@ -837,7 +854,7 @@ function submitFeedback(e) {
             <div class="success-icon">✅</div>
             <h3>Спасибо!</h3>
             <p>Ваше сообщение отправлено.<br>Мы ответим в ближайшее время.</p>
-            <button type="button" class="btn-submit" onclick="closeFeedback()" style="margin-top:15px;">Закрыть</button>
+            <button type="button" class="btn-submit" onclick="closeFeedback(true)" style="margin-top:15px;">Закрыть</button>
         </div>
     `;
     
@@ -849,6 +866,7 @@ function getTopicText(topic) {
     const topics = {
         'bug': 'Ошибка',
         'feature': 'Предложение',
+        'book': 'Предложить книгу',
         'other': 'Другое'
     };
     return topics[topic] || topic;
