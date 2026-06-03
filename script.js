@@ -647,10 +647,11 @@ function showFavorites() {
     }
     const filtered = allBooks.filter(book => favorites.includes(book.id));
     renderBooks(filtered);
-    showPage('main');
+    // Добавляем в историю перед переходом
+    history.pushState({ page: 'favorites', navHistory: [...navigationHistory, currentView], menuOpen: false, feedbackOpen: false }, '', '#favorites');
+    currentView = 'main';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 // ========== БОКОВОЕ МЕНЮ ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
