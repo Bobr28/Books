@@ -11,7 +11,9 @@ function cacheDomElements() {
                  'themeToggle', 'closeReader', 'prevPage', 'nextPage',
                  'fontPlus', 'fontMinus', 'fullscreenBtn', 'exitFullscreenBtn',
                  'fullscreenPrevBtn', 'fullscreenNextBtn', 'mainPage', 'genresPage', 'authorsPage',
-                 'genresList', 'authorsList', 'menuFavorites', 'menuFeedback'];
+                 'favoritesPage', 'favoritesBooksGrid',
+                 'genresList', 'authorsList', 'menuFavorites', 'menuFeedback',
+                 'backFromFavorites'];
 
     ids.forEach(id => {
         DOM[id] = document.getElementById(id);
@@ -199,6 +201,7 @@ function showPage(page, addToHistory = true) {
     if (DOM.mainPage) DOM.mainPage.style.display = 'none';
     if (DOM.genresPage) DOM.genresPage.style.display = 'none';
     if (DOM.authorsPage) DOM.authorsPage.style.display = 'none';
+    if (DOM.favoritesPage) DOM.favoritesPage.style.display = 'none';
 
     switch(page) {
         case 'main':
@@ -209,6 +212,9 @@ function showPage(page, addToHistory = true) {
             break;
         case 'authors':
             if (DOM.authorsPage) DOM.authorsPage.style.display = 'block';
+            break;
+        case 'favorites':
+            if (DOM.favoritesPage) DOM.favoritesPage.style.display = 'block';
             break;
     }
 
@@ -248,14 +254,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerServiceWorker();
 
     window.addEventListener('popstate', (e) => {
-        // 1. Закрываем модалку обратной связи
         const feedbackModal = document.getElementById('feedbackModal');
         if (feedbackModal && feedbackModal.classList.contains('active')) {
             closeFeedback(false);
             return;
         }
 
-        // 2. Закрываем боковое меню
         if (menuActive) {
             const sideMenu = document.getElementById('sideMenu');
             const menuOverlay = document.getElementById('menuOverlay');
@@ -271,20 +275,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // 3. Закрываем читалку
         if (DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
             closeReader(false);
             return;
         }
 
-        // 4. Если были в избранном — показываем все книги
-if (e.state && e.state.page === 'favorites') {
-    renderBooks(allBooks);
-    currentView = 'main';
-    return;
-}
-
-        // 5. Возвращаемся по истории страниц
         if (e.state && e.state.navHistory) {
             navigationHistory = e.state.navHistory;
             if (e.state.page) {
@@ -293,7 +288,6 @@ if (e.state && e.state.page === 'favorites') {
             }
         }
 
-        // 6. Если нет состояния — используем локальную историю
         if (navigationHistory.length > 0) {
             goBack();
         }
@@ -442,10 +436,11 @@ async function loadFromCache() {
     return false;
 }
 
-function renderBooks(books) {
-    if (!DOM.booksGrid) return;
+function renderBooks(books, targetGrid) {
+    const grid = targetGrid || DOM.booksGrid;
+    if (!grid) return;
     if (!books || books.length === 0) {
-        DOM.booksGrid.innerHTML = '<div style="text-align:center;padding:40px;">📭 Книги не найдены</div>';
+        grid.innerHTML = '<div style="text-align:center;padding:40px;">📭 Книги не найдены</div>';
         return;
     }
     const fragment = document.createDocumentFragment();
@@ -487,8 +482,8 @@ function renderBooks(books) {
         }
         fragment.appendChild(card);
     }
-    DOM.booksGrid.innerHTML = '';
-    DOM.booksGrid.appendChild(fragment);
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
 }
 
 window.openBook = function(bookId) {
@@ -521,10 +516,11 @@ window.openBook = function(bookId) {
     applyDeviceLayout();
 };
 
-// ========== НАСТРОЙКА СТРАНИЦ ЖАНРОВ/АВТОРОВ ==========
+// ========== НАСТРОЙКА СТРАНИЦ ==========
 function setupCategoryPages() {
     document.getElementById('backFromGenres')?.addEventListener('click', () => goBack());
     document.getElementById('backFromAuthors')?.addEventListener('click', () => goBack());
+    document.getElementById('backFromFavorites')?.addEventListener('click', () => goBack());
 }
 
 function showGenresPage() {
@@ -636,24 +632,24 @@ function toggleFavorite(bookId, button) {
 }
 
 function showFavorites() {
+    if (!allBooks || allBooks.length === 0) return;
+    
     const favorites = getFavorites();
+    const filtered = allBooks.filter(book => favorites.includes(book.id));
     
-    // Всегда добавляем в историю браузера
-    navigationHistory.push(currentView);
-    history.pushState({ page: 'favorites', navHistory: [...navigationHistory] }, '', '#favorites');
+    const grid = document.getElementById('favoritesBooksGrid');
+    if (!grid) return;
     
-    if (favorites.length === 0) {
-        renderBooks([]);
-        currentView = 'favorites';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;padding:40px;">⭐ Пока нет избранных книг</div>';
+    } else {
+        renderBooks(filtered, grid);
     }
     
-    const filtered = allBooks.filter(book => favorites.includes(book.id));
-    renderBooks(filtered);
-    currentView = 'favorites';
+    showPage('favorites');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 // ========== БОКОВОЕ МЕНЮ ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
