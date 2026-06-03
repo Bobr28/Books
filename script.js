@@ -805,7 +805,7 @@ function submitFeedback(e) {
     const subject = `[Библиотека] ${getTopicText(topic)} от ${name}`;
     const body = `Имя: ${name}\nТема: ${getTopicText(topic)}\n\n${message}\n\n---\nОтправлено из электронной библиотеки`;
     
-    window.location.href = `mailto:your@email.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
     const form = document.getElementById('feedbackForm');
     form.innerHTML = `
