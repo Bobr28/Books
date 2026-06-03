@@ -12,7 +12,8 @@
     <script>
         (function() {
             const allowedDomains = [
-                'read-world.vercel.app',
+                'rafstar.vercel.app',
+                '.rafstar.com',
                 'localhost',
                 '127.0.0.1'
             ];
@@ -70,6 +71,10 @@
                 <span class="menu-icon">✍️</span>
                 <span>Авторы</span>
             </button>
+            <button class="menu-item" id="menuFavorites">
+                <span class="menu-icon">⭐</span>
+                <span>Избранное</span>
+            </button>
             <div class="menu-divider"></div>
             <button class="menu-item" id="menuAll">
                 <span class="menu-icon">📖</span>
@@ -101,17 +106,9 @@
     <main class="container">
         <!-- Главная страница -->
         <div id="mainPage">
-           <section>
-               <h2>Коллекция книг</h2>
-               <div class="loading" id="loadingIndicator">Загрузка книг...</div>
-               <div class="books-grid" id="booksGrid"></div>
-               <div class="error-message" id="errorMessage" style="display: none;">
-        Ошибка загрузки книг. Пожалуйста, обновите страницу.
-               </div>
-           </section>   
-        
             <section>
                 <h2>Коллекция книг</h2>
+                <div class="loading" id="loadingIndicator">Загрузка книг...</div>
                 <div class="books-grid" id="booksGrid"></div>
                 <div class="error-message" id="errorMessage" style="display: none;">
                     Ошибка загрузки книг. Пожалуйста, обновите страницу.
