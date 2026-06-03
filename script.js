@@ -277,15 +277,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-                // 4. Если были в избранном — показываем все книги
+        // 4. Если были в избранном — показываем все книги
         if (e.state && e.state.page === 'favorites') {
             renderBooks(allBooks);
             if (e.state.navHistory) {
                 navigationHistory = e.state.navHistory;
             }
-            currentView = 'main';
             return;
         }
+
         // 5. Возвращаемся по истории страниц
         if (e.state && e.state.navHistory) {
             navigationHistory = e.state.navHistory;
@@ -640,9 +640,6 @@ function toggleFavorite(bookId, button) {
 function showFavorites() {
     const favorites = getFavorites();
     
-    // Всегда добавляем в историю
-    history.pushState({ page: 'favorites', navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#favorites');
-    
     if (favorites.length === 0) {
         renderBooks([]);
         showPage('main', false);
@@ -652,9 +649,11 @@ function showFavorites() {
     
     const filtered = allBooks.filter(book => favorites.includes(book.id));
     renderBooks(filtered);
-    showPage('main', false);
+    // Добавляем в историю браузера, но НЕ меняем currentView через showPage
+    history.pushState({ page: 'favorites', navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#favorites');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 // ========== БОКОВОЕ МЕНЮ ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
