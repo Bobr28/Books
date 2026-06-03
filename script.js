@@ -1,6 +1,9 @@
 // Кэш для DOM элементов
 const DOM = {};
 
+// История навигации для кнопки "назад"
+let navigationHistory = [];
+
 // Инициализация DOM элементов
 function cacheDomElements() {
     const ids = ['booksGrid', 'loadingIndicator', 'errorMessage', 'readerWindow', 'overlay',
@@ -183,8 +186,16 @@ function addSearchBar() {
     }
 }
 
-// Переключение страниц
-function showPage(page) {
+// Переключение страниц с историей
+function showPage(page, addToHistory = true) {
+    if (addToHistory && currentView !== page) {
+        navigationHistory.push(currentView);
+        if (navigationHistory.length > 10) {
+            navigationHistory.shift();
+        }
+        history.pushState({ page: page, navHistory: [...navigationHistory], menuOpen: false }, '', '#' + page);
+    }
+
     if (DOM.mainPage) DOM.mainPage.style.display = 'none';
     if (DOM.genresPage) DOM.genresPage.style.display = 'none';
     if (DOM.authorsPage) DOM.authorsPage.style.display = 'none';
@@ -204,11 +215,21 @@ function showPage(page) {
     currentView = page;
 }
 
+// Возврат на предыдущую страницу
+function goBack() {
+    if (navigationHistory.length > 0) {
+        const previousPage = navigationHistory.pop();
+        showPage(previousPage, false);
+        return true;
+    }
+    return false;
+}
+
 // Инициализация
 document.addEventListener('DOMContentLoaded', async () => {
     cacheDomElements();
     if (DOM.currentYear) DOM.currentYear.textContent = new Date().getFullYear();
-    showPage('main');
+    showPage('main', false);
     setupTheme();
     setupReader();
     setupSideMenu();
@@ -226,6 +247,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAllBooks();
     addSearchBar();
     registerServiceWorker();
+
+    // Обработчик кнопки "назад" в браузере
+    window.addEventListener('popstate', (e) => {
+        // Если открыто меню — закрываем его
+        if (menuActive) {
+            const sideMenu = document.getElementById('sideMenu');
+            const menuOverlay = document.getElementById('menuOverlay');
+            sideMenu.classList.remove('active');
+            sideMenu.style.right = '-320px';
+            menuOverlay.classList.remove('active');
+            menuOverlay.style.opacity = '0';
+            menuActive = false;
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                if (!menuActive) menuOverlay.style.display = 'none';
+            }, 300);
+            return;
+        }
+
+        // Если открыта читалка — закрываем её
+        if (DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
+            closeReader(false);
+            return;
+        }
+
+        // Восстанавливаем историю
+        if (e.state && e.state.navHistory) {
+            navigationHistory = e.state.navHistory;
+            if (e.state.page) {
+                showPage(e.state.page, false);
+                return;
+            }
+        }
+
+        if (navigationHistory.length > 0) {
+            goBack();
+        }
+    });
+
+    history.replaceState({ page: 'main', navHistory: [], menuOpen: false }, '', window.location.href);
 });
 
 function registerServiceWorker() {
@@ -233,20 +294,15 @@ function registerServiceWorker() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js').then(reg => {
                 console.log('SW registered:', reg);
-                
-                // Проверка обновлений каждый час
                 setInterval(() => reg.update(), 60 * 60 * 1000);
                 
-                // Если найден новый SW — применяем и перезагружаем
                 reg.addEventListener('updatefound', () => {
                     const newWorker = reg.installing;
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('🔄 Новый SW установлен, перезагружаем...');
-                            // Очищаем кэш книг в localStorage
+                            console.log('🔄 Новый SW, перезагружаем...');
                             localStorage.removeItem('cachedBooks');
                             localStorage.removeItem('cacheTimestamp');
-                            // Перезагружаем страницу
                             window.location.reload();
                         }
                     });
@@ -396,7 +452,7 @@ function renderBooks(books) {
             <div class="book-title">${title}</div>
             <div class="book-meta">
                 <p><strong>Автор:</strong> ${author}</p>
-                <p><strong>Жанр:</strong> <span class="book-genre">${genre}</span></p>
+                <p><strong>Жанр:</strong> ${genre}</p>
                 <p><strong>Год:</strong> ${year}</p>
                 <p><strong>Страниц:</strong> ${pagesCount}</p>
             </div>
@@ -421,6 +477,8 @@ window.openBook = function(bookId) {
         alert('Ошибка: книга не найдена');
         return;
     }
+
+    history.pushState({ page: 'reader', bookId: bookId, navHistory: [...navigationHistory], menuOpen: false }, '', '#book-' + bookId);
 
     currentBook = JSON.parse(JSON.stringify(book));
     currentPage = getReadingProgress(bookId);
@@ -455,8 +513,8 @@ function showBookDetails(bookId) {
 
 // ========== НАСТРОЙКА СТРАНИЦ ЖАНРОВ/АВТОРОВ ==========
 function setupCategoryPages() {
-    document.getElementById('backFromGenres')?.addEventListener('click', () => showPage('main'));
-    document.getElementById('backFromAuthors')?.addEventListener('click', () => showPage('main'));
+    document.getElementById('backFromGenres')?.addEventListener('click', () => goBack());
+    document.getElementById('backFromAuthors')?.addEventListener('click', () => goBack());
 }
 
 function showGenresPage() {
@@ -531,7 +589,7 @@ function showAuthorsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ========== БОКОВОЕ МЕНЮ (ОДИН СВАЙП) ==========
+// ========== БОКОВОЕ МЕНЮ (СВАЙП + КНОПКА НАЗАД) ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
     const sideMenu = document.getElementById('sideMenu');
@@ -551,9 +609,10 @@ function setupSideMenu() {
         menuOverlay.style.opacity = '1';
         menuActive = true;
         document.body.style.overflow = 'hidden';
+        history.pushState({ page: currentView, menuOpen: true, navHistory: [...navigationHistory] }, '', '#menu');
     }
 
-    function closeMenu() {
+    function closeMenu(addHistory = true) {
         sideMenu.classList.remove('active');
         sideMenu.style.right = '-320px';
         menuOverlay.classList.remove('active');
@@ -563,17 +622,21 @@ function setupSideMenu() {
         setTimeout(() => {
             if (!menuActive) menuOverlay.style.display = 'none';
         }, 300);
+        
+        if (addHistory && history.state && history.state.menuOpen) {
+            history.back();
+        }
     }
 
     burgerBtn.addEventListener('click', openMenu);
-    sideMenuClose.addEventListener('click', closeMenu);
-    menuOverlay.addEventListener('click', closeMenu);
+    sideMenuClose.addEventListener('click', () => closeMenu(true));
+    menuOverlay.addEventListener('click', () => closeMenu(true));
     
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && menuActive) closeMenu();
+        if (e.key === 'Escape' && menuActive) closeMenu(true);
     });
 
-    // ===== ОТКРЫТИЕ СВАЙПОМ (один свайп) =====
+    // Свайп для открытия
     let startX = 0;
 
     document.addEventListener('touchstart', (e) => {
@@ -593,7 +656,7 @@ function setupSideMenu() {
         startX = 0;
     });
 
-    // ===== ЗАКРЫТИЕ СВАЙПОМ =====
+    // Свайп для закрытия
     let menuStartX = 0;
     let menuCurrentX = 0;
     let menuSwiping = false;
@@ -624,25 +687,26 @@ function setupSideMenu() {
         
         const diff = menuCurrentX - menuStartX;
         if (diff > 80) {
-            closeMenu();
+            closeMenu(true);
         } else {
             sideMenu.style.right = '0px';
             menuOverlay.style.opacity = '1';
         }
     });
 
+    // Кнопки меню
     menuGenres.addEventListener('click', () => {
-        closeMenu();
+        closeMenu(false);
         setTimeout(() => showGenresPage(), 300);
     });
 
     menuAuthors.addEventListener('click', () => {
-        closeMenu();
+        closeMenu(false);
         setTimeout(() => showAuthorsPage(), 300);
     });
 
     menuAll.addEventListener('click', () => {
-        closeMenu();
+        closeMenu(false);
         setTimeout(() => {
             renderBooks(allBooks);
             showPage('main');
@@ -713,8 +777,8 @@ function setupReader() {
     if (DOM.nextPage) DOM.nextPage.addEventListener('click', nextPage);
     if (DOM.fullscreenPrevBtn) DOM.fullscreenPrevBtn.addEventListener('click', prevPage);
     if (DOM.fullscreenNextBtn) DOM.fullscreenNextBtn.addEventListener('click', nextPage);
-    if (DOM.closeReader) DOM.closeReader.addEventListener('click', closeReader);
-    if (DOM.overlay) DOM.overlay.addEventListener('click', closeReader);
+    if (DOM.closeReader) DOM.closeReader.addEventListener('click', () => closeReader(true));
+    if (DOM.overlay) DOM.overlay.addEventListener('click', () => closeReader(true));
     if (DOM.exitFullscreenBtn) DOM.exitFullscreenBtn.addEventListener('click', toggleFullscreen);
     if (DOM.fullscreenBtn) DOM.fullscreenBtn.addEventListener('click', toggleFullscreen);
 
@@ -735,7 +799,7 @@ function setupReader() {
         if (DOM.readerWindow && DOM.readerWindow.style.display !== 'flex') return;
         if (e.key === 'Escape') {
             if (isFullscreen) toggleFullscreen();
-            else closeReader();
+            else closeReader(true);
         } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
             e.preventDefault();
             prevPage();
@@ -779,11 +843,15 @@ window.toggleFullscreen = function() {
     }
 };
 
-window.closeReader = function() {
+window.closeReader = function(useHistory = true) {
     if (currentBook && currentBook.id) saveReadingProgress(currentBook.id, currentPage);
     if (isFullscreen) toggleFullscreen();
     if (DOM.readerWindow) DOM.readerWindow.style.display = 'none';
     if (DOM.overlay) DOM.overlay.style.display = 'none';
+    
+    if (useHistory) {
+        history.back();
+    }
 };
 
 window.retryLoading = function() {
