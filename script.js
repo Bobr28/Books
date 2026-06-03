@@ -277,13 +277,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // 4. Если были в избранном — показываем все книги
+                // 4. Если были в избранном — показываем все книги
         if (e.state && e.state.page === 'favorites') {
             renderBooks(allBooks);
-            currentView = 'main';
             if (e.state.navHistory) {
                 navigationHistory = e.state.navHistory;
             }
+            currentView = 'main';
             return;
         }
         // 5. Возвращаемся по истории страниц
@@ -647,10 +647,9 @@ function showFavorites() {
     }
     const filtered = allBooks.filter(book => favorites.includes(book.id));
     renderBooks(filtered);
-    // Добавляем в историю и меняем currentView
+    showPage('main', false); // Не добавляем в историю навигации
+    // Вручную добавляем в историю браузера
     history.pushState({ page: 'favorites', navHistory: [...navigationHistory], menuOpen: false, feedbackOpen: false }, '', '#favorites');
-    navigationHistory.push(currentView);
-    currentView = 'favorites';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
