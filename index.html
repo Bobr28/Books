@@ -101,11 +101,14 @@
     <main class="container">
         <!-- Главная страница -->
         <div id="mainPage">
-            <section class="intro">
-                <h2>Добро пожаловать!</h2>
-                <p>В нашей библиотеке вы можете читать произведения совершенно бесплатно. Выбирайте книгу и начинайте чтение прямо сейчас!</p>
-                <div class="loading" id="loadingIndicator">Загрузка книг...</div>
-            </section>    
+           <section>
+               <h2>Коллекция книг</h2>
+               <div class="loading" id="loadingIndicator">Загрузка книг...</div>
+               <div class="books-grid" id="booksGrid"></div>
+               <div class="error-message" id="errorMessage" style="display: none;">
+        Ошибка загрузки книг. Пожалуйста, обновите страницу.
+               </div>
+           </section>   
         
             <section>
                 <h2>Коллекция книг</h2>
