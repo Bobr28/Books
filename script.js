@@ -11,7 +11,7 @@ function cacheDomElements() {
                  'themeToggle', 'closeReader', 'prevPage', 'nextPage',
                  'fontPlus', 'fontMinus', 'fullscreenBtn', 'exitFullscreenBtn',
                  'fullscreenPrevBtn', 'fullscreenNextBtn', 'mainPage', 'genresPage', 'authorsPage',
-                 'genresList', 'authorsList'];
+                 'genresList', 'authorsList', 'menuFavorites'];
 
     ids.forEach(id => {
         DOM[id] = document.getElementById(id);
@@ -95,8 +95,8 @@ const DEFAULT_BOOK_FILES = [
 
 // === ПОИСК КНИГ ===
 function addSearchBar() {
-    const introSection = document.querySelector('#mainPage h2');
-    if (!introSection) return;
+    const titleElement = document.querySelector('#mainPage h2');
+    if (!titleElement) return;
     if (document.getElementById('globalSearchInput')) return;
 
     const searchHTML = `
@@ -108,7 +108,7 @@ function addSearchBar() {
         </div>
     `;
 
-    introSection.insertAdjacentHTML('afterend', searchHTML);
+    titleElement.insertAdjacentHTML('afterend', searchHTML);
 
     const searchInput = document.getElementById('globalSearchInput');
     const resultsDiv = document.getElementById('globalSearchResults');
@@ -215,7 +215,6 @@ function showPage(page, addToHistory = true) {
     currentView = page;
 }
 
-// Возврат на предыдущую страницу
 function goBack() {
     if (navigationHistory.length > 0) {
         const previousPage = navigationHistory.pop();
@@ -248,9 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     addSearchBar();
     registerServiceWorker();
 
-    // Обработчик кнопки "назад" в браузере
     window.addEventListener('popstate', (e) => {
-        // Если открыто меню — закрываем его
         if (menuActive) {
             const sideMenu = document.getElementById('sideMenu');
             const menuOverlay = document.getElementById('menuOverlay');
@@ -266,13 +263,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Если открыта читалка — закрываем её
         if (DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
             closeReader(false);
             return;
         }
 
-        // Восстанавливаем историю
         if (e.state && e.state.navHistory) {
             navigationHistory = e.state.navHistory;
             if (e.state.page) {
@@ -458,13 +453,20 @@ function renderBooks(books) {
             </div>
             <div class="book-buttons">
                 <button class="btn btn-read">📖 Читать</button>
-                <button class="btn btn-details">ℹ️ Подробнее</button>
+                <button class="btn btn-favorite" data-book-id="${book.id}">⭐</button>
             </div>
         `;
         const readBtn = card.querySelector('.btn-read');
-        const detailsBtn = card.querySelector('.btn-details');
+        const favBtn = card.querySelector('.btn-favorite');
         readBtn.addEventListener('click', () => openBook(book.id));
-        detailsBtn.addEventListener('click', () => showBookDetails(book.id));
+        favBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(book.id, favBtn);
+        });
+        if (isFavorite(book.id)) {
+            favBtn.classList.add('active');
+            favBtn.textContent = '★';
+        }
         fragment.appendChild(card);
     }
     DOM.booksGrid.innerHTML = '';
@@ -589,7 +591,57 @@ function showAuthorsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ========== БОКОВОЕ МЕНЮ (СВАЙП + КНОПКА НАЗАД) ==========
+// ========== ИЗБРАННОЕ ==========
+function getFavorites() {
+    try {
+        return JSON.parse(localStorage.getItem('favorites') || '[]');
+    } catch(e) { return []; }
+}
+
+function saveFavorites(favorites) {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+}
+
+function isFavorite(bookId) {
+    return getFavorites().includes(bookId);
+}
+
+function toggleFavorite(bookId, button) {
+    const favorites = getFavorites();
+    const index = favorites.indexOf(bookId);
+    
+    if (index > -1) {
+        favorites.splice(index, 1);
+        if (button) {
+            button.classList.remove('active');
+            button.textContent = '⭐';
+        }
+    } else {
+        favorites.push(bookId);
+        if (button) {
+            button.classList.add('active');
+            button.textContent = '★';
+        }
+    }
+    
+    saveFavorites(favorites);
+}
+
+function showFavorites() {
+    const favorites = getFavorites();
+    if (favorites.length === 0) {
+        renderBooks([]);
+        showPage('main');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+    const filtered = allBooks.filter(book => favorites.includes(book.id));
+    renderBooks(filtered);
+    showPage('main');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ========== БОКОВОЕ МЕНЮ ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
     const sideMenu = document.getElementById('sideMenu');
@@ -597,6 +649,7 @@ function setupSideMenu() {
     const sideMenuClose = document.getElementById('sideMenuClose');
     const menuGenres = document.getElementById('menuGenres');
     const menuAuthors = document.getElementById('menuAuthors');
+    const menuFavorites = document.getElementById('menuFavorites');
     const menuAll = document.getElementById('menuAll');
 
     if (!burgerBtn || !sideMenu) return;
@@ -636,7 +689,6 @@ function setupSideMenu() {
         if (e.key === 'Escape' && menuActive) closeMenu(true);
     });
 
-    // Свайп для открытия
     let startX = 0;
 
     document.addEventListener('touchstart', (e) => {
@@ -656,7 +708,6 @@ function setupSideMenu() {
         startX = 0;
     });
 
-    // Свайп для закрытия
     let menuStartX = 0;
     let menuCurrentX = 0;
     let menuSwiping = false;
@@ -694,7 +745,6 @@ function setupSideMenu() {
         }
     });
 
-    // Кнопки меню
     menuGenres.addEventListener('click', () => {
         closeMenu(false);
         setTimeout(() => showGenresPage(), 300);
@@ -703,6 +753,11 @@ function setupSideMenu() {
     menuAuthors.addEventListener('click', () => {
         closeMenu(false);
         setTimeout(() => showAuthorsPage(), 300);
+    });
+
+    menuFavorites.addEventListener('click', () => {
+        closeMenu(false);
+        setTimeout(() => showFavorites(), 300);
     });
 
     menuAll.addEventListener('click', () => {
