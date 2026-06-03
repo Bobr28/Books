@@ -280,12 +280,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 4. Если были в избранном — показываем все книги
         if (e.state && e.state.page === 'favorites') {
             renderBooks(allBooks);
+            currentView = 'main';
             if (e.state.navHistory) {
                 navigationHistory = e.state.navHistory;
             }
             return;
         }
-
         // 5. Возвращаемся по истории страниц
         if (e.state && e.state.navHistory) {
             navigationHistory = e.state.navHistory;
