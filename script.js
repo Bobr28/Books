@@ -248,14 +248,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerServiceWorker();
 
     window.addEventListener('popstate', (e) => {
-        // Закрываем модалку обратной связи
+        // 1. Закрываем модалку обратной связи
         const feedbackModal = document.getElementById('feedbackModal');
         if (feedbackModal && feedbackModal.classList.contains('active')) {
             closeFeedback(false);
             return;
         }
 
-        // Закрываем меню
+        // 2. Закрываем боковое меню
         if (menuActive) {
             const sideMenu = document.getElementById('sideMenu');
             const menuOverlay = document.getElementById('menuOverlay');
@@ -271,13 +271,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Закрываем читалку
+        // 3. Закрываем читалку
         if (DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
             closeReader(false);
             return;
         }
 
-        // Возвращаемся по истории
+        // 4. Если были в избранном — показываем все книги
+        if (e.state && e.state.page === 'favorites') {
+            renderBooks(allBooks);
+            if (e.state.navHistory) {
+                navigationHistory = e.state.navHistory;
+            }
+            return;
+        }
+
+        // 5. Возвращаемся по истории страниц
         if (e.state && e.state.navHistory) {
             navigationHistory = e.state.navHistory;
             if (e.state.page) {
@@ -286,6 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // 6. Если нет состояния — используем локальную историю
         if (navigationHistory.length > 0) {
             goBack();
         }
@@ -513,16 +523,6 @@ window.openBook = function(bookId) {
     applyDeviceLayout();
 };
 
-function showBookDetails(bookId) {
-    const book = allBooks.find(function(b) { return b.id === bookId; });
-    if (!book) return;
-    let preview = '';
-    if (book.pages && book.pages[0]) {
-        preview = book.pages[0].replace(/<[^>]*>/g, '').substring(0, 150);
-    }
-    alert(book.title + '\n\nАвтор: ' + book.author + '\nЖанр: ' + (book.genre || 'Не указан') + '\nГод: ' + (book.year || 'Не указан') + '\nСтраниц: ' + (book.pages ? book.pages.length : 0) + '\n\n' + preview + '...');
-}
-
 // ========== НАСТРОЙКА СТРАНИЦ ЖАНРОВ/АВТОРОВ ==========
 function setupCategoryPages() {
     document.getElementById('backFromGenres')?.addEventListener('click', () => goBack());
@@ -647,11 +647,12 @@ function showFavorites() {
     }
     const filtered = allBooks.filter(book => favorites.includes(book.id));
     renderBooks(filtered);
-    // Добавляем в историю перед переходом
+    // Добавляем в историю
     history.pushState({ page: 'favorites', navHistory: [...navigationHistory, currentView], menuOpen: false, feedbackOpen: false }, '', '#favorites');
     currentView = 'main';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 // ========== БОКОВОЕ МЕНЮ ==========
 function setupSideMenu() {
     const burgerBtn = document.getElementById('burgerBtn');
@@ -786,15 +787,14 @@ function setupSideMenu() {
         }, 300);
     });
 }
+
 // ========== ОБРАТНАЯ СВЯЗЬ ==========
 function openFeedback() {
     const modal = document.getElementById('feedbackModal');
     if (!modal) return;
     
-    // Добавляем в историю браузера
     history.pushState({ page: currentView, menuOpen: false, feedbackOpen: true, navHistory: [...navigationHistory] }, '', '#feedback');
     
-    // Сбрасываем форму при каждом открытии
     const form = document.getElementById('feedbackForm');
     form.innerHTML = `
         <div class="feedback-field">
@@ -804,7 +804,7 @@ function openFeedback() {
         <div class="feedback-field">
             <label>Тема</label>
             <select id="feedbackTopic">
-                <option value="bug">🐛 Найдена ошибка</option>
+                <option value="bug">🐛 Нашёл ошибку</option>
                 <option value="feature">💡 Предложение</option>
                 <option value="other">💬 Другое</option>
             </select>
@@ -845,7 +845,6 @@ function submitFeedback(e) {
     const subject = `[Библиотека] ${getTopicText(topic)} от ${name}`;
     const body = `Имя: ${name}\nТема: ${getTopicText(topic)}\n\n${message}\n\n---\nОтправлено из электронной библиотеки`;
     
-    // Показываем "Спасибо"
     const form = document.getElementById('feedbackForm');
     form.innerHTML = `
         <div class="feedback-success">
@@ -856,15 +855,12 @@ function submitFeedback(e) {
         </div>
     `;
     
-    // Определяем устройство
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     
     if (isMobile) {
-        // На телефоне — обычный mailto
-        window.location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = `mailto:your@email.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     } else {
-        // На ПК — Gmail в браузере
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=cheburekus2012@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=your@email.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.open(gmailUrl, '_blank');
     }
 }
