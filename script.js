@@ -785,16 +785,15 @@ function setupSideMenu() {
         }, 300);
     });
 }
-
 // ========== ОБРАТНАЯ СВЯЗЬ ==========
 function openFeedback() {
     const modal = document.getElementById('feedbackModal');
     if (!modal) return;
     
-    // Добавляем в историю
+    // Добавляем в историю браузера
     history.pushState({ page: currentView, menuOpen: false, feedbackOpen: true, navHistory: [...navigationHistory] }, '', '#feedback');
     
-    // Сбрасываем форму при открытии
+    // Сбрасываем форму при каждом открытии
     const form = document.getElementById('feedbackForm');
     form.innerHTML = `
         <div class="feedback-field">
@@ -804,9 +803,8 @@ function openFeedback() {
         <div class="feedback-field">
             <label>Тема</label>
             <select id="feedbackTopic">
-                <option value="bug">🐛 Нашёл ошибку</option>
+                <option value="bug">🐛 Найдена ошибка</option>
                 <option value="feature">💡 Предложение</option>
-                <option value="book">📖 Предложить книгу</option>
                 <option value="other">💬 Другое</option>
             </select>
         </div>
@@ -815,7 +813,6 @@ function openFeedback() {
             <textarea id="feedbackMessage" rows="5" placeholder="Опишите проблему или предложение..." required></textarea>
         </div>
         <button type="submit" class="btn-submit">📨 Отправить</button>
-        <p class="feedback-note">Или напишите на почту: <a href="mailto:your@email.com">your@email.com</a></p>
     `;
     
     modal.classList.add('active');
@@ -858,15 +855,23 @@ function submitFeedback(e) {
         </div>
     `;
     
-    // Открываем почтовый клиент
-    window.location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Определяем устройство
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // На телефоне — обычный mailto
+        window.location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    } else {
+        // На ПК — Gmail в браузере
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=cheburekus2012@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(gmailUrl, '_blank');
+    }
 }
 
 function getTopicText(topic) {
     const topics = {
         'bug': 'Ошибка',
         'feature': 'Предложение',
-        'book': 'Предложить книгу',
         'other': 'Другое'
     };
     return topics[topic] || topic;
