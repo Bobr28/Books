@@ -780,6 +780,31 @@ function setupSideMenu() {
 function openFeedback() {
     const modal = document.getElementById('feedbackModal');
     if (!modal) return;
+    
+    // Сбрасываем форму при каждом открытии
+    const form = document.getElementById('feedbackForm');
+    form.innerHTML = `
+        <div class="feedback-field">
+            <label>Ваше имя</label>
+            <input type="text" id="feedbackName" placeholder="Введите имя (необязательно)">
+        </div>
+        <div class="feedback-field">
+            <label>Тема</label>
+            <select id="feedbackTopic">
+                <option value="bug">🐛 Нашёл ошибку</option>
+                <option value="feature">💡 Предложение</option>
+                <option value="book">📖 Предложить книгу</option>
+                <option value="other">💬 Другое</option>
+            </select>
+        </div>
+        <div class="feedback-field">
+            <label>Сообщение</label>
+            <textarea id="feedbackMessage" rows="5" placeholder="Опишите проблему или предложение..." required></textarea>
+        </div>
+        <button type="submit" class="btn-submit">📨 Отправить</button>
+        <p class="feedback-note">Или напишите на почту: <a href="mailto:your@email.com">your@email.com</a></p>
+    `;
+    
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
@@ -805,17 +830,11 @@ function submitFeedback(e) {
     const subject = `[Библиотека] ${getTopicText(topic)} от ${name}`;
     const body = `Имя: ${name}\nТема: ${getTopicText(topic)}\n\n${message}\n\n---\nОтправлено из электронной библиотеки`;
     
-    window.location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Открываем почтовый клиент
+    window.location.href = `mailto:your@email.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
-    const form = document.getElementById('feedbackForm');
-    form.innerHTML = `
-        <div class="feedback-success">
-            <div class="success-icon">✅</div>
-            <h3>Спасибо!</h3>
-            <p>Ваше сообщение отправлено.<br>Мы ответим в ближайшее время.</p>
-            <button type="button" class="btn-submit" onclick="closeFeedback()" style="margin-top:15px;">Закрыть</button>
-        </div>
-    `;
+    // Закрываем модалку
+    closeFeedback();
 }
 
 function getTopicText(topic) {
@@ -827,7 +846,6 @@ function getTopicText(topic) {
     };
     return topics[topic] || topic;
 }
-
 // ========== ТЕМА ==========
 function setupTheme() {
     const savedTheme = localStorage.getItem('selectedTheme') || 'light';
