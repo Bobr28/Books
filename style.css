@@ -497,14 +497,14 @@ header {
 }
 
 /* ========== ВСТУПЛЕНИЕ ========== */
-.intro {
+/*.intro {
     background-color: white;
     padding: 25px;
     border-radius: 12px;
     margin-bottom: 30px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     transition: background 0.3s ease, box-shadow 0.3s ease;
-}
+}*/
 
 .light-theme .intro {
     background: linear-gradient(135deg, #ffffff, #fffef7);
