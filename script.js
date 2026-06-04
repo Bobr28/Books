@@ -112,17 +112,73 @@ async function saveComment(bookId, name, text) {
             mode: 'add',
             bookId: String(bookId),
             name: name,
-            text: text,
-            t: Date.now()
+            text: text
         });
-        // Используем GET вместо POST
         const res = await fetch(`${COMMENTS_API_URL}?${params.toString()}`);
-        const textResp = await res.text();
-        return textResp.includes('success') || textResp.length > 0;
+        return res.ok;
     } catch(e) { return false; }
 }
 
-// Остальные функции addComment и loadComments остаются без изменений
+async function addComment(bookId) {
+    const nameInput = document.getElementById('commentName');
+    const textInput = document.getElementById('commentText');
+    const submitBtn = document.querySelector('#commentForm .btn-submit');
+    
+    const name = nameInput.value.trim();
+    const text = textInput.value.trim();
+    if (!name || !text) return;
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳';
+    
+    const saved = await saveComment(bookId, name, text);
+    
+    if (saved) {
+        nameInput.value = '';
+        textInput.value = '';
+        await loadComments(bookId);
+    }
+    
+    submitBtn.disabled = false;
+    submitBtn.textContent = '📨 Отправить';
+}
+
+async function loadComments(bookId) {
+    const list = document.getElementById('commentsList');
+    if (!list) return;
+    
+    list.innerHTML = '<div class="comment-empty">Загрузка...</div>';
+    
+    const comments = await getComments(bookId);
+    
+    if (!comments || comments.length === 0) {
+        list.innerHTML = '<div class="comment-empty">💬 Пока нет комментариев</div>';
+        return;
+    }
+    
+    list.innerHTML = comments.map(c => `
+        <div class="comment-item">
+            <div class="comment-author">${escapeHtml(c.name)}<span class="comment-date">${formatDate(c.date)}</span></div>
+            <div class="comment-text">${escapeHtml(c.text)}</div>
+        </div>
+    `).join('');
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Только что';
+    if (minutes < 60) return `${minutes} мин. назад`;
+    if (hours < 24) return `${hours} ч. назад`;
+    if (days < 7) return `${days} дн. назад`;
+    return date.toLocaleDateString('ru-RU');
+}
+
 // === ПОИСК КНИГ ===
 function addSearchBar() {
     const titleElement = document.querySelector('#mainPage h2');
