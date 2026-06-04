@@ -96,7 +96,7 @@ const DEFAULT_BOOK_FILES = [
 ];
 
 // === КОММЕНТАРИИ (Google Sheets) ===
-const COMMENTS_API_URL = 'https://script.google.com/macros/s/AKfycbz2ndat6Tu3Qeg9tn1aaYcekr4PPRXYSkpNREgRQofsVPMAGb8Y1oDW5teUJNS_CvpQ/exec';
+const COMMENTS_API_URL = 'https://script.google.com/macros/s/AKfycbx5P_1l-48jSeUWYi_L2KIRkOTPAZ5JhfsaTAydHYjUwASgtgL4mR1OZoGcD9SI4HY/exec';
 
 async function getComments(bookId) {
     try {
