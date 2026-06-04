@@ -10,15 +10,17 @@
     <link rel="manifest" href="/manifest.json">
     
     <script>
-        (function() {
-            const allowedDomains = [
-                'rafstar.vercel.app',
-                '.rafstar.com',
-                'localhost',
-                '127.0.0.1'
-            ];
-            const currentDomain = window.location.hostname;
-            if (!allowedDomains.some(domain => currentDomain.includes(domain))) {
+    (function() {
+        const allowedDomains = [
+            'read-world.vercel.app',
+            '.rafstar.com',
+            'localhost',
+            '127.0.0.1'
+        ];
+        const currentDomain = window.location.hostname;
+        if (!allowedDomains.some(domain => currentDomain.includes(domain))) {
+            // Ждём загрузки body
+            document.addEventListener('DOMContentLoaded', function() {
                 const overlay = document.createElement('div');
                 overlay.style.cssText = `
                     position: fixed;
@@ -51,9 +53,10 @@
                     e.stopPropagation();
                 });
                 document.addEventListener('contextmenu', (e) => e.preventDefault());
-            }
-        })();
-    </script>
+            });
+        }
+    })();
+</script>
 </head>
 <body>
     <!-- Бургер-меню -->
