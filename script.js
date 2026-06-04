@@ -225,6 +225,11 @@ function goBack() {
     if (navigationHistory.length > 0) {
         const previousPage = navigationHistory.pop();
         showPage(previousPage, false);
+        
+        // Очищаем URL если вернулись на главную
+        if (previousPage === 'main') {
+            history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', window.location.pathname);
+        }
         return true;
     }
     return false;
@@ -254,12 +259,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerServiceWorker();
 
     window.addEventListener('popstate', (e) => {
+        // 1. Закрываем модалку обратной связи
         const feedbackModal = document.getElementById('feedbackModal');
         if (feedbackModal && feedbackModal.classList.contains('active')) {
             closeFeedback(false);
             return;
         }
 
+        // 2. Закрываем боковое меню и очищаем URL
         if (menuActive) {
             const sideMenu = document.getElementById('sideMenu');
             const menuOverlay = document.getElementById('menuOverlay');
@@ -272,25 +279,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => {
                 if (!menuActive) menuOverlay.style.display = 'none';
             }, 300);
+            // Очищаем URL если на главной
+            if (currentView === 'main') {
+                history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', window.location.pathname);
+            }
             return;
         }
 
+        // 3. Закрываем читалку
         if (DOM.readerWindow && DOM.readerWindow.style.display === 'flex') {
             closeReader(false);
             return;
         }
 
-        if (e.state && e.state.navHistory) {
-            navigationHistory = e.state.navHistory;
-            if (e.state.page) {
-                showPage(e.state.page, false);
-                return;
+        // 4. Возвращаемся по истории
+        if (e.state && e.state.page) {
+            showPage(e.state.page, false);
+            if (e.state.navHistory) {
+                navigationHistory = e.state.navHistory;
             }
+            // Очищаем URL если вернулись на главную
+            if (e.state.page === 'main') {
+                history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', window.location.pathname);
+            }
+            return;
         }
 
-        if (navigationHistory.length > 0) {
-            goBack();
-        }
+        // 5. Если нет состояния — на главную с чистым URL
+        showPage('main', false);
+        history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', window.location.pathname);
     });
 
     history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', window.location.href);
