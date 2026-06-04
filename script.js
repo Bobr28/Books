@@ -43,8 +43,19 @@ const DEFAULT_BOOK_FILES = ['book8.json', 'book7.json', 'book6.json', 'book5.jso
 // === КОММЕНТАРИИ ===
 const COMMENTS_API_URL = 'https://script.google.com/macros/s/AKfycbxk-JzUsqjqTFKjgXdKM5Fxr7JCdoyfQhJyhHIP83WNsxkpFDB4RSgiIWiC0EFxYmpQ/exec';
 
-async function getComments(bookId) { try { const r = await fetch(`${COMMENTS_API_URL}?bookId=${bookId}&t=${Date.now()}`); return JSON.parse(await r.text()); } catch(e) { return []; } }
-async function saveComment(bookId, name, text) { try { const p = new URLSearchParams({ mode: 'add', bookId: String(bookId), name, text }); const r = await fetch(`${COMMENTS_API_URL}?${p.toString()}`); return r.ok; } catch(e) { return false; } }
+async function getComments(bookId) {
+    try {
+        const r = await fetch(`${COMMENTS_API_URL}?bookId=${bookId}&t=${Date.now()}`);
+        return JSON.parse(await r.text());
+    } catch(e) { console.error('Ошибка загрузки комментариев:', e); return []; }
+}
+async function saveComment(bookId, name, text) {
+    try {
+        const p = new URLSearchParams({ mode: 'add', bookId: String(bookId), name, text });
+        const r = await fetch(`${COMMENTS_API_URL}?${p.toString()}`);
+        return r.ok;
+    } catch(e) { console.error('Ошибка сохранения комментария:', e); return false; }
+}
 
 function openComments(bookId) {
     const modal = document.getElementById('commentsModal');
@@ -72,6 +83,7 @@ async function loadComments(bookId) {
     const comments = await getComments(bookId);
     if (!comments || comments.length === 0) { list.innerHTML = '<div class="comment-empty">💬 Пока нет комментариев</div>'; return; }
     list.innerHTML = comments.map(c => `<div class="comment-item"><div class="comment-author">${escapeHtml(c.name)}<span class="comment-date">${formatDate(c.date)}</span></div><div class="comment-text">${escapeHtml(c.text)}</div></div>`).join('');
+    console.log(`📝 Загружено ${comments.length} комментариев для книги ${bookId}`);
 }
 function formatDate(dateString) {
     const d = new Date(dateString), n = new Date(), diff = n - d;
@@ -106,14 +118,17 @@ function showPage(page, addToHistory = true) {
     if (DOM.authorsPage) DOM.authorsPage.style.display = 'none'; if (DOM.favoritesPage) DOM.favoritesPage.style.display = 'none';
     switch(page) { case 'main': if(DOM.mainPage) DOM.mainPage.style.display='block'; break; case 'genres': if(DOM.genresPage) DOM.genresPage.style.display='block'; break; case 'authors': if(DOM.authorsPage) DOM.authorsPage.style.display='block'; break; case 'favorites': if(DOM.favoritesPage) DOM.favoritesPage.style.display='block'; break; }
     currentView = page;
+    console.log(`📄 Страница: ${page}`);
 }
 function goBack() { if (navigationHistory.length > 0) { const pp = navigationHistory.pop(); showPage(pp, false); if (pp === 'main') history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', '/'); return true; } return false; }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Инициализация приложения...');
     cacheDomElements(); if (DOM.currentYear) DOM.currentYear.textContent = new Date().getFullYear();
     showPage('main', false); setupTheme(); setupReader(); setupSideMenu(); setupCategoryPages(); updateConnectionStatus();
     const s = document.createElement('style'); s.textContent = '.reader-content{transition:padding 0.2s ease,line-height 0.2s ease;}'; document.head.appendChild(s);
     await loadAllBooks(); addSearchBar(); registerServiceWorker();
+    console.log('✅ Приложение готово');
     window.addEventListener('popstate', (e) => {
         if (document.getElementById('feedbackModal')?.classList.contains('active')) { closeFeedback(false); return; }
         if (document.getElementById('commentsModal')?.classList.contains('active')) { closeComments(); return; }
@@ -125,14 +140,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     history.replaceState({ page: 'main', navHistory: [], menuOpen: false, feedbackOpen: false }, '', '/');
 });
 
-function registerServiceWorker() { if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').then(reg => { setInterval(() => reg.update(), 3600000); reg.addEventListener('updatefound', () => { const nw = reg.installing; nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) { localStorage.removeItem('cachedBooks'); localStorage.removeItem('cacheTimestamp'); window.location.reload(); } }); }); }).catch(() => {}); } }
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('🔧 SW зарегистрирован');
+            setInterval(() => reg.update(), 3600000);
+            reg.addEventListener('updatefound', () => {
+                const nw = reg.installing;
+                nw.addEventListener('statechange', () => {
+                    if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                        console.log('🔄 Обновление SW...');
+                        localStorage.removeItem('cachedBooks'); localStorage.removeItem('cacheTimestamp');
+                        window.location.reload();
+                    }
+                });
+            });
+        }).catch(err => console.error('Ошибка SW:', err));
+    }
+}
 
-async function loadAllBooks() { if (isLoading) return; isLoading = true; if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'block'; try { if (await loadFromCache()) { isLoading = false; if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none'; return; } let bf = []; try { const r = await fetch('books-list.json?t=' + Date.now()); if (r.ok) { const d = await r.json(); if (Array.isArray(d) && d.length > 0) bf = d; } } catch(e) {} if (!bf.length) bf = DEFAULT_BOOK_FILES; allBooks = []; for (let i = 0; i < bf.length; i++) { try { const r = await fetch(bf[i] + '?t=' + Date.now()); if (r.ok) { const d = await r.json(); if (d?.title && d.pages) { d.id = i + 1; allBooks.push(d); } } } catch(e) {} } if (allBooks.length > 0) { renderBooks(allBooks); try { localStorage.setItem('cachedBooks', JSON.stringify(allBooks)); localStorage.setItem('cacheTimestamp', Date.now().toString()); } catch(e) {} } } catch(e) { if (!await loadFromCache() && DOM.errorMessage) { DOM.errorMessage.style.display = 'block'; DOM.errorMessage.innerHTML = '<h3>Ошибка загрузки</h3><button id="retryButton" class="btn btn-read">Повторить</button>'; document.getElementById('retryButton')?.addEventListener('click', retryLoading); } } finally { isLoading = false; if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none'; } }
-async function loadFromCache() { try { const c = localStorage.getItem('cachedBooks'), t = localStorage.getItem('cacheTimestamp'); if (c && t && (Date.now() - parseInt(t) < 86400000)) { allBooks = JSON.parse(c); if (allBooks?.length > 0) { renderBooks(allBooks); return true; } } } catch(e) {} return false; }
+async function loadAllBooks() {
+    if (isLoading) return;
+    isLoading = true;
+    console.log('📚 Загрузка книг...');
+    if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'block';
+    try {
+        if (await loadFromCache()) { isLoading = false; if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none'; return; }
+        let bf = [];
+        try {
+            const r = await fetch('books-list.json?t=' + Date.now());
+            if (r.ok) { const d = await r.json(); if (Array.isArray(d) && d.length > 0) { bf = d; console.log('✅ Загружен books-list.json:', bf); } }
+        } catch(e) { console.warn('⚠️ Ошибка books-list.json:', e); }
+        if (!bf.length) { bf = DEFAULT_BOOK_FILES; console.log('📚 Используем список по умолчанию'); }
+        allBooks = [];
+        for (let i = 0; i < bf.length; i++) {
+            try {
+                const r = await fetch(bf[i] + '?t=' + Date.now());
+                if (r.ok) { const d = await r.json(); if (d?.title && d.pages) { d.id = i + 1; allBooks.push(d); console.log(`✅ ${d.title}`); } }
+            } catch(e) { console.warn(`⚠️ Ошибка загрузки ${bf[i]}:`, e); }
+        }
+        console.log(`📊 Загружено книг: ${allBooks.length}`);
+        if (allBooks.length > 0) { renderBooks(allBooks); try { localStorage.setItem('cachedBooks', JSON.stringify(allBooks)); localStorage.setItem('cacheTimestamp', Date.now().toString()); } catch(e) {} }
+    } catch(e) { console.error('❌ Ошибка загрузки:', e); if (!await loadFromCache() && DOM.errorMessage) { DOM.errorMessage.style.display = 'block'; DOM.errorMessage.innerHTML = '<h3>Ошибка загрузки</h3><button id="retryButton" class="btn btn-read">Повторить</button>'; document.getElementById('retryButton')?.addEventListener('click', retryLoading); } }
+    finally { isLoading = false; if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'none'; }
+}
+async function loadFromCache() { try { const c = localStorage.getItem('cachedBooks'), t = localStorage.getItem('cacheTimestamp'); if (c && t && (Date.now() - parseInt(t) < 86400000)) { allBooks = JSON.parse(c); if (allBooks?.length > 0) { console.log(`⚡ Из кэша: ${allBooks.length} книг`); renderBooks(allBooks); return true; } } } catch(e) {} return false; }
 
 function renderBooks(books, targetGrid) { const grid = targetGrid || DOM.booksGrid; if (!grid) return; if (!books?.length) { grid.innerHTML = '<div style="text-align:center;padding:40px;">Книги не найдены</div>'; return; } const f = document.createDocumentFragment(); for (const b of books) { const card = document.createElement('div'); card.className = 'book-card'; card.innerHTML = `<div class="book-cover">${escapeHtml(b.cover || b.title)}</div><div class="book-title">${escapeHtml(b.title)}</div><div class="book-meta"><p><strong>Автор:</strong> ${escapeHtml(b.author||'Неизвестен')}</p><p><strong>Жанр:</strong> ${escapeHtml(b.genre||'Без жанра')}</p><p><strong>Год:</strong> ${escapeHtml(b.year||'-')}</p><p><strong>Страниц:</strong> ${b.pages?.length||0}</p></div><div class="book-buttons"><button class="btn btn-read">📖 Читать</button><button class="btn btn-favorite">⭐</button></div><button class="btn btn-comments-card">💬 Комментарии</button>`; card.querySelector('.btn-read').addEventListener('click', () => openBook(b.id)); card.querySelector('.btn-favorite').addEventListener('click', (e) => { e.stopPropagation(); toggleFavorite(b.id, card.querySelector('.btn-favorite')); }); card.querySelector('.btn-comments-card').addEventListener('click', (e) => { e.stopPropagation(); openComments(b.id); }); if (isFavorite(b.id)) { card.querySelector('.btn-favorite').classList.add('active'); card.querySelector('.btn-favorite').textContent = '★'; } f.appendChild(card); } grid.innerHTML = ''; grid.appendChild(f); }
 
-window.openBook = function(bookId) { const b = allBooks.find(x => x.id === bookId); if (!b?.pages?.length) return; history.pushState({ page: 'reader', bookId, navHistory: [...navigationHistory] }, '', '/book/' + bookId); currentBook = JSON.parse(JSON.stringify(b)); currentPage = getReadingProgress(bookId); if (currentPage > currentBook.pages.length) currentPage = 1; fontSize = getDeviceType() === 'mobile' ? 14 : getDeviceType() === 'tablet' ? 16 : 18; if (DOM.readerTitle) DOM.readerTitle.textContent = currentBook.title; if (DOM.readerContent) { DOM.readerContent.innerHTML = currentBook.pages[currentPage - 1]; DOM.readerContent.style.fontSize = fontSize + 'px'; DOM.readerContent.scrollTop = 0; } if (DOM.currentPage) DOM.currentPage.textContent = currentPage; if (DOM.totalPages) DOM.totalPages.textContent = currentBook.pages.length; if (DOM.readerWindow) DOM.readerWindow.style.display = 'flex'; if (DOM.overlay) DOM.overlay.style.display = 'block'; applyDeviceLayout(); };
+window.openBook = function(bookId) { const b = allBooks.find(x => x.id === bookId); if (!b?.pages?.length) return; console.log(`📖 Открыта книга: ${b.title}`); history.pushState({ page: 'reader', bookId, navHistory: [...navigationHistory] }, '', '/book/' + bookId); currentBook = JSON.parse(JSON.stringify(b)); currentPage = getReadingProgress(bookId); if (currentPage > currentBook.pages.length) currentPage = 1; fontSize = getDeviceType() === 'mobile' ? 14 : getDeviceType() === 'tablet' ? 16 : 18; if (DOM.readerTitle) DOM.readerTitle.textContent = currentBook.title; if (DOM.readerContent) { DOM.readerContent.innerHTML = currentBook.pages[currentPage - 1]; DOM.readerContent.style.fontSize = fontSize + 'px'; DOM.readerContent.scrollTop = 0; } if (DOM.currentPage) DOM.currentPage.textContent = currentPage; if (DOM.totalPages) DOM.totalPages.textContent = currentBook.pages.length; if (DOM.readerWindow) DOM.readerWindow.style.display = 'flex'; if (DOM.overlay) DOM.overlay.style.display = 'block'; applyDeviceLayout(); };
 
 function setupCategoryPages() { document.getElementById('backFromGenres')?.addEventListener('click', goBack); document.getElementById('backFromAuthors')?.addEventListener('click', goBack); document.getElementById('backFromFavorites')?.addEventListener('click', goBack); }
 
