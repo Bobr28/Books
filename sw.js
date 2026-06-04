@@ -40,6 +40,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const pathname = url.pathname;
 
+  // Пропускаем Google Scripts (не кэшируем, не обрабатываем)
+  if (url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') {
+    return; // Просто пропускаем, браузер сделает обычный запрос
+  }
+
   if (pathname.match(/\/book\d+\.json$/)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
