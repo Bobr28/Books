@@ -59,39 +59,22 @@
     </script>
 </head>
 <body>
-    <!-- Бургер-меню -->
     <nav class="side-menu" id="sideMenu">
         <div class="side-menu-header">
             <h3>📚 Меню</h3>
             <button class="side-menu-close" id="sideMenuClose">✕</button>
         </div>
         <div class="side-menu-content">
-            <button class="menu-item" id="menuGenres">
-                <span class="menu-icon">📂</span>
-                <span>Жанры</span>
-            </button>
-            <button class="menu-item" id="menuAuthors">
-                <span class="menu-icon">✍️</span>
-                <span>Авторы</span>
-            </button>
-            <button class="menu-item" id="menuFavorites">
-                <span class="menu-icon">⭐</span>
-                <span>Избранное</span>
-            </button>
-            <button class="menu-item" id="menuFeedback">
-                <span class="menu-icon">💬</span>
-                <span>Обратная связь</span>
-            </button>
+            <button class="menu-item" id="menuGenres"><span class="menu-icon">📂</span><span>Жанры</span></button>
+            <button class="menu-item" id="menuAuthors"><span class="menu-icon">✍️</span><span>Авторы</span></button>
+            <button class="menu-item" id="menuFavorites"><span class="menu-icon">⭐</span><span>Избранное</span></button>
+            <button class="menu-item" id="menuFeedback"><span class="menu-icon">💬</span><span>Обратная связь</span></button>
             <div class="menu-divider"></div>
-            <button class="menu-item" id="menuAll">
-                <span class="menu-icon">📖</span>
-                <span>Все книги</span>
-            </button>
+            <button class="menu-item" id="menuAll"><span class="menu-icon">📖</span><span>Все книги</span></button>
         </div>
     </nav>
     <div class="menu-overlay" id="menuOverlay"></div>
 
-    <!-- Кнопка смены темы -->
     <button class="theme-toggle-btn" id="themeToggle" title="Сменить тему">
         <span class="theme-icon-light">☀️</span>
         <span class="theme-icon-dark">🌙</span>
@@ -99,14 +82,8 @@
     
     <header>
         <div class="container header-container">
-            <div class="header-title">
-                <h1>📚 Электронная библиотека</h1>
-            </div>
-            <button class="burger-btn" id="burgerBtn" aria-label="Меню">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            <div class="header-title"><h1>📚 Электронная библиотека</h1></div>
+            <button class="burger-btn" id="burgerBtn" aria-label="Меню"><span></span><span></span><span></span></button>
         </div>
     </header>
     
@@ -116,33 +93,19 @@
                 <h2>Коллекция книг</h2>
                 <div class="loading" id="loadingIndicator">Загрузка книг...</div>
                 <div class="books-grid" id="booksGrid"></div>
-                <div class="error-message" id="errorMessage" style="display: none;">
-                    Ошибка загрузки книг. Пожалуйста, обновите страницу.
-                </div>
+                <div class="error-message" id="errorMessage" style="display: none;">Ошибка загрузки книг. Пожалуйста, обновите страницу.</div>
             </section>
         </div>
-
         <div class="category-page" id="genresPage" style="display: none;">
-            <div class="category-page-header">
-                <button class="back-btn" id="backFromGenres">← Назад</button>
-                <h2>📂 Жанры</h2>
-            </div>
+            <div class="category-page-header"><button class="back-btn" id="backFromGenres">← Назад</button><h2>📂 Жанры</h2></div>
             <div class="category-list" id="genresList"></div>
         </div>
-
         <div class="category-page" id="authorsPage" style="display: none;">
-            <div class="category-page-header">
-                <button class="back-btn" id="backFromAuthors">← Назад</button>
-                <h2>✍️ Авторы</h2>
-            </div>
+            <div class="category-page-header"><button class="back-btn" id="backFromAuthors">← Назад</button><h2>✍️ Авторы</h2></div>
             <div class="category-list" id="authorsList"></div>
         </div>
-
         <div class="category-page" id="favoritesPage" style="display: none;">
-            <div class="category-page-header">
-                <button class="back-btn" id="backFromFavorites">← Назад</button>
-                <h2>⭐ Избранное</h2>
-            </div>
+            <div class="category-page-header"><button class="back-btn" id="backFromFavorites">← Назад</button><h2>⭐ Избранное</h2></div>
             <div class="books-grid" id="favoritesBooksGrid"></div>
         </div>
     </main>
@@ -152,13 +115,9 @@
         <p>Все произведения находятся в открытом доступе</p>
     </footer>
     
-    <!-- Окно читалки -->
     <div class="overlay" id="overlay"></div>
     <div class="reader-window" id="readerWindow">
-        <div class="reader-header">
-            <h3 id="readerTitle">Название книги</h3>
-            <button class="close-btn" id="closeReader">Закрыть (ESC)</button>
-        </div>
+        <div class="reader-header"><h3 id="readerTitle">Название книги</h3><button class="close-btn" id="closeReader">Закрыть (ESC)</button></div>
         <div class="reader-controls">
             <button class="reader-btn" id="prevPage">← Назад</button>
             <span class="page-indicator">Страница: <span id="currentPage">1</span>/<span id="totalPages">1</span></span>
@@ -170,55 +129,38 @@
             </div>
         </div>
         <div class="reader-content" id="readerContent">Содержание книги...</div>
-        
-        <!-- Комментарии -->
-        <div class="comments-section" id="commentsSection">
-            <div class="comments-header" id="commentsHeader">
-                <h4>💬 Комментарии</h4>
-                <button class="comments-toggle" id="commentsToggle">▼</button>
-            </div>
-            <div class="comments-body" id="commentsBody">
-                <div class="comments-list" id="commentsList">
-                    <div class="comment-empty">Загрузка...</div>
-                </div>
-                <form class="comment-form" id="commentForm">
-                    <input type="text" id="commentName" placeholder="Ваше имя" maxlength="30" required>
-                    <textarea id="commentText" placeholder="Ваш комментарий..." rows="2" maxlength="300" required></textarea>
-                    <button type="submit" class="btn-submit">📨 Отправить</button>
-                </form>
-            </div>
-        </div>
     </div>
 
     <button class="exit-fullscreen-btn" id="exitFullscreenBtn" title="Выйти из полноэкранного режима (ESC)">✕</button>
     <button class="page-nav-btn prev-page" id="fullscreenPrevBtn" title="Предыдущая страница (←)">←</button>
     <button class="page-nav-btn next-page" id="fullscreenNextBtn" title="Следующая страница (→)">→</button>
 
+    <!-- Модальное окно комментариев -->
+    <div class="comments-modal" id="commentsModal">
+        <div class="comments-overlay" id="commentsOverlay"></div>
+        <div class="comments-modal-content">
+            <div class="comments-modal-header">
+                <h3>💬 Комментарии</h3>
+                <button class="comments-modal-close" id="commentsClose">✕</button>
+            </div>
+            <div class="comments-list" id="commentsList"><div class="comment-empty">Загрузка...</div></div>
+            <form class="comment-form" id="commentForm">
+                <input type="text" id="commentName" placeholder="Ваше имя" maxlength="30" required>
+                <textarea id="commentText" placeholder="Ваш комментарий..." rows="2" maxlength="300" required></textarea>
+                <button type="submit" class="btn-submit">📨 Отправить</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Модальное окно обратной связи -->
     <div class="feedback-modal" id="feedbackModal">
         <div class="feedback-overlay" id="feedbackOverlay"></div>
         <div class="feedback-content">
-            <div class="feedback-header">
-                <h3>💬 Обратная связь</h3>
-                <button class="feedback-close" id="feedbackClose">✕</button>
-            </div>
+            <div class="feedback-header"><h3>💬 Обратная связь</h3><button class="feedback-close" id="feedbackClose">✕</button></div>
             <form class="feedback-form" id="feedbackForm">
-                <div class="feedback-field">
-                    <label>Ваше имя</label>
-                    <input type="text" id="feedbackName" placeholder="Введите имя (необязательно)">
-                </div>
-                <div class="feedback-field">
-                    <label>Тема</label>
-                    <select id="feedbackTopic">
-                        <option value="bug">🐛 Нашёл ошибку</option>
-                        <option value="feature">💡 Предложение</option>
-                        <option value="other">💬 Другое</option>
-                    </select>
-                </div>
-                <div class="feedback-field">
-                    <label>Сообщение</label>
-                    <textarea id="feedbackMessage" rows="5" placeholder="Опишите проблему или предложение..." required></textarea>
-                </div>
+                <div class="feedback-field"><label>Ваше имя</label><input type="text" id="feedbackName" placeholder="Введите имя (необязательно)"></div>
+                <div class="feedback-field"><label>Тема</label><select id="feedbackTopic"><option value="bug">🐛 Нашёл ошибку</option><option value="feature">💡 Предложение</option><option value="other">💬 Другое</option></select></div>
+                <div class="feedback-field"><label>Сообщение</label><textarea id="feedbackMessage" rows="5" placeholder="Опишите проблему или предложение..." required></textarea></div>
                 <button type="submit" class="btn-submit">📨 Отправить</button>
             </form>
         </div>
