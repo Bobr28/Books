@@ -182,37 +182,15 @@ header {
 
 /* Кнопка комментариев в карточке */
 .btn-comments-card {
-    width: 100%;
-    margin-top: 6px;
-    padding: 6px;
-    background: linear-gradient(135deg, #c49a6c, #8b5a2b);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    color: white;
-    font-family: 'Georgia', serif;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%; margin-top: 6px; padding: 6px;
+    background: linear-gradient(135deg, #c49a6c, #8b5a2b); border: none; border-radius: 6px;
+    cursor: pointer; font-size: 0.75rem; color: white;
+    font-family: 'Georgia', serif; transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.btn-comments-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(139, 90, 43, 0.3);
-}
-
-.btn-comments-card:active {
-    transform: scale(0.97);
-}
-
-.dark-theme .btn-comments-card {
-    background: linear-gradient(135deg, #444, #333);
-    color: #e0e0e0;
-}
-
-.dark-theme .btn-comments-card:hover {
-    background: linear-gradient(135deg, #555, #444);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
+.btn-comments-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(139, 90, 43, 0.3); }
+.btn-comments-card:active { transform: scale(0.97); }
+.dark-theme .btn-comments-card { background: linear-gradient(135deg, #444, #333); color: #e0e0e0; }
+.dark-theme .btn-comments-card:hover { background: linear-gradient(135deg, #555, #444); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
 
 /* Футер */
 footer { text-align: center; margin-top: 50px; padding: 25px; color: #7f8c8d; border-top: 1px solid #eee; font-size: 0.9rem; }
@@ -315,9 +293,16 @@ footer { text-align: center; margin-top: 50px; padding: 25px; color: #7f8c8d; bo
 .comment-form input, .comment-form textarea { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Georgia', serif; font-size: 0.8rem; resize: none; background: white; color: #333; }
 .dark-theme .comment-form input, .dark-theme .comment-form textarea { background: #383838; color: #e0e0e0; border-color: #555; }
 .comment-form input:focus, .comment-form textarea:focus { outline: none; border-color: #c49a6c; }
-.comment-form .btn-submit { background: #c49a6c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-family: 'Georgia', serif; align-self: flex-end; transition: transform 0.2s; }
-.comment-form .btn-submit:hover { transform: translateY(-1px); }
-.comment-form .btn-submit:disabled { background: #999; cursor: not-allowed; }
+.comment-form .btn-submit {
+    background: linear-gradient(135deg, #c49a6c, #8b5a2b); color: white; border: none;
+    padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+    font-family: 'Georgia', serif; align-self: flex-end; transition: transform 0.2s, box-shadow 0.2s;
+}
+.comment-form .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(139, 90, 43, 0.3); }
+.comment-form .btn-submit:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
+.dark-theme .comment-form .btn-submit { background: linear-gradient(135deg, #555, #3a3a3a); color: #e0e0e0; }
+.dark-theme .comment-form .btn-submit:hover { background: linear-gradient(135deg, #666, #4a4a4a); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
+.dark-theme .comment-form .btn-submit:disabled { background: #555; color: #888; }
 
 /* Обратная связь */
 .feedback-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; }
