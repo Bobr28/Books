@@ -1,4 +1,4 @@
-const CACHE_NAME = 'library-v1.0.6';
+const CACHE_NAME = 'library-v1.0.7';
 const STATIC_FILES = [
   '/',
   '/index.html',
@@ -40,11 +40,12 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const pathname = url.pathname;
 
-  // Пропускаем Google Scripts (не кэшируем, не обрабатываем)
+  // Пропускаем Google Scripts — вообще не обрабатываем
   if (url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') {
-    return; // Просто пропускаем, браузер сделает обычный запрос
+    return;
   }
 
+  // Книги (book1.json, book2.json, ...)
   if (pathname.match(/\/book\d+\.json$/)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
@@ -65,6 +66,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Список книг (books-list.json)
   if (pathname === '/books-list.json') {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
@@ -85,6 +87,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Статические файлы — кэш, потом сеть
   if (STATIC_FILES.includes(pathname) || pathname === '/' || pathname.endsWith('.html')) {
     event.respondWith(
       caches.match(event.request).then(cached => {
@@ -100,5 +103,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Всё остальное — только сеть
   event.respondWith(fetch(event.request));
 });
