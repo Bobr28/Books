@@ -1506,6 +1506,10 @@ footer {
     border-color: #c49a6c;
 }
 
+.feedback-field textarea {
+    resize: none;
+}
+
 .btn-submit {
     background: linear-gradient(135deg, #4CAF50, #388E3C);
     color: white;
