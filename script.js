@@ -55,6 +55,7 @@ let cachedWidth = 0;
 /**
  * Безопасная обработка строк для вставки в HTML.
  * Предотвращает XSS-атаки, заменяя спецсимволы на HTML-сущности.
+ * ВАЖНО: & заменяется ПЕРВЫМ, чтобы не испортить уже заменённые сущности.
  */
 function escapeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -367,6 +368,7 @@ function addSearchBar() {
 async function loadAllBooks() {
     if (isLoading) return;
     isLoading = true;
+    allBooks = [];                          // Очищаем массив перед загрузкой
 
     console.log('📚 Загрузка книг...');
     if (DOM.loadingIndicator) DOM.loadingIndicator.style.display = 'block';
@@ -840,7 +842,7 @@ async function loadComments(bookId) {
         <div class="comment-item">
             <div class="comment-author">
                 ${escapeHtml(comment.name)}
-                <span class="comment-date">${formatDate(comment.date)}</span>
+                <span class="comment-date">${escapeHtml(formatDate(comment.date))}</span>
             </div>
             <div class="comment-text">${escapeHtml(comment.text)}</div>
         </div>
@@ -941,10 +943,8 @@ function submitFeedback(e) {
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isMobile) {
-        // На мобильных — mailto:
         location.href = `mailto:readworldfeedback@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     } else {
-        // На десктопе — Gmail
         open(`https://mail.google.com/mail/?view=cm&fs=1&to=readworldfeedback@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
     }
 }
@@ -1118,10 +1118,14 @@ function setupSideMenu() {
     }, { passive: true });
 
     document.addEventListener('touchend', (e) => {
-        if (menuActive) return;
+        if (menuActive) {
+            startX = 0;
+            return;
+        }
         if (startX > innerWidth - 40 && startX - e.changedTouches[0].clientX > 50) {
             open();
         }
+        startX = 0;
     });
 
     // Свайп для закрытия меню (перетаскивание вправо)
