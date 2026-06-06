@@ -942,10 +942,10 @@ function submitFeedback(e) {
 
     if (isMobile) {
         // На мобильных — mailto:
-        location.href = `mailto:cheburekus2012@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        location.href = `mailto:readworldfeedback@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     } else {
         // На десктопе — Gmail
-        open(`https://mail.google.com/mail/?view=cm&fs=1&to=cheburekus2012@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+        open(`https://mail.google.com/mail/?view=cm&fs=1&to=readworldfeedback@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
     }
 }
 
