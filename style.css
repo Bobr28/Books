@@ -180,7 +180,7 @@ header {
 @media (hover: hover) and (pointer: fine) { .btn-favorite:hover { transform: scale(1.1); } }
 .btn-favorite:active { transform: scale(0.9); }
 
-/* Кнопка комментариев в карточке */
+/* Кнопка комментариев */
 .btn-comments-card {
     width: 100%; margin-top: 6px; padding: 6px;
     background: linear-gradient(135deg, #c49a6c, #8b5a2b); border: none; border-radius: 6px;
@@ -323,6 +323,7 @@ footer { text-align: center; margin-top: 50px; padding: 25px; color: #7f8c8d; bo
 .feedback-field input, .feedback-field select, .feedback-field textarea { padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; font-family: 'Georgia', serif; background: white; color: #333; }
 .dark-theme .feedback-field input, .dark-theme .feedback-field select, .dark-theme .feedback-field textarea { background: #383838; color: #e0e0e0; border-color: #555; }
 .feedback-field input:focus, .feedback-field select:focus, .feedback-field textarea:focus { outline: none; border-color: #c49a6c; }
+.feedback-field textarea { resize: none; min-height: 100px; }
 .btn-submit { background: linear-gradient(135deg, #4CAF50, #388E3C); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; font-family: 'Georgia', serif; transition: transform 0.2s; }
 .btn-submit:hover { transform: translateY(-2px); }
 .btn-submit:active { transform: scale(0.97); }
