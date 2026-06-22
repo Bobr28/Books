@@ -2,22 +2,16 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-// Раздаём статические файлы
-app.use(express.static(__dirname));
+// Раздаём файлы из корня проекта
+app.use(express.static(path.join(__dirname)));
 
-// Только для несуществующих файлов отдаём index.html (SPA)
-app.get('*', (req, res) => {
-    // Проверяем, существует ли файл
-    const filePath = path.join(__dirname, req.path);
-    const fs = require('fs');
-    
-    if (!fs.existsSync(filePath) && !req.path.includes('.')) {
-        res.sendFile(path.join(__dirname, 'index.html'));
-    } else if (!fs.existsSync(filePath)) {
-        res.status(404).send('Not Found');
-    } else {
-        res.sendFile(filePath);
+// Для SPA — отдаём index.html для всех не-файловых запросов
+app.get('*', (req, res, next) => {
+    // Пропускаем запросы к существующим файлам
+    if (req.path.includes('.')) {
+        return next();
     }
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
