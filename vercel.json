@@ -1,5 +1,4 @@
 {
-  "buildCommand": "npm install",
   "headers": [
     {
       "source": "/sw.js",
